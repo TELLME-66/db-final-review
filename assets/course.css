@@ -1,0 +1,421 @@
+/* ═══════════════════════════════════════════════════════════════
+   讲义页样式 · course.css
+   用于 db.html（章节索引）与 db/*.html（每章讲义）。
+   左边一列目录、右边正文；颜色令牌取自 assets/theme.css。
+   改完把引用处的 ?v=N 加一。
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── 两栏：左目录 + 右正文 ─────────────────────────────── */
+.doc{
+  width:min(var(--wrap-wide),100% - var(--gutter)*2);
+  margin-inline:auto;
+  padding:28px 0 88px;
+  display:grid;
+  grid-template-columns:236px minmax(0,1fr);
+  gap:clamp(32px,5vw,64px);
+  align-items:start;
+}
+.doc-body{min-width:0;max-width:860px}
+
+/* ── 目录 ──────────────────────────────────────────────── */
+.doc-toc{
+  position:sticky;top:calc(var(--bar-h) + 20px);
+  max-height:calc(100vh - var(--bar-h) - 40px);
+  overflow:auto;overscroll-behavior:contain;
+  padding-right:16px;
+  font-size:13px;line-height:1.5;
+  min-width:0;
+  scrollbar-width:thin;
+}
+.toc-fold>summary{
+  cursor:pointer;list-style:none;
+  font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);padding:0 0 12px;
+}
+.toc-fold>summary::-webkit-details-marker{display:none}
+.toc-fold>summary::after{content:"⌄";font-size:12px;margin-left:6px;display:inline-block;transform:translateY(-1px)}
+.toc-fold[open]>summary::after{content:"⌃"}
+.toc-home{
+  display:block;font-size:15px;font-weight:600;letter-spacing:-.015em;color:var(--fg);
+  padding:2px 0 14px;margin-bottom:8px;border-bottom:1px solid var(--line);
+}
+.toc-home:hover{color:var(--accent-ink);text-decoration:none}
+.toc-ch{margin:0 0 16px}
+.toc-ch>h2{
+  font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+  margin:16px 0 6px;padding:0 10px;
+}
+.toc-list{list-style:none;margin:0;padding:0}
+.toc-list li{margin:0}
+.toc-list a,.toc-list .todo{
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;
+  padding:6px 10px;border-radius:9px;
+  color:var(--fg);opacity:.78;text-decoration:none;
+  overflow:hidden;overflow-wrap:anywhere;
+  transition:background var(--t-fast) var(--ease),opacity var(--t-fast) var(--ease),color var(--t-fast) var(--ease);
+}
+.toc-list a:hover{background:var(--panel);opacity:1;text-decoration:none}
+.toc-list a[aria-current="page"]{
+  background:var(--accent-soft);color:var(--accent-ink);
+  opacity:1;font-weight:600;
+}
+.toc-list .todo{color:var(--muted);opacity:.45;cursor:default}
+.toc-list .num{font-variant-numeric:tabular-nums;color:var(--muted);margin-right:.45em;font-size:12px}
+.toc-list a[aria-current="page"] .num{color:inherit}
+.toc-list a.done{opacity:.5}
+.toc-list a.done .num::after{content:"✓";color:var(--ok);font-weight:700;margin-left:.35em;font-size:11px}
+
+/* ── 正文抬头 ──────────────────────────────────────────── */
+.doc-head{padding:4px 0 26px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.doc-head .crumb{font-size:12.5px;color:var(--muted);margin-bottom:14px;letter-spacing:.01em}
+.doc-head h1{font-size:clamp(30px,4.2vw,46px);letter-spacing:-.04em;line-height:1.06}
+.doc-head .meta{
+  margin-top:14px;font-size:13px;color:var(--muted);
+  font-variant-numeric:tabular-nums;display:flex;flex-wrap:wrap;gap:6px 0;align-items:center;
+}
+.doc-head .meta .dot{opacity:.45;margin:0 9px}
+.status{
+  display:flex;align-items:center;gap:10px;margin-top:18px;
+  font-size:12.5px;color:var(--muted);
+}
+.status .track{
+  flex:0 1 150px;height:4px;border-radius:99px;background:var(--line);overflow:hidden;
+}
+.status .track i{display:block;height:100%;width:0;background:var(--accent);border-radius:99px;transition:width .4s var(--ease-out)}
+.status b{color:var(--fg);font-variant-numeric:tabular-nums;font-weight:600}
+
+/* ── 讲义正文 ──────────────────────────────────────────── */
+.note{font-size:17px;line-height:1.9;letter-spacing:-.005em;max-width:44em;color:var(--fg)}
+.note h2{
+  font-size:clamp(21px,2.2vw,25px);line-height:1.34;letter-spacing:-.025em;
+  margin:58px 0 16px;padding-top:22px;border-top:1px solid var(--line);
+  scroll-margin-top:calc(var(--bar-h) + 24px);
+  display:flex;align-items:baseline;gap:12px;
+}
+.note h2:first-child{margin-top:30px;padding-top:0;border-top:0}
+.note h2 .h2no{
+  flex:0 0 auto;color:var(--accent-ink);font-size:.66em;
+  font-variant-numeric:tabular-nums;letter-spacing:0;font-weight:600;
+}
+.note h3{
+  font-size:17.5px;font-weight:600;letter-spacing:-.012em;
+  margin:34px 0 10px;scroll-margin-top:calc(var(--bar-h) + 24px);
+}
+.note p{margin:0 0 1.05em}
+.note ul,.note ol{margin:0 0 1.1em;padding-left:1.3em}
+.note li{margin:.4em 0}
+.note li::marker{color:var(--muted)}
+.note li>ul{margin:.3em 0 .4em}
+.note strong{font-weight:600;letter-spacing:-.002em}
+.note hr{border:0;border-top:1px solid var(--line);margin:2.4em 0}
+.note-empty{font-size:14px;color:var(--muted)}
+
+/* 行内代码 / SQL */
+.note code{
+  font-size:.84em;padding:.1em .38em;border-radius:6px;
+  background:var(--panel);border:1px solid var(--line);
+  font-family:var(--mono);white-space:nowrap;
+}
+.note pre{
+  margin:0 0 1.3em;padding:16px 18px;
+  border:1px solid var(--line);border-radius:var(--r-sm);
+  background:var(--panel);overflow:auto;
+  font-size:13.5px;line-height:1.75;
+  font-family:var(--mono);
+  -webkit-overflow-scrolling:touch;
+}
+.note pre code{
+  background:none;border:0;padding:0;white-space:pre;font-size:inherit;
+}
+.note pre .c{color:var(--muted)}
+.note pre .k{color:var(--accent-ink);font-weight:600}
+
+/* ── 数据表格 ──────────────────────────────────────────── */
+.note table{
+  width:100%;margin:1.5em 0 1.9em;border-collapse:collapse;
+  font-size:14.5px;line-height:1.6;
+}
+.note table :is(th,td){
+  padding:10px 14px;border-bottom:1px solid var(--line);
+  text-align:left;vertical-align:top;
+}
+.note thead th{
+  background:transparent;font-weight:600;white-space:nowrap;
+  font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);
+  border-bottom:1px solid color-mix(in srgb, var(--fg) 26%, transparent);
+}
+.note tbody tr:last-child td{border-bottom:1px solid color-mix(in srgb, var(--fg) 26%, transparent)}
+.note table caption{
+  caption-side:bottom;padding-top:10px;
+  font-size:12.5px;line-height:1.5;color:var(--muted);text-align:left;
+}
+.note .tbl-wrap{max-width:100%;overflow-x:auto}
+.note .tbl-wrap>table{margin-top:0}
+
+/* ── 导语 ──────────────────────────────────────────────── */
+.note .lead{
+  margin:0 0 2em;padding:2px 0 2px 20px;
+  border-left:2px solid var(--accent);
+  color:var(--muted);font-size:16px;line-height:1.8;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   备考组件：考点卡 / 易错 / 例题 / 口诀 / 小结
+   ═══════════════════════════════════════════════════════════════ */
+.note .kp,.note .trap,.note .eg,.note .mem,.note .sum{
+  margin:1.6em 0 1.9em;border-radius:16px;
+  font-size:15.5px;line-height:1.8;
+}
+.note .kp,.note .trap,.note .eg{padding:18px 20px 8px}
+
+.note .kp{
+  background:rgba(0,113,227,.055);
+  border:1px solid rgba(0,113,227,.14);
+}
+:root[data-theme="dark"] .note .kp{background:rgba(41,151,255,.08);border-color:rgba(41,151,255,.18)}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .note .kp{background:rgba(41,151,255,.08);border-color:rgba(41,151,255,.18)}
+}
+.note .kp>*:last-child{margin-bottom:.9em}
+.note .kp .t{
+  font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--accent-ink);margin:0 0 .7em;
+}
+.note .trap{
+  background:rgba(215,0,21,.045);
+  border:1px solid rgba(215,0,21,.14);
+}
+:root[data-theme="dark"] .note .trap{background:rgba(255,105,97,.07);border-color:rgba(255,105,97,.18)}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .note .trap{background:rgba(255,105,97,.07);border-color:rgba(255,105,97,.18)}
+}
+.note .trap .t{
+  font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--danger);margin:0 0 .7em;
+}
+.note .eg{
+  background:var(--soft);
+  border:1px solid var(--line);
+}
+.note .eg .t{
+  font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);margin:0 0 .7em;
+}
+.note .eg .sol{
+  margin-top:.7em;padding-top:.8em;border-top:1px dashed var(--line);
+}
+.note .mem{
+  padding:12px 18px;
+  background:var(--panel);
+  border-radius:14px;
+  font-size:14.5px;color:var(--fg);
+}
+.note .mem b{color:var(--accent-ink)}
+.note .sum{
+  padding:18px 20px;
+  background:var(--panel);
+  font-size:15px;
+}
+.note .sum .t{
+  font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);margin:0 0 .7em;
+}
+.note .sum ul{margin-bottom:.2em}
+.note .sum>*:last-child{margin-bottom:0}
+
+/* 小标签 */
+.note .badge{
+  display:inline-block;font-size:11.5px;font-weight:600;line-height:1.5;
+  padding:0 .55em;border-radius:999px;vertical-align:1px;
+  background:var(--accent-soft);color:var(--accent-ink);
+  font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+.note .badge.hot{background:rgba(215,0,21,.10);color:var(--danger)}
+.note .badge.new{background:rgba(0,128,9,.12);color:var(--ok)}
+.note .badge.gray{background:var(--panel);color:var(--muted)}
+
+/* 两列对照 */
+.note .cols2{display:grid;grid-template-columns:1fr 1fr;gap:0 28px;margin:1.3em 0 1.7em}
+.note .cols2>div{min-width:0}
+.note .cols2 h4{margin:0 0 .5em;font-size:13px;font-weight:600;letter-spacing:.02em;color:var(--muted)}
+
+/* 步骤条 */
+.note .steps{list-style:none;padding:0;margin:1.3em 0 1.7em;counter-reset:st}
+.note .steps>li{
+  position:relative;padding:0 0 1em 36px;margin:0;counter-increment:st;
+}
+.note .steps>li::before{
+  content:counter(st);position:absolute;left:0;top:2px;
+  width:23px;height:23px;border-radius:50%;
+  display:grid;place-items:center;
+  background:var(--accent-soft);color:var(--accent-ink);
+  font-size:11.5px;font-weight:700;font-variant-numeric:tabular-nums;
+}
+.note .steps>li::after{
+  content:"";position:absolute;left:11px;top:27px;bottom:4px;
+  border-left:1px solid var(--line);
+}
+.note .steps>li:last-child{padding-bottom:0}
+.note .steps>li:last-child::after{display:none}
+
+/* 图（SVG / 图片） */
+.note .fig{margin:1.8em 0 2em}
+.note .fig svg,.note .fig img{display:block;max-width:100%;height:auto;margin-inline:auto}
+.note .fig img{border-radius:var(--r-sm);box-shadow:var(--sh-1)}
+.note .fig figcaption{
+  margin-top:12px;font-size:12.5px;line-height:1.5;color:var(--muted);
+  text-align:center;font-variant-numeric:tabular-nums;
+}
+.note .fig svg text{font-family:var(--sans);fill:var(--fg)}
+.note .fig svg .ln{stroke:var(--fg);stroke-width:1.2;fill:none}
+.note .fig svg .ln-m{stroke:var(--muted);stroke-width:1.2;fill:none}
+.note .fig svg .box{fill:var(--panel);stroke:var(--line)}
+.note .fig svg .acc{fill:var(--accent-soft);stroke:var(--accent)}
+.note .fig svg .lbl{font-size:12px;fill:var(--muted)}
+
+/* 小节「标记掌握」按钮 */
+.note h2 .m-btn{
+  margin-left:auto;flex:0 0 auto;
+  font:inherit;font-size:11.5px;font-weight:500;letter-spacing:0;
+  color:var(--muted);background:transparent;
+  border:1px solid var(--line);border-radius:999px;
+  padding:3px 11px;cursor:pointer;opacity:.8;
+  transition:opacity var(--t-fast) var(--ease),color var(--t-fast) var(--ease),border-color var(--t-fast) var(--ease),background var(--t-fast) var(--ease);
+}
+.note h2 .m-btn:hover{opacity:1;color:var(--accent-ink);border-color:var(--accent)}
+.note h2 .m-btn[aria-pressed="true"]{
+  color:var(--ok);border-color:currentColor;opacity:1;background:rgba(0,128,9,.07);
+}
+.note h2.is-done{color:var(--muted)}
+@media print{.note h2 .m-btn{display:none}}
+
+/* 顶部阅读进度 */
+#readbar{position:fixed;top:0;left:0;height:2px;width:0;background:var(--accent);z-index:60;transition:width .12s linear}
+
+/* 本节自测入口 */
+.selftest{
+  display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;
+  margin:48px 0 0;padding:22px 24px;border-radius:var(--r);
+  background:linear-gradient(120deg,rgba(0,113,227,.07),rgba(88,86,214,.05));
+  border:1px solid rgba(0,113,227,.12);
+  font-size:15px;
+}
+.selftest .st-n{color:var(--muted);font-size:13.5px;max-width:46ch;line-height:1.6}
+.selftest a{font-weight:600;white-space:nowrap}
+.selftest a::after{content:" ›"}
+
+/* ── 上一章 / 下一章 ───────────────────────────────────── */
+.pager{
+  display:grid;grid-template-columns:1fr 1fr;gap:12px;
+  margin-top:56px;
+  font-size:14.5px;
+}
+.pager a{
+  display:block;padding:16px 18px;border:1px solid var(--line);border-radius:var(--r-sm);
+  color:var(--fg);line-height:1.45;
+  transition:border-color var(--t-fast) var(--ease),background var(--t-fast) var(--ease),transform var(--t-fast) var(--ease);
+}
+.pager a:hover{border-color:var(--accent);background:var(--soft);text-decoration:none;transform:translateY(-1px)}
+.pager a span{display:block;font-size:11.5px;color:var(--muted);margin-bottom:2px}
+.pager .next{text-align:right}
+.pager .todo{color:var(--muted);opacity:.5}
+
+/* ── 板块首页：章 → 节 清单 ────────────────────────────── */
+.course-index{display:grid;gap:40px;padding-bottom:8px}
+.ci-ch h2{
+  font-size:19px;letter-spacing:-.025em;
+  padding-bottom:12px;margin-bottom:6px;border-bottom:1px solid var(--line);
+  display:flex;align-items:baseline;gap:10px;
+}
+.ci-ch h2 .no{color:var(--muted);font-weight:500;font-size:12px;letter-spacing:.04em;text-transform:uppercase}
+.ci-list{list-style:none;margin:0;padding:0;display:grid;gap:0}
+.ci-list a,.ci-list .todo{
+  display:flex;align-items:baseline;gap:14px;
+  padding:10px 12px;border-radius:var(--r-xs);
+  color:var(--fg);text-decoration:none;font-size:15.5px;
+  transition:background var(--t-fast) var(--ease);
+}
+.ci-list a:hover{background:var(--panel);text-decoration:none}
+.ci-list .num{
+  flex:0 0 auto;width:4.2em;color:var(--muted);font-size:12.5px;
+  font-variant-numeric:tabular-nums;
+}
+.ci-list .nm{flex:1 1 auto;min-width:0}
+.ci-list .pg{margin-left:auto;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.ci-list .todo{color:var(--muted);opacity:.5}
+.done-note{
+  font-size:13px;color:var(--muted);padding:26px 0 40px;line-height:1.7;
+  border-top:1px solid var(--line);
+}
+
+/* 章节卡 */
+.chgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(228px,1fr));gap:12px;padding:0 0 10px}
+.chcard{
+  position:relative;display:flex;flex-direction:column;gap:10px;min-height:172px;
+  padding:22px 22px 18px;border-radius:var(--r);background:var(--panel);
+  color:var(--fg);text-decoration:none;
+  transition:transform var(--t) var(--ease-out),background var(--t) var(--ease),box-shadow var(--t) var(--ease);
+}
+.chcard:hover{background:var(--tile-hover);text-decoration:none;transform:translateY(-2px);box-shadow:var(--sh-2)}
+.chcard .cno{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.chcard h3{font-size:18px;letter-spacing:-.02em;line-height:1.24}
+.chcard p{font-size:12.5px;color:var(--muted);line-height:1.55;margin-top:-2px}
+.chcard .cmeta{margin-top:auto;display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:11.5px;color:var(--muted)}
+.chcard .pbar{height:3px;border-radius:2px;background:var(--line);overflow:hidden;margin-top:2px}
+.chcard .pbar i{display:block;height:100%;background:var(--accent);border-radius:2px;width:0;transition:width .4s var(--ease-out)}
+.chcard .prog{font-variant-numeric:tabular-nums}
+
+/* ── 模块切换（分段控件） ─────────────────────────────── */
+.mod-switch{
+  display:flex;gap:2px;margin:0 0 14px;
+  background:var(--panel);border-radius:11px;padding:3px;
+  font-size:12.5px;
+}
+.mod-switch a{
+  flex:1 1 0;text-align:center;padding:6px 8px;border-radius:8px;
+  color:var(--muted);white-space:nowrap;font-weight:500;
+  transition:background var(--t-fast) var(--ease),color var(--t-fast) var(--ease),box-shadow var(--t-fast) var(--ease);
+}
+.mod-switch a:hover{color:var(--fg);text-decoration:none}
+.mod-switch a[aria-current="page"]{
+  background:var(--card);color:var(--fg);font-weight:600;
+  box-shadow:0 1px 3px rgba(0,0,0,.1),0 0 0 .5px rgba(0,0,0,.04);
+}
+.page-head .mod-switch{width:fit-content;max-width:100%;margin:0 auto 22px}
+.doc-toc .mod-switch{width:auto;margin:0 0 14px}
+
+/* ── 窄屏 ──────────────────────────────────────────────── */
+@media (max-width:980px){
+  .doc{grid-template-columns:1fr;gap:18px;padding-top:14px}
+  .doc-toc{
+    position:static;max-height:none;overflow:visible;
+    padding:0 0 16px;border-bottom:1px solid var(--line);
+  }
+  .toc-fold>summary{padding:2px 0 14px;font-size:11px}
+  .toc-body{columns:2;column-gap:24px}
+  .toc-ch{break-inside:avoid}
+  .doc-head{padding-top:6px}
+  .doc-body{max-width:none}
+}
+@media (max-width:620px){
+  .toc-body{columns:1}
+  .ci-list .num{width:3.6em}
+  .note{font-size:16.5px;line-height:1.85}
+  .note .cols2{grid-template-columns:1fr}
+  .pager{grid-template-columns:1fr}
+  .pager .next{text-align:left}
+  .selftest{padding:18px}
+  .chgrid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+}
+
+/* ── 打印 ──────────────────────────────────────────────── */
+@media print{
+  .doc{display:block;width:auto;padding:0}
+  .doc-toc,.pager,.selftest,.status{display:none}
+  .doc-body{max-width:none}
+  .note{padding:0;font-size:11.5pt;line-height:1.7}
+  .note h2{page-break-after:avoid}
+  .note pre{page-break-inside:avoid}
+  .note table{page-break-inside:avoid}
+  .note .kp,.note .trap,.note .eg,.note .sum{page-break-inside:avoid;background:none;border:1px solid #ccc}
+}

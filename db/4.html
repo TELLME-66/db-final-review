@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 4 章 数据库安全性 · 数据库系统概论 · 备考</title>
+<meta name="description" content="安全标准、身份鉴别、自主与强制访问控制、授权与回收（含 WITH GRANT OPTION 级联）、角色、审计、加密。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/theme.css?v=2">
+<link rel="stylesheet" href="../assets/site.css?v=2">
+<link rel="stylesheet" href="../assets/course.css?v=2">
+<script>(function(){var d=document.documentElement;d.classList.add('js');try{var t=localStorage.getItem('site-theme');if(t==='light'||t==='dark')d.setAttribute('data-theme',t);}catch(e){}})();</script>
+</head>
+<body data-ch="4">
+<a class="skip" href="#main">跳到正文</a>
+<header class="topbar" id="topbar">
+  <div class="wrap-wide bar">
+    <a class="brand" href="../index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="7" ry="2.6"/><path d="M5 6v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6V6"/><path d="M5 12v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6v-6"/></svg><span>数据库系统概论</span></a>
+    <nav class="nav" aria-label="站点导航"><a href="../index.html">首页</a><a href="../db.html" aria-current="page">讲义</a><a href="quiz.html">题库</a><a href="exam.html">模拟卷</a><a href="cheatsheet.html">速查卡</a></nav>
+    <button class="icon-btn" id="themeBtn" type="button" title="主题：跟随系统（点击切换）" aria-label="主题：跟随系统（点击切换）"><span id="themeIcon" aria-hidden="true">◐</span></button>
+  </div>
+</header>
+<div id="readbar"></div>
+
+<main id="main">
+<div class="doc">
+
+  <aside class="doc-toc" aria-label="讲义目录">
+  <details class="toc-fold" open>
+  <summary>讲义目录</summary>
+  <nav class="mod-switch" aria-label="课程模块">
+    <a href="../db.html" aria-current="page">讲义</a>
+    <a href="quiz.html">题库</a>
+    <a href="exam.html">模拟卷</a>
+    <a href="cheatsheet.html">速查卡</a>
+  </nav>
+  <a class="toc-home" href="../db.html">数据库系统概论</a>
+  <p class="toc-ver"><span>本学期课件</span>10 章</p>
+  <div class="toc-body">
+  <div class="toc-ch">
+    <h2>全部章节</h2>
+    <ul class="toc-list"><li><a href="1.html"><span class="num">第 1 章</span>绪论</a></li><li><a href="2.html"><span class="num">第 2 章</span>关系数据库</a></li><li><a href="3.html"><span class="num">第 3 章</span>关系数据库标准语言 SQL</a></li><li><a href="4.html" aria-current="page"><span class="num">第 4 章</span>数据库安全性</a></li><li><a href="5.html"><span class="num">第 5 章</span>数据库完整性</a></li><li><a href="6.html"><span class="num">第 6 章</span>关系数据理论</a></li><li><a href="7.html"><span class="num">第 7 章</span>数据库设计</a></li><li><a href="9.html"><span class="num">第 9 章</span>关系查询处理和查询优化</a></li><li><a href="10.html"><span class="num">第 10 章</span>数据库恢复技术</a></li><li><a href="11.html"><span class="num">第 11 章</span>并发控制</a></li></ul>
+  </div>
+  <div class="toc-ch">
+    <h2>本章小节</h2>
+    <ul class="toc-list"><li><a href="#s1"><span class="num">4.1</span>数据库安全性概述与安全标准</a></li><li><a href="#s2"><span class="num">4.2.1</span>用户身份鉴别</a></li><li><a href="#s3"><span class="num">4.2.2</span>访问控制机制：DAC 与 MAC</a></li><li><a href="#s4"><span class="num">4.2.3</span>自主访问控制方法与授权表</a></li><li><a href="#s5"><span class="num">4.2.4</span>授权与回收：GRANT 与 REVOKE</a></li><li><a href="#s6"><span class="num">4.2.5</span>数据库角色</a></li><li><a href="#s7"><span class="num">4.2.6</span>强制访问控制与 DAC+MAC 检查流程</a></li><li><a href="#s8"><span class="num">4.3</span>视图机制</a></li><li><a href="#s9"><span class="num">4.4</span>审计</a></li><li><a href="#s10"><span class="num">4.5</span>数据加密</a></li><li><a href="#s11"><span class="num">4.6</span>其它安全性保护与本章小结</a></li></ul>
+  </div>
+  </div>
+  </details>
+  </aside>
+
+  <article class="doc-body">
+    <header class="doc-head">
+      <p class="crumb"><a href="../db.html">数据库系统概论</a> · 第 4 章</p>
+      <h1>数据库安全性</h1>
+      <p class="meta">共 11 节 <span class="dot">·</span> 约 8,000 字 <span class="dot">·</span> 课件 115 页 <span class="dot">·</span> 本章自测 24 题</p>
+      <p class="status"><span>已掌握 <b data-mastery-count>0 / 11</b> 节</span>
+        <span class="track"><i data-mastery-bar></i></span></p>
+    </header>
+    <div class="note">
+
+<p class="lead">数据库把数据集中起来共享，也把风险集中了起来：谁能看、谁能改、改过之后能不能查出来，都要靠 DBMS 的一整套安全机制回答。本章是第 3 章 SQL 的"反向补充"——第 3 章讲如何操作数据，本章讲如何限制操作；它也是后面完整性、恢复、并发三章的制度前提。期末本章稳定出 GRANT/REVOKE 默写题、WITH GRANT OPTION 级联回收判断题，以及 DAC 与 MAC 区别、视图安全性的简答题，分值通常 10～15 分。</p>
+
+<h2 id="s1"><span class="h2no">4.1</span>数据库安全性概述与安全标准</h2>
+
+<p><strong>数据库安全性是指保护数据库以防止不合法使用所造成的数据泄露、更改或破坏。</strong>定义里的三个后果——泄露、更改、破坏——就是简答题的得分点。数据共享不能无条件：军事秘密、国家机密、客户档案、医疗档案、银行储蓄数据，都属于"必须共享给一部分人、又必须不共享给另一部分人"的数据。系统安全保护措施是否有效，是数据库系统主要的性能指标之一。</p>
+
+<table>
+<thead><tr><th>不安全因素</th><th>典型表现</th><th>DBMS 的主要对策</th></tr></thead>
+<tbody>
+<tr><td>非授权用户恶意存取和破坏</td><td>黑客窃取用户名和口令，假冒合法用户偷取、修改甚至破坏数据</td><td>用户身份鉴别、访问控制、视图</td></tr>
+<tr><td>重要或敏感数据被泄露</td><td>利用 SQL 注入等技术盗取机密信息</td><td>强制访问控制、存储加密、传输加密、分析审计日志</td></tr>
+<tr><td>安全环境的脆弱性</td><td>硬件、操作系统、网络系统的漏洞被利用</td><td>建立可信计算机系统的概念与评估标准（TCSEC/TDI、CC）</td></tr>
+</tbody>
+<caption>表 1　数据库三类不安全因素与相应对策</caption>
+</table>
+
+<p>计算机系统安全性是为计算机系统建立和采取的各种安全保护措施，保护硬件、软件及数据，防止其因偶然或恶意原因遭到破坏、更改或泄露，范畴就是<strong>硬件、软件、数据</strong>。安全措施层层设置：身份鉴别把门、操作系统自保、DBMS 做访问控制、敏感数据密文落盘；任何一层失守，上层都可能被绕过，所以"数据库安全只靠 DBMS"是错的。</p>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>三类不安全因素与对策是选择题、简答题的固定搭配，不要张冠李戴。</p><ul><li>假冒合法用户 → <strong>身份鉴别 + 访问控制 + 视图</strong></li><li>敏感数据泄露（含 SQL 注入）→ <strong>强制访问控制 + 存储/传输加密 + 审计</strong></li><li>环境脆弱 → <strong>可信计算机系统评估标准</strong></li><li>安全性定义的三后果：<strong>泄露、更改、破坏</strong></li></ul></div>
+
+<p>安全标准记三个时间点和两本"皮书"。1985 年美国国防部（DoD）颁布《DoD 可信计算机系统评估准则》，简称 <strong>TCSEC 或 DoD85</strong>，俗称<strong>橘皮书</strong>；1991 年 4 月美国国家计算机安全中心（NCSC）颁布《可信计算机系统评估标准关于可信数据库系统的解释》，简称 <strong>TDI</strong>，俗称<strong>紫皮书</strong>，把 TCSEC 扩展到 DBMS。TCSEC/TDI 从<strong>安全策略、责任、保证、文档</strong>四方面评估；R1 含 DAC、客体重用、标记、MAC。四组七级从低到高是 D、C1、C2、B1、B2、B3、A1，级别之间<strong>偏序向下兼容</strong>：高级别必须包含低级别的全部保护要求。</p>
+
+<table>
+<thead><tr><th>级别</th><th>名称</th><th>关键特征与典型产品</th></tr></thead>
+<tbody>
+<tr><td>A1</td><td>验证设计</td><td>在 B3 之上给出形式化设计说明和验证</td></tr>
+<tr><td>B3</td><td>安全域</td><td>TCB 满足访问监控器要求，审计跟踪更强，提供系统恢复</td></tr>
+<tr><td>B2</td><td>结构化保护</td><td>建立形式化安全策略模型，对所有主客体实施 DAC 和 MAC</td></tr>
+<tr><td>B1</td><td>标记安全保护</td><td>对数据加标记，对主客体实施 MAC、审计；Trusted Oracle 7</td></tr>
+<tr><td>C2</td><td>受控的访问保护</td><td>安全产品最低档次；个人身份注册、审计和资源隔离；Windows 2000、Oracle 7</td></tr>
+<tr><td>C1</td><td>自主安全保护</td><td>初级 DAC，用户与数据分离，限制权限传播</td></tr>
+<tr><td>D</td><td>最小保护</td><td>不符合更高标准的系统，几乎无专门安全机制；DOS</td></tr>
+</tbody>
+<caption>表 2　TCSEC/TDI 的四组七级（自高向低）</caption>
+</table>
+
+<p>1993 年，CTCPEC、FC、TCSEC 和 ITSEC 联合行动形成 <strong>CC（Common Criteria，通用准则）</strong>项目；1999 年 CC V2.1 被 ISO 采用为国际标准，2001 年被我国采用为国家标准。CC 已基本取代 TCSEC，把安全要求分为<strong>安全功能要求</strong>和<strong>安全保证要求</strong>，提出评估保证级 <strong>EAL1～EAL7</strong>；近似对应 EAL2→C1、EAL3→C2、EAL4→B1、EAL5→B2、EAL6→B3、EAL7→A1，EAL1 无对应级别。</p>
+
+<div class="trap"><p class="t">易错</p><p>级别特征最易张冠李戴：<strong>C2 的标志是"个人身份注册 + 审计 + 资源隔离"</strong>，不是 MAC；<strong>B1 才引入标记与 MAC</strong>；<strong>B2 才要求形式化安全策略模型并对所有主客体同时实施 DAC 和 MAC</strong>；B3 的关键词是访问监控器和系统恢复；A1 是形式化验证。C2 是"安全产品的最低档次"，不是最高档。</p></div>
+
+<div class="mem">口诀：<b>策、责、保、文</b>——TCSEC/TDI 的四个评估维度；级别记<b>「D 最小，C 自主，B 强制，A 验证」</b>，C 分 C1/C2、B 分 B1/B2/B3、A 只有 A1。</div>
+
+<h2 id="s2"><span class="h2no">4.2.1</span>用户身份鉴别</h2>
+
+<p>用户身份鉴别（Identification &amp; Authentication）是最外层安全保护措施，含标识与鉴别两个动作。<strong>用户标识由用户名和用户标识号 UID 组成，UID 在系统整个生命周期内唯一</strong>——用户名可以改，UID 不能重复，这是把"人"与"历史操作"绑定起来的关键。鉴别则要证明"你就是你声称的那个人"。</p>
+
+<p>四类鉴别方法：<strong>静态口令</strong>由用户设定、长期不变，简单但易被破解；<strong>动态口令</strong>每次认证用动态产生的新口令，即一次一密（如短信验证码），能防重放但依赖分发通道；<strong>生物特征</strong>用指纹、虹膜、掌纹认证，难以伪造但成本高、涉及隐私；<strong>智能卡</strong>是不可复制的硬件，内置芯片、具硬件加密功能，采用 PIN + 智能卡，构成"持有物 + 所知信息"的双因素认证。</p>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>身份鉴别是最外层保护，四类方法按"知道什么、一次性什么、是什么、有什么"来记。</p><ul><li>用户标识 = <strong>用户名 + UID</strong>，UID 全生命周期唯一</li><li>静态口令：<strong>一次设定、长期不变</strong>，弱点是易破解</li><li>动态口令：<strong>一次一密</strong>，每次认证用新口令</li><li>生物特征：<strong>指纹、虹膜、掌纹</strong></li><li>智能卡：<strong>不可复制硬件 + 内置芯片 + 硬件加密 + PIN</strong></li></ul></div>
+
+<div class="trap"><p class="t">易错</p><p>动态口令不是"每隔 90 天强制改一次密码"，后者仍是静态口令；智能卡认证不属于生物特征，它是"持有物 + PIN"的双因素；口令加密存储只防泄露，不能替代身份鉴别本身。</p></div>
+
+<h2 id="s3"><span class="h2no">4.2.2</span>访问控制机制：DAC 与 MAC</h2>
+
+<p>身份鉴别只说明"你是合法用户"，不说明"你能动哪些数据"。访问控制机制由<strong>定义用户权限并登记到数据字典</strong>与<strong>合法权限检查</strong>两部分组成。用户对某一数据对象的操作权力称为权限，DBMS 定义权限并存入数据字典，称为安全规则或授权规则；用户请求存取时查字典做检查，两者合起来就是访问控制子系统。常用方法只有 DAC 与 MAC。</p>
+
+<p><strong>DAC 对应 C2 级</strong>，"自主"体现在三句话：用户对不同的数据对象有不同的访问权限；不同的用户对同一对象也有不同的权限；<strong>用户还可将其拥有的存取权限转授给其他用户</strong>。权限的授予与转授由对象属主自主决定，灵活是优点，也是缺点——数据本身无密级标记，无法防止"无意泄露"。</p>
+
+<p><strong>MAC 对应 B1 级</strong>：每一个数据对象被标以一定的密级（classification），每一个用户也被授予某一个级别的许可证（clearance），<strong>对于任意一个对象，只有具有合法许可证的用户才可以访问</strong>。规则由系统统一制定，用户不能感知或控制，适合军事、政府部门等有严格固定密级的场合。</p>
+
+<table>
+<thead><tr><th>对比维度</th><th>自主访问控制 DAC</th><th>强制访问控制 MAC</th></tr></thead>
+<tbody>
+<tr><td>对应安全级别</td><td>C2 级</td><td>B1 级</td></tr>
+<tr><td>权限由谁决定</td><td>对象属主自主决定，可转授</td><td>系统按密级强制决定，用户不能感知或控制</td></tr>
+<tr><td>数据是否带标记</td><td>数据本身无安全性标记</td><td>数据带密级标记，标记与数据不可分</td></tr>
+<tr><td>典型场景</td><td>一般商业系统、教务系统</td><td>军事、政府部门等严格密级分类的部门</td></tr>
+<tr><td>主要弱点</td><td>可能存在数据的"无意泄露"</td><td>管理复杂、灵活性差，需先实现 DAC</td></tr>
+</tbody>
+<caption>表 3　DAC 与 MAC 的五维对比</caption>
+</table>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>访问控制子系统 = 权限定义（登记数据字典）+ 合法权限检查。两种方法的级别与关键词要背成条件反射。</p><ul><li>DAC：<strong>C2 级</strong>，不同用户对不同对象权限不同，<strong>可转授</strong>，数据无标记</li><li>MAC：<strong>B1 级</strong>，客体有<strong>密级</strong>、主体有<strong>许可证</strong>，只有合法许可证才能访问</li><li>DAC 的缺点：<strong>数据"无意泄露"</strong>；解决办法是实施 MAC</li></ul></div>
+
+<h2 id="s4"><span class="h2no">4.2.3</span>自主访问控制方法与授权表</h2>
+
+<p>自主访问控制在关系数据库中通过 SQL 的 <strong>GRANT</strong> 与 <strong>REVOKE</strong> 实现。一条权限由<strong>数据对象</strong>和<strong>操作类型</strong>两个要素组成；定义用户可以在哪些对象上进行哪些操作，称为授权，结果登记在数据字典的授权表中，作为合法权限检查的依据。</p>
+
+<table>
+<thead><tr><th>对象类型</th><th>对象</th><th>可授予的操作类型</th></tr></thead>
+<tbody>
+<tr><td>数据库、模式</td><td>模式</td><td>CREATE SCHEMA</td></tr>
+<tr><td>基本表</td><td>基本表</td><td>CREATE TABLE、ALTER TABLE</td></tr>
+<tr><td>视图</td><td>视图</td><td>CREATE VIEW</td></tr>
+<tr><td>索引</td><td>索引</td><td>CREATE INDEX</td></tr>
+<tr><td>数据</td><td>基本表和视图</td><td>SELECT、INSERT、UPDATE、DELETE、REFERENCES、ALL PRIVILEGES</td></tr>
+<tr><td>数据</td><td>属性列</td><td>SELECT、INSERT、UPDATE、REFERENCES、ALL PRIVILEGES</td></tr>
+</tbody>
+<caption>表 4　关系数据库系统中的访问权限对象</caption>
+</table>
+
+<p>表 4 上半部分是"建对象"权限，下半部分是"动数据"权限。<strong>列级权限</strong>是热点：对属性列授权必须写列名，如 <code>UPDATE(Sno)</code>；只写 <code>UPDATE</code> 表示整表所有列。REFERENCES 允许为其他表建立参照本表某列的外码，常被忽略。</p>
+
+<h2 id="s5"><span class="h2no">4.2.4</span>授权与回收：GRANT 与 REVOKE</h2>
+
+<p>GRANT 通用格式必须默写，方括号表示可选：</p>
+
+<pre><code>GRANT &lt;权限&gt;[, &lt;权限&gt;]...
+ON &lt;对象类型&gt; &lt;对象名&gt;[, &lt;对象类型&gt; &lt;对象名&gt;]...
+TO &lt;用户&gt;[, &lt;用户&gt;]...
+[WITH GRANT OPTION];</code></pre>
+
+<p>语义：把指定对象的指定操作权限授予指定用户。能发出 GRANT 的有<strong>DBA、对象创建者（属主 Owner）、拥有该权限的用户</strong>；受权者可以是一个或多个用户，也可以是 <strong>PUBLIC（全体用户）</strong>。WITH GRANT OPTION 表示可再授予，不加则不能传播；<strong>不允许循环授权</strong>。</p>
+
+<pre><code><span class="c">-- 例4.1：把查询 Student 表的权限授予 U1</span>
+GRANT SELECT ON TABLE Student TO U1;
+
+<span class="c">-- 例4.2：把 Student、Course 的全部权限授予 U2、U3</span>
+GRANT ALL PRIVILEGES ON TABLE Student, Course TO U2, U3;
+
+<span class="c">-- 例4.3：把 SC 表的查询权限授予所有用户</span>
+GRANT SELECT ON TABLE SC TO PUBLIC;
+
+<span class="c">-- 例4.4：列级授权必须指出列名</span>
+GRANT UPDATE(Sno), SELECT ON TABLE Student TO U4;
+
+<span class="c">-- 例4.5：允许 U5 再传播 INSERT 权限</span>
+GRANT INSERT ON TABLE SC TO U5 WITH GRANT OPTION;</code></pre>
+
+<p>执行例 4.5 后，U5 能传播权限：【例 4.6】U5 把 INSERT 授予 U6 并带 WITH GRANT OPTION；【例 4.7】U6 再授予 U7，但不带选项，所以 U7 不能再传播。整条链是 <strong>DBA → U5（可转授）→ U6（可转授）→ U7（不可转授）</strong>，授权表要能逐行还原：</p>
+
+<table>
+<thead><tr><th>授权用户名</th><th>被授权用户</th><th>数据库对象名</th><th>操作类型</th><th>能否转授</th></tr></thead>
+<tbody>
+<tr><td>DBA</td><td>U1</td><td>关系 Student</td><td>SELECT</td><td>不能</td></tr>
+<tr><td>DBA</td><td>U2</td><td>关系 Student</td><td>ALL</td><td>不能</td></tr>
+<tr><td>DBA</td><td>U3</td><td>关系 Course</td><td>ALL</td><td>不能</td></tr>
+<tr><td>DBA</td><td>PUBLIC</td><td>关系 SC</td><td>SELECT</td><td>不能</td></tr>
+<tr><td>DBA</td><td>U4</td><td>属性列 Student.Sno</td><td>UPDATE</td><td>不能</td></tr>
+<tr><td>DBA</td><td>U5</td><td>关系 SC</td><td>INSERT</td><td>能</td></tr>
+<tr><td>U5</td><td>U6</td><td>关系 SC</td><td>INSERT</td><td>能</td></tr>
+<tr><td>U6</td><td>U7</td><td>关系 SC</td><td>INSERT</td><td>不能</td></tr>
+</tbody>
+<caption>表 5　执行例 4.1～4.7 后的用户权限定义表（节选）</caption>
+</table>
+
+<p>REVOKE 与 GRANT 对称，末尾多一个 <code>[CASCADE | RESTRICT]</code>：</p>
+
+<pre><code>REVOKE &lt;权限&gt;[, &lt;权限&gt;]...
+ON &lt;对象类型&gt; &lt;对象名&gt;[, &lt;对象类型&gt; &lt;对象名&gt;]...
+FROM &lt;用户&gt;[, &lt;用户&gt;]...
+[CASCADE | RESTRICT];
+
+<span class="c">-- 例4.8：收回 U4 修改学号的权限</span>
+REVOKE UPDATE(Sno) ON TABLE Student FROM U4;
+
+<span class="c">-- 例4.9：收回所有用户对 SC 表的查询权限</span>
+REVOKE SELECT ON TABLE SC FROM PUBLIC;
+
+<span class="c">-- 例4.10：U6、U7 的权限来自 U5，必须级联收回</span>
+REVOKE INSERT ON TABLE SC FROM U5 CASCADE;</code></pre>
+
+<p>例 4.10 是全章最值得琢磨的题。U6 的 INSERT 来自 U5，U7 的又来自 U6，<strong>收回 U5 时必须用 CASCADE，否则系统拒绝执行</strong>。执行后 U5、U6、U7 的 INSERT 一起消失；但若 U6 或 U7 还从别处获得过该权限，他们仍保留——<strong>系统只收回直接或间接从 U5 处获得的那部分</strong>。RESTRICT 相反：有依赖就拒绝回收。答题先画授权链，再看"断点下游有没有别的来源"。</p>
+
+<p>4.2.4 还包含"创建数据库模式的权限"，由 DBA 在创建用户时实现：</p>
+
+<pre><code>CREATE USER &lt;username&gt; [WITH] [DBA | RESOURCE | CONNECT];</code></pre>
+
+<p>只有超级用户才能创建新用户；不指定权限时默认 <strong>CONNECT</strong>：只能登录，不能创建用户、模式、基本表，查询和操纵数据还须另有权限。<strong>RESOURCE</strong> 能建基本表和视图并成为属主，但不能建模式、不能建新用户。<strong>DBA</strong> 是超级用户，能建用户、模式、表、视图，拥有所有对象的存取权限，还能授权。CREATE USER 不是 SQL 标准，各系统差异很大。</p>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>GRANT/REVOKE 是本章唯一要求逐字默写的语法，按"权限—对象—用户—选项"四段背。</p><ul><li>GRANT：<code>GRANT 权限 ON 对象类型 对象名 TO 用户 [WITH GRANT OPTION];</code></li><li>REVOKE：<code>REVOKE 权限 ON 对象类型 对象名 FROM 用户 [CASCADE | RESTRICT];</code></li><li>三类授权者：<strong>DBA、对象属主、拥有该权限的用户</strong>；受权者可是具体用户或 <strong>PUBLIC</strong></li><li>不带 WITH GRANT OPTION <strong>不能传播</strong>；<strong>不允许循环授权</strong></li><li>级联回收只收回<strong>从该授权者直接或间接获得</strong>的权限，别处获得的不动</li></ul></div>
+
+<div class="trap"><p class="t">易错</p><p>五个高频失分点：<strong>①</strong> 该用 CASCADE 时用了 RESTRICT（或漏写选项）导致语句被拒绝；<strong>②</strong> 以为收回 U5 会把 U6 从别处得到的权限也收回；<strong>③</strong> 对 PUBLIC 授权后忘记回收同样写 FROM PUBLIC；<strong>④</strong> 列级权限漏写列名；<strong>⑤</strong> 把 WITH GRANT OPTION 写进 REVOKE——REVOKE 没有这个子句。</p></div>
+
+<div class="eg"><p class="t">补充例题</p><p>DBA 把 SC 表的 UPDATE 权限授予 U1 并允许转授；U1 授予 U2 并允许转授；U2 授予 U3（不允许转授）；此外 DBA 又直接把 UPDATE 授予 U3。执行 <code>REVOKE UPDATE ON TABLE SC FROM U1 CASCADE;</code> 后，U2、U3 是否还拥有该权限？</p><div class="sol"><p>答案：U2 失去权限；U3 仍拥有权限。U2 的权限只来自 U1，级联后消失；U3 虽然从 U2 处获得过权限，但 DBA 另外直接授予过他，这条来源不在 U1 的授权链上，所以保留。判断口诀：<strong>沿授权链向下级联，链外来源不受影响</strong>。</p></div></div>
+
+<div class="mem">口诀：<b>授权三问：谁给的、给谁的、能不能再给</b>——正好对应授权表的三列；回收时沿"谁给的"这条链往下找，链断权限断，链外来源保留。</div>
+
+<div class="sum"><p class="t">本节小结</p><ul><li>GRANT/REVOKE 四段式默写，WITH GRANT OPTION 控制传播，CASCADE/RESTRICT 控制回收。</li><li>级联回收看授权链，不看用户当前是否"应该"有权限。</li><li>CREATE USER 三种权限：CONNECT 只能登录、RESOURCE 能建表建视图、DBA 是超级用户。</li></ul></div>
+
+<h2 id="s6"><span class="h2no">4.2.5</span>数据库角色</h2>
+
+<p>逐个用户授权在用户多、权限杂时会变成灾难：新来一个教务员要重复发十几条 GRANT，岗位调整又要逐条回收。<strong>数据库角色是被命名的一组与数据库操作相关的权限</strong>，本质是"权限的集合"，可以为一组具有相同权限的用户创建一个角色，从而简化授权过程。角色把"人"和"权限"解耦成"人—角色—权限"三层。</p>
+
+<p>角色的用法是四步：<code>CREATE ROLE 角色名</code> 建角色；<code>GRANT 权限 ON 对象 TO 角色</code> 给角色授权；<code>GRANT 角色 TO 用户 [WITH ADMIN OPTION]</code> 把角色授予用户或其他角色，带 ADMIN OPTION 者可再授予；<code>REVOKE 权限 ... FROM 角色</code> 改权限，<code>REVOKE 角色 FROM 用户</code> 摘角色。角色权限 = 直接授予它的权限 + 其他角色授予它的权限。</p>
+
+<pre><code><span class="c">-- 例4.11：用角色把一组权限授予用户</span>
+CREATE ROLE R1;
+
+GRANT SELECT, UPDATE, INSERT ON TABLE Student TO R1;
+
+GRANT R1 TO 王平, 张明, 赵玲;
+
+<span class="c">-- 一次性收回王平的这三个权限</span>
+REVOKE R1 FROM 王平;</code></pre>
+
+<p>【例 4.12】给 R1 增加 DELETE：<code>GRANT DELETE ON TABLE Student TO R1;</code>，所有拥有 R1 的用户立刻同时获得该权限。【例 4.13】从 R1 收回 SELECT：<code>REVOKE SELECT ON TABLE Student FROM R1;</code>，所有拥有 R1 的用户同时失去 SELECT。这正是角色"改一次、全体生效"的价值。</p>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>角色四条语句按"建角色—给角色授权—把角色给人—回收"顺序背，注意两个 OPTION 的区别。</p><ul><li><code>CREATE ROLE R1;</code></li><li><code>GRANT 权限 ON 对象 TO R1;</code>（给角色装权限）</li><li><code>GRANT R1 TO 用户 [WITH ADMIN OPTION];</code>（把角色挂到人身上）</li><li><code>REVOKE 权限 ON 对象 FROM R1;</code>（改角色）／<code>REVOKE R1 FROM 用户;</code>（摘角色）</li><li>角色权限 = <strong>直接授予角色的权限 + 其他角色授予该角色的权限</strong></li></ul></div>
+
+<div class="trap"><p class="t">易错</p><p>WITH ADMIN OPTION 管的是"这个角色能不能再授予别人"，WITH GRANT OPTION 管的是"这个权限能不能再授予别人"，两者不能互换。REVOKE R1 FROM 王平 只是把王平和 R1 解绑，<strong>既不删除 R1，也不改变 R1 的权限</strong>；要让 R1 少一个权限，必须写 REVOKE 权限 ON 对象 FROM R1。</p></div>
+
+<div class="eg"><p class="t">补充例题</p><p>教务系统有 20 名院系教务员，都需要对 Student 表做 SELECT、INSERT、UPDATE，其中 2 名还需要 DELETE。请用角色设计授权方案，并说明新增一名教务员时要执行什么语句。</p><div class="sol"><p>答案：创建角色 R_CLERK，授予 SELECT、INSERT、UPDATE；创建角色 R_SENIOR，授予 DELETE，并把 R_CLERK 授予 R_SENIOR（角色可以授予角色），20 名教务员授予 R_CLERK，2 名资深教务员授予 R_SENIOR。新增一人只需 <code>GRANT R_CLERK TO 新用户;</code>。这里利用了角色继承：R_SENIOR 的权限包含 R_CLERK 的全部权限。</p></div></div>
+
+<h2 id="s7"><span class="h2no">4.2.6</span>强制访问控制与 DAC+MAC 检查流程</h2>
+
+<p>DAC 的致命缺点是可能存在数据的"无意泄露"：机制仅仅通过访问权限进行安全控制，而数据本身并无安全性标记。一个有权读取机密表的用户，完全可以把查到的内容复制到一张人人可读的表里，DAC 对此无能为力。解决办法是对系统控制下的所有主客体实施强制访问控制策略。</p>
+
+<p>MAC 把实体分为<strong>主体</strong>和<strong>客体</strong>：主体是活动实体（用户、代表用户的进程），客体是被动实体（文件、基本表、索引、视图）。DBMS 为每个主客体实例指派<strong>敏感度标记（Label）</strong>，级别为<strong>绝密（TS）≥ 机密（S）≥ 可信（C）≥ 公开（P）</strong>；主体的标记叫<strong>许可证级别（Clearance）</strong>，客体的叫<strong>密级（Classification）</strong>。</p>
+
+<p>MAC 的判定只有两条规则，必须逐字背：</p>
+<ol class="steps"><li><strong>读规则：仅当主体的许可证级别大于或等于客体的密级时，该主体才能读取相应的客体。</strong>即 clearance ≥ classification 才能读。</li><li><strong>写规则：仅当主体的许可证级别小于或等于客体的密级时，该主体才能写相应的客体。</strong>即 clearance ≤ classification 才能写。</li></ol>
+
+<p>写规则为什么反着来？"写"可能把高密级信息带入低密级对象：绝密用户若能写公开文件，就能把绝密内容抄进去，等于降密泄露；只许写同级或更高级客体，信息只能"向上流"。这叫"不向下写"，是 MAC 与 DAC 最本质的区别。</p>
+
+<p>MAC 与 DAC 不是二选一。课件明确：<strong>实现强制访问控制时要先实现自主访问控制</strong>，因为较高安全性级别提供的安全保护要包含较低级别的所有保护；两者共同构成 DBMS 的安全机制。一条 SQL 请求要通过两道检查：先做 DAC 检查，通过的数据对象再由系统做 MAC 检查，只有通过 MAC 检查的数据对象方可访问。</p>
+
+<figure class="fig">
+<svg viewBox="0 0 700 150" role="img" aria-label="DAC 与 MAC 两级检查流程" width="700" height="150">
+<rect class="box" x="8" y="48" width="112" height="46" rx="6"/>
+<text x="64" y="76" text-anchor="middle" font-size="13">SQL 请求</text>
+<rect class="box" x="148" y="48" width="124" height="46" rx="6"/>
+<text x="210" y="70" text-anchor="middle" font-size="12">语法分析与</text>
+<text x="210" y="86" text-anchor="middle" font-size="12">语义检查</text>
+<rect class="acc" x="300" y="48" width="104" height="46" rx="6"/>
+<text x="352" y="76" text-anchor="middle" font-size="13">DAC 检查</text>
+<rect class="acc" x="432" y="48" width="104" height="46" rx="6"/>
+<text x="484" y="76" text-anchor="middle" font-size="13">MAC 检查</text>
+<rect class="box" x="564" y="48" width="124" height="46" rx="6"/>
+<text x="626" y="70" text-anchor="middle" font-size="12">继续语义检查</text>
+<text x="626" y="86" text-anchor="middle" font-size="12">并执行</text>
+<line class="ln" x1="120" y1="71" x2="144" y2="71"/>
+<path class="acc" d="M144 71 l-7 -4 v8 z"/>
+<line class="ln" x1="272" y1="71" x2="296" y2="71"/>
+<path class="acc" d="M296 71 l-7 -4 v8 z"/>
+<line class="ln" x1="404" y1="71" x2="428" y2="71"/>
+<path class="acc" d="M428 71 l-7 -4 v8 z"/>
+<line class="ln" x1="536" y1="71" x2="560" y2="71"/>
+<path class="acc" d="M560 71 l-7 -4 v8 z"/>
+<text class="lbl" x="352" y="118" text-anchor="middle">不通过则拒绝</text>
+<text class="lbl" x="484" y="118" text-anchor="middle">不通过则拒绝</text>
+<text class="lbl" x="210" y="36" text-anchor="middle">① 身份已鉴别</text>
+<text class="lbl" x="626" y="36" text-anchor="middle">② 两道都过才执行</text>
+</svg>
+<figcaption>图 4.1　DAC 与 MAC 的两级检查：先自主、后强制，任一不通过即拒绝</figcaption>
+</figure>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>MAC 的三种标记、两条规则、两个"先"是简答题的骨架。</p><ul><li>主体 = 活动实体（<strong>用户、进程</strong>）；客体 = 被动实体（<strong>文件、基本表、索引、视图</strong>）</li><li>四级标记：<strong>TS ≥ S ≥ C ≥ P</strong>；主体叫<strong>许可证</strong>，客体叫<strong>密级</strong></li><li>读：<strong>许可证 ≥ 密级</strong>；写：<strong>许可证 ≤ 密级</strong>（不向下写）</li><li>先实现 DAC 再实现 MAC；检查时<strong>先 DAC 后 MAC</strong>，两者都通过才执行</li></ul></div>
+
+<div class="trap"><p class="t">易错</p><p>读写两条规则的符号最容易记反：<strong>读是"下读"（高可读低），写是"上写"（低可写高）</strong>。用"绝密用户读公开文件可以、写公开文件不行"一句就能推出全部方向。另一个错误是把 MAC 说成"用户自己决定密级"——密级由系统（安全管理员）分配，用户不能感知或控制。</p></div>
+
+<div class="eg"><p class="t">补充例题</p><p>主体 A 的许可证为机密（S），客体 X 的密级为绝密（TS），客体 Y 的密级为公开（P）。A 能否读 X、写 X、读 Y、写 Y？</p><div class="sol"><p>答案：读 X 不能（S &lt; TS）；写 X 可以（S ≤ TS）；读 Y 可以（S ≥ P）；写 Y 不能（S &gt; P）。四个判断逐一对照两条规则即可，特别记住"写 Y 不能"——这是防止机密信息流入公开对象的关键。</p></div></div>
+
+<div class="sum"><p class="t">本节小结</p><ul><li>DAC 的漏洞是数据无标记导致"无意泄露"，MAC 用密级标记补上。</li><li>主体/客体、许可证/密级、读 ≥、写 ≤ 是四个必背术语与两条必背规则。</li><li>MAC 建立在 DAC 之上，SQL 请求先过 DAC 再过 MAC。</li></ul></div>
+
+<h2 id="s8"><span class="h2no">4.3</span>视图机制</h2>
+
+<p>视图机制的安全性作用只有一句话：<strong>把要保密的数据对无权存取的用户隐藏起来，提供一定程度的安全保护</strong>，并<strong>间接地实现支持存取谓词的用户权限定义</strong>。后半句是得分点：DAC 只能按"表/列"授权，不能写"只能看计算机系的学生"；视图把 WHERE 条件固化进定义，再把视图权限授出去，就等于把"系别 = CS"这个谓词变成了权限的一部分。</p>
+
+<p>【例 4.14】建立计算机系学生的视图，把对该视图的 SELECT 权限授予王平，把该视图上的所有操作权限授予张明。</p>
+<pre><code><span class="c">-- 先建立计算机系学生的视图</span>
+CREATE VIEW CS_Student
+AS
+SELECT *
+FROM Student
+WHERE Sdept = 'CS';
+
+<span class="c">-- 在视图上进一步定义存取权限</span>
+GRANT SELECT ON CS_Student TO 王平;
+
+GRANT ALL PRIVILEGES ON CS_Student TO 张明;</code></pre>
+
+<p>执行后，王平只能看计算机系的学生，张明可对其做查询、插入、修改、删除，两人都看不到其他系的学生。视图的安全性可以落在三个层次：<strong>行级</strong>用 WHERE 过滤（例 4.14）；<strong>列级</strong>只保留可公开的列，例如 <code>CREATE VIEW S_PUBLIC AS SELECT Sno, Sname, Sdept FROM Student;</code>，把 Sage、Ssex 藏起来；<strong>统计级</strong>只暴露聚合结果，不暴露个体记录。</p>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>视图安全性的简答按"隐藏 + 谓词 + 授权在视图上"三句话写。</p><ul><li>作用：<strong>隐藏保密数据</strong>，提供一定程度的安全保护</li><li>进阶作用：<strong>间接实现支持存取谓词的用户权限定义</strong>（行级过滤）</li><li>实现：先 CREATE VIEW 定义过滤/投影，再 GRANT 权限 ON 视图</li><li>视图权限与基表权限<strong>相互独立</strong>：用户没被授予基表权限，仍可通过视图访问允许的那部分数据</li></ul></div>
+
+<div class="mem">口诀：<b>视图是开在基表上的"过滤窗"</b>——窗外的行看不见、没开的列看不见；权限授在窗上，不授在表上。</div>
+
+<div class="sum"><p class="t">本节小结</p><ul><li>视图用 WHERE 实现行级、用 SELECT 列表实现列级、用聚合实现统计级保护。</li><li>"间接实现存取谓词权限定义"是简答题的关键得分句。</li><li>视图权限与基表权限独立，用户可经视图访问基表的部分数据而不拥有基表权限。</li></ul></div>
+
+<h2 id="s9"><span class="h2no">4.4</span>审计</h2>
+
+<p>鉴别、访问控制、视图都是"事前"防护，审计是"事后"追查：启用专用的<strong>审计日志（Audit Log）</strong>，记录用户对数据库的所有操作，审计员据此找出非法存取数据的人、时间和内容，并对潜在威胁提前防范。<strong>C2 以上安全级别的 DBMS 必须具有审计功能</strong>。审计很费时间和空间，所以是可选的，DBA 可根据安全性要求灵活开关，主要用于安全性要求较高的部门。</p>
+
+<p>审计事件分四类：<strong>服务器事件</strong>（启动、停止等）；<strong>系统权限</strong>（对系统结构或模式对象的操作，权限来自系统权限）；<strong>语句事件</strong>（DDL、DML、DQL、DCL）；<strong>模式对象事件</strong>（对特定模式对象的 SELECT 或 DML）。审计功能还包括多种查阅方式、多套审计规则（初始化设定）、分析和报表、日志管理，以及查询审计设置和记录的专门视图。日志管理的铁律：<strong>审计日志必须先转储后删除</strong>，转储文件保证完整性和保密性，<strong>只允许审计员查阅和转储，不允许任何用户新增和修改审计记录</strong>。</p>
+
+<p>审计分两级。<strong>用户级审计</strong>是任何用户都可以设置的审计，主要是针对自己创建的数据库表和视图进行审计；<strong>系统级审计</strong>只能由 DBA 设置，监测成功或失败的登录要求、监测授权和收回操作，以及其他数据库级权限下的操作。设置和取消审计分别用 AUDIT 与 NOAUDIT。</p>
+
+<pre><code><span class="c">-- 例4.15：审计 SC 表结构和数据的修改</span>
+AUDIT ALTER, UPDATE ON SC;
+
+<span class="c">-- 例4.16：取消对 SC 表的一切审计</span>
+NOAUDIT ALTER, UPDATE ON SC;</code></pre>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>审计的定位、级别、日志规则三件事分开背，简答按"事后追查 + 两类审计 + 先转储后删除"展开。</p><ul><li>审计 = <strong>事后</strong>安全措施，依赖<strong>审计日志</strong>，C2 以上必须提供</li><li>审计事件四类：<strong>服务器事件、系统权限、语句事件、模式对象事件</strong></li><li>用户级审计：<strong>任何用户</strong>可设，审计自己创建的表和视图</li><li>系统级审计：<strong>只能 DBA</strong> 设置，监测登录、授权与收回等</li><li>日志：<strong>先转储后删除</strong>；只有审计员能查阅和转储，任何用户不得增改</li></ul></div>
+
+<div class="trap"><p class="t">易错</p><p>审计不能阻止非法操作，只能在事后发现和追责，别把审计写成"防止非法访问"；用户级审计不是"审计所有用户"，而是"普通用户审计自己创建的对象"；任何用户（包括 DBA）都不能修改审计记录，只有审计员能查阅和转储；NOAUDIT 取消的是审计设置，不是删除已有日志。</p></div>
+
+<div class="eg"><p class="t">补充例题</p><p>某银行要求所有对账户表的修改都留下记录、日志不能被篡改，还要能发现谁在什么时间登录失败，应如何配置审计？</p><div class="sol"><p>答案：对账户表设置对象级审计（如 <code>AUDIT UPDATE ON 账户表;</code>），由 DBA 设置系统级审计监测成功或失败的登录要求；日志管理坚持先转储后删除，转储文件做完整性和保密性保护，只允许审计员查阅和转储，禁止任何用户新增、修改审计记录。若还要求"实时阻断"，须说明审计不具备阻断能力，需配合访问控制。</p></div></div>
+
+<h2 id="s10"><span class="h2no">4.5</span>数据加密</h2>
+
+<p>加密是防止数据在<strong>存储和传输</strong>中失密的有效手段：按一定算法把<strong>明文（Plain text）</strong>变换为不可直接识别的<strong>密文（Cipher text）</strong>，分存储加密与传输加密两类。</p>
+
+<p><strong>存储加密</strong>有透明与非透明两种。透明存储加密是<strong>内核级</strong>保护方式，对用户完全透明：写盘时加密，授权用户读取时解密，应用程序无需修改，只需在建表语句中说明加密字段；内核级加密性能较好、安全完备性较高。非透明存储加密通过多个加密函数实现，应用需要显式调用。</p>
+
+<p><strong>传输加密</strong>分链路加密与端到端加密。链路加密在链路层进行，传输信息由报头和报文组成，<strong>报文和报头均加密</strong>；端到端加密在发送端加密、接收端解密，<strong>只加密报文不加密报头</strong>，所需密码设备较少，但报头明文暴露，容易被非法监听者发现并获取敏感信息。</p>
+
+<table>
+<thead><tr><th>层次</th><th>方式</th><th>加密对象</th><th>特点</th></tr></thead>
+<tbody>
+<tr><td>存储</td><td>透明存储加密</td><td>落盘数据</td><td>内核级、对用户透明、应用不改</td></tr>
+<tr><td>存储</td><td>非透明存储加密</td><td>落盘数据</td><td>通过多个加密函数实现，应用需显式调用</td></tr>
+<tr><td>传输</td><td>链路加密</td><td>报文 + 报头</td><td>链路层加密，报头也加密，逐链路保护</td></tr>
+<tr><td>传输</td><td>端到端加密</td><td>仅报文</td><td>端到端加解密，密码设备少，报头明文易被监听</td></tr>
+</tbody>
+<caption>表 6　存储加密与传输加密的四种方式</caption>
+</table>
+
+<p>DBMS 可信传输五步：创建可信连接；确认通信双方端点的可靠性；协商加密算法和密钥；可信传输数据；关闭可信连接。SSL 的思路是：用基于数字证书的服务器和客户端认证确认端点可靠性（先互送己方证书，再用本地 CA 信任列表和证书撤销列表验证对方证书）；协商本次会话的算法与密钥；业务数据发送前加密并计算消息摘要，以密文传输，接收时解密并校验摘要。</p>
+
+<ol class="steps"><li><strong>创建可信连接</strong>：客户端与数据库服务器建立安全通道。</li><li><strong>确认通信双方端点的可靠性</strong>：交换数字证书，用 CA 信任列表和证书撤销列表验证。</li><li><strong>协商加密算法和密钥</strong>：为本次会话确定算法与密钥。</li><li><strong>可信传输数据</strong>：发送前加密并计算消息摘要，接收后解密并校验摘要。</li><li><strong>关闭可信连接</strong>：会话结束，释放密钥与连接资源。</li></ol>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>加密按"存哪里、传哪里"分两大类，四种方式的关键词要一一对应。</p><ul><li>存储加密：<strong>透明</strong>（内核级、应用不改、建表说明字段）／<strong>非透明</strong>（加密函数）</li><li>传输加密：<strong>链路</strong>（报文 + 报头都加密）／<strong>端到端</strong>（只加密报文）</li><li>可信传输五步：<strong>建连接—验端点—商密钥—传数据—关连接</strong></li><li>SSL 端点认证依赖<strong>数字证书 + CA 信任列表 + 证书撤销列表</strong></li></ul></div>
+
+<div class="trap"><p class="t">易错</p><p>链路加密与端到端加密的范围正好相反：<strong>链路加密连报头一起加密，端到端只加密报文</strong>，所以端到端"设备少但报头暴露"。透明存储加密的"透明"是<strong>对应用程序透明</strong>，不是"不加密"，它仍要在建表语句中说明加密字段。传输加密解决链路窃听，存储加密解决介质失窃，两者不能互相替代。</p></div>
+
+<h2 id="s11"><span class="h2no">4.6</span>其它安全性保护与本章小结</h2>
+
+<p>还有三类问题超出 DAC/MAC 的处理范围。<strong>推理控制</strong>处理 MAC 未解决的问题：避免用户利用可访问的数据推知更高密级的数据，方法有基于函数依赖和基于敏感关联的推理控制。典型场景是"多次合法查询的聚合"——单看每个查询都合规，合起来却能推出个体敏感值，前述的"通过多次合法查询推导保密数据"正是这类攻击。<strong>隐蔽信道</strong>同样处理 MAC 未解决的问题，指利用系统正常机制之外的方式传递信息。<strong>数据隐私保护</strong>是个人控制其不愿他人知道或他人不便知道的个人数据的能力，覆盖收集、存储、处理、发布各阶段。</p>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>三种"补丁"各管一件事，别与前面的技术混为一谈。</p><ul><li><strong>推理控制</strong>：防止用可访问数据推出更高密级数据；方法有<strong>基于函数依赖</strong>、<strong>基于敏感关联</strong></li><li><strong>隐蔽信道</strong>：处理 MAC 未解决的 covert channel 问题</li><li><strong>数据隐私保护</strong>：个人控制其个人数据的能力，贯穿<strong>收集、存储、处理、发布</strong>四阶段</li></ul></div>
+
+<p>4.7 小结把全章技术收成一条线：数据共享日益加强，安全保密越来越重要；DBMS 是管理数据的核心，自身必须具有一整套完整而有效的安全性机制。实现数据库系统安全性的技术和方法有<strong>用户身份鉴别、访问控制（DAC 与 MAC）、视图、审计、数据加密存储与加密传输</strong>。这五项正好对应一条攻击链：冒充身份→越权操作→窥探全表→事后无痕→窃取介质或链路。按"事前—事中—事后"排布：身份鉴别与访问控制是事前门禁，视图是事中最小可见，审计是事后追查，加密是最后一道兜底。</p>
+
+<div class="trap"><p class="t">易错</p><p>把"安全性"与"完整性"混为一谈是跨章错误：安全性防的是<strong>非法用户的有意破坏</strong>，完整性防的是<strong>合法用户的失误与数据语义约束</strong>；触发器、断言属于完整性手段，不属于本章的安全性手段。加密也不能替代访问控制——加密只保证"看不懂"，不能保证"拿不到"。</p></div>
+
+<div class="sum"><p class="t">本章小结</p><ul><li>安全性定义、三类不安全因素与对策是简答与选择的底座。</li><li>TCSEC/TDI 七级与 CC 的 EAL1～7 记顺序与关键词，不记产品细节。</li><li>GRANT/REVOKE 必须默写，WITH GRANT OPTION 与 CASCADE 的判断先画授权链。</li><li>DAC（C2，可转授，无标记）与 MAC（B1，密级/许可证，读 ≥ 写 ≤）必须能对比成表。</li><li>视图实现存取谓词权限，审计事后追查，加密保护存储与传输，推理控制/隐蔽信道/隐私是补充防线。</li></ul></div>
+
+    </div>
+    <div class="selftest">
+      <span class="st-n">本章共 24 道自测题（选择 / 判断 / 填空 / 简答），作答后立即判分并给出解析。</span>
+      <a href="quiz.html?ch=4">刷本章题</a>
+    </div>
+    <nav class="pager" aria-label="翻页"><a class="prev" href="3.html">‹ 第 3 章 关系数据库标准语言 SQL</a><a class="next" href="5.html">第 5 章 数据库完整性 ›</a></nav>
+  </article>
+
+</div>
+</main>
+
+<footer class="footer">
+  <div class="wrap foot-inner">
+    <div class="foot-cols">
+      <div class="foot-brand">
+        <div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="7" ry="2.6"/><path d="M5 6v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6V6"/><path d="M5 12v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6v-6"/></svg>数据库系统概论</div>
+        <p>据本学期 14 个课件文件整理，教材为王珊《数据库系统概论》（第 6 版）。题目均为自编练习，不是真题。</p>
+      </div>
+      <div>
+        <h4>学习</h4>
+        <ul>
+          <li><a href="../index.html">备考首页</a></li>
+          <li><a href="../db.html">十章讲义</a></li>
+          <li><a href="../db/cheatsheet.html">考前速查卡</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>练习</h4>
+        <ul>
+          <li><a href="../db/quiz.html">题库 · 239 题</a></li>
+          <li><a href="../db/exam.html">模拟卷 · 3 套</a></li>
+          <li><a href="../index.html#plan">七天冲刺表</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>说明</h4>
+        <ul>
+          <li>课件未含第 8 章</li>
+          <li>进度只存在本机</li>
+          <li>可离线打开</li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-legal"><span>© <span id="year">2026</span> 数据库系统概论 · 期末备考</span><span>据课件整理 · 仅供复习使用</span></div>
+  </div>
+</footer>
+<button class="backtop" id="backtop" type="button" aria-label="回到顶部" hidden>↑</button>
+<script src="../assets/site.js?v=2"></script>
+<script src="../assets/study.js?v=2"></script>
+</body>
+</html>

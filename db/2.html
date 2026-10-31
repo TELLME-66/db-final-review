@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 2 章 关系数据库 · 数据库系统概论 · 备考</title>
+<meta name="description" content="域与笛卡尔积、关系模式、候选码与主码、实体/参照/用户定义完整性、关系代数（含除）与综合查询。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/theme.css?v=2">
+<link rel="stylesheet" href="../assets/site.css?v=2">
+<link rel="stylesheet" href="../assets/course.css?v=2">
+<script>(function(){var d=document.documentElement;d.classList.add('js');try{var t=localStorage.getItem('site-theme');if(t==='light'||t==='dark')d.setAttribute('data-theme',t);}catch(e){}})();</script>
+</head>
+<body data-ch="2">
+<a class="skip" href="#main">跳到正文</a>
+<header class="topbar" id="topbar">
+  <div class="wrap-wide bar">
+    <a class="brand" href="../index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="7" ry="2.6"/><path d="M5 6v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6V6"/><path d="M5 12v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6v-6"/></svg><span>数据库系统概论</span></a>
+    <nav class="nav" aria-label="站点导航"><a href="../index.html">首页</a><a href="../db.html" aria-current="page">讲义</a><a href="quiz.html">题库</a><a href="exam.html">模拟卷</a><a href="cheatsheet.html">速查卡</a></nav>
+    <button class="icon-btn" id="themeBtn" type="button" title="主题：跟随系统（点击切换）" aria-label="主题：跟随系统（点击切换）"><span id="themeIcon" aria-hidden="true">◐</span></button>
+  </div>
+</header>
+<div id="readbar"></div>
+
+<main id="main">
+<div class="doc">
+
+  <aside class="doc-toc" aria-label="讲义目录">
+  <details class="toc-fold" open>
+  <summary>讲义目录</summary>
+  <nav class="mod-switch" aria-label="课程模块">
+    <a href="../db.html" aria-current="page">讲义</a>
+    <a href="quiz.html">题库</a>
+    <a href="exam.html">模拟卷</a>
+    <a href="cheatsheet.html">速查卡</a>
+  </nav>
+  <a class="toc-home" href="../db.html">数据库系统概论</a>
+  <p class="toc-ver"><span>本学期课件</span>10 章</p>
+  <div class="toc-body">
+  <div class="toc-ch">
+    <h2>全部章节</h2>
+    <ul class="toc-list"><li><a href="1.html"><span class="num">第 1 章</span>绪论</a></li><li><a href="2.html" aria-current="page"><span class="num">第 2 章</span>关系数据库</a></li><li><a href="3.html"><span class="num">第 3 章</span>关系数据库标准语言 SQL</a></li><li><a href="4.html"><span class="num">第 4 章</span>数据库安全性</a></li><li><a href="5.html"><span class="num">第 5 章</span>数据库完整性</a></li><li><a href="6.html"><span class="num">第 6 章</span>关系数据理论</a></li><li><a href="7.html"><span class="num">第 7 章</span>数据库设计</a></li><li><a href="9.html"><span class="num">第 9 章</span>关系查询处理和查询优化</a></li><li><a href="10.html"><span class="num">第 10 章</span>数据库恢复技术</a></li><li><a href="11.html"><span class="num">第 11 章</span>并发控制</a></li></ul>
+  </div>
+  <div class="toc-ch">
+    <h2>本章小节</h2>
+    <ul class="toc-list"><li><a href="#s1"><span class="num">2.1.1</span>关系：域、笛卡尔积与二维表</a></li><li><a href="#s2"><span class="num">2.1.2</span>关系模式：型与值</a></li><li><a href="#s3"><span class="num">2.1.3</span>关系数据库与关系模型的存储结构</a></li><li><a href="#s4"><span class="num">2.2</span>关系操作与关系数据语言</a></li><li><a href="#s5"><span class="num">2.3.1</span>实体完整性</a></li><li><a href="#s6"><span class="num">2.3.2</span>参照完整性</a></li><li><a href="#s7"><span class="num">2.3.3</span>用户定义的完整性</a></li><li><a href="#s8"><span class="num">2.4.1</span>传统的集合运算</a></li><li><a href="#s9"><span class="num">2.4.2</span>专门的关系运算（一）：选择、投影与连接</a></li><li><a href="#s10"><span class="num">2.4.2</span>专门的关系运算（二）：除运算</a></li><li><a href="#s11"><span class="num">2.4</span>关系代数综合举例</a></li></ul>
+  </div>
+  </div>
+  </details>
+  </aside>
+
+  <article class="doc-body">
+    <header class="doc-head">
+      <p class="crumb"><a href="../db.html">数据库系统概论</a> · 第 2 章</p>
+      <h1>关系数据库</h1>
+      <p class="meta">共 11 节 <span class="dot">·</span> 约 7,267 字 <span class="dot">·</span> 课件 178 页 <span class="dot">·</span> 本章自测 24 题</p>
+      <p class="status"><span>已掌握 <b data-mastery-count>0 / 11</b> 节</span>
+        <span class="track"><i data-mastery-bar></i></span></p>
+    </header>
+    <div class="note">
+
+<p class="lead">本章把"表"讲成一门可以计算的学问：先用域与笛卡尔积给关系下集合论定义，再区分关系模式（型）与关系（值），然后立起实体完整性、参照完整性、用户定义完整性三条规矩，最后把查询写成关系代数表达式。它是第 3 章 SQL 的地基，也是期末卷上关系代数大题的必考章——除运算与"全部/所有"类查询几乎年年出现，也是最容易失分的地方。</p>
+
+<h2 id="s1"><span class="h2no">2.1.1</span>关系：域、笛卡尔积与二维表</h2>
+
+<p>关系模型只有一种数据结构——<strong>关系</strong>，用户看到的逻辑结构就是一张二维表。说清它要搭三级台阶：域 → 笛卡尔积 → 关系。</p>
+
+<p><strong>域（Domain）</strong>是一组具有相同数据类型的值的集合，域中值的个数称为<strong>基数 m</strong>，它规定属性的取值范围：D1=｛李力，王平，刘伟｝（m1=3）可表示姓名，D2=｛男，女｝（m2=2）表示性别。</p>
+
+<p><strong>笛卡尔积</strong>：给定一组域 D1，D2，…，Dn（允许有相同的域），D1×D2×…×Dn =｛(d1，d2，…，dn) | di∈Di，i=1，…，n｝。每个元素是一个<strong>n 元组</strong>，元组中的每个 di 是一个<strong>分量</strong>。若 Di 的基数为 mi，则<strong>笛卡尔积的基数 M = ∏(i=1…n) mi</strong>。画成二维表时<strong>每行一个元组、每列一个域</strong>；D1=｛张清玫，刘逸｝、D2=｛计算机专业，信息专业｝、D3=｛李勇，刘晨，王敏｝的笛卡尔积共 2×2×3=12 个元组。</p>
+
+<p><strong>关系</strong>是笛卡尔积的<strong>有意义的子集</strong>，记作 R(D1，D2，…，Dn)。n 称为关系的<strong>目或度</strong>；n=1 为单元关系，n=2 为二元关系。关系也是二维表，每列必须起名，称为<strong>属性</strong>，n 目关系必有 n 个属性；不同列可出自同一域，但属性名不能相同。现实中的笛卡尔积大多无意义（"丈夫×妻子×孩子"会配出大量不存在的家庭），所以<strong>只取有意义的子集才构成关系</strong>。</p>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>关系数据结构的三个层次与两个基数：</p><ul>
+<li>域：同类型值的集合，值的个数为基数 m。</li>
+<li>笛卡尔积：所有域取值的一切组合，<strong>基数 M = m1×m2×…×mn</strong>，不能重复。</li>
+<li>关系：笛卡尔积的子集，<strong>元组数 ≤ M</strong>；目（度）= 属性个数 = 列数。</li>
+<li>元组 t、分量 t[Ai]、属性列 A、元组连接 tr ts 是关系代数的记号基础。</li>
+</ul></div>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>码的四个概念必须能互相推出：</p><ul>
+<li><strong>候选码</strong>：能唯一标识元组、且其<strong>真子集不能</strong>标识的属性组（最小性）。</li>
+<li><strong>全码</strong>：关系模式的所有属性组成本模式的候选码，是最极端的情形。</li>
+<li><strong>主码</strong>：多个候选码中选定的那一个，一个关系只有一个主码。</li>
+<li><strong>主属性</strong>：包含在任一候选码中的属性；否则为非主属性（非码属性）。</li>
+</ul></div>
+
+<table>
+<thead><tr><th>关系术语</th><th>二维表术语</th><th>要点</th></tr></thead>
+<tbody>
+<tr><td>关系</td><td>表</td><td>一个关系就是一张表</td></tr>
+<tr><td>元组</td><td>行</td><td>表中一条记录，通常记为 t</td></tr>
+<tr><td>属性</td><td>列</td><td>必须有属性名，n 目关系 n 个属性</td></tr>
+<tr><td>分量</td><td>单元格</td><td>必须是原子值，不可再分</td></tr>
+<tr><td>候选码</td><td>能唯一确定行的最小列组</td><td>可以有多个</td></tr>
+<tr><td>主码</td><td>选定的候选码</td><td>唯一且非空（实体完整性）</td></tr>
+</tbody>
+<caption>表 2.1　关系术语与二维表术语对照</caption>
+</table>
+
+<p>基本关系六条性质（判断题高频）：① <strong>列是同质的</strong>，同一列来自相同的域；② 不同列可出自同一域，但要有不同属性名；③ 列序无影响；④ 行序无影响；⑤ <strong>任意两个元组的候选码不能相同</strong>；⑥ <strong>分量必须取原子值</strong>，这是规范化条件中最基本的一条。</p>
+
+<div class="trap"><p class="t">易错</p><p>（学号，课程号，课程名）不是选课关系的候选码。候选码要求"其子集不能标识"，而（学号，课程号）已能唯一标识元组，所以三元组只是<strong>超码</strong>。判断候选码只做两件事：<strong>先看能否唯一标识，再看是否最小</strong>。同理，"全码"不是"把所有属性都拿来当码"，而是客观上不得不全部用上。</p></div>
+
+<div class="eg"><p class="t">例题</p><p>（补充例题）设 D1=｛a，b，c｝，D2=｛0，1｝，D3=｛x，y，z，w｝，求 D1×D2×D3 的基数；在它上面定义关系 R，R 最多、最少各有多少元组？</p><div class="sol"><p>基数 M=3×2×4=24，即共 24 个三元组。关系是笛卡尔积的子集，故 R 最多 24 个元组，最少 0 个（空关系也是关系）。考场上常把"关系元组数"直接写成 24，忘了"子集"二字。</p></div></div>
+
+<div class="mem">口诀：<b>域定范围，积作全配；子集成关系，码取最小</b>——域规定取值范围，笛卡尔积穷举组合，关系只取有意义的子集，候选码必须最小。</div>
+
+<h2 id="s2"><span class="h2no">2.1.2</span>关系模式：型与值</h2>
+
+<p>关系模式（Relation Schema）是对关系的描述，是<strong>型</strong>；关系是某一时刻的<strong>值</strong>。它要描述元组集合的结构（哪些属性、每个属性来自哪个域、属性与域的映像）以及完整性约束条件。</p>
+
+<p>形式化定义为四元组 <strong>R(U，D，DOM，F)</strong>：R 为关系名；U 为属性名集合；D 为 U 中属性所来自的域；DOM 为属性向域的映像集合；F 为属性间数据依赖关系的集合。笛卡尔积不满足交换律，元组本有位置有序性，关系模型靠<strong>给每列增加属性名</strong>取消列序，于是 (d1，…，di，dj，…，dn) 与交换后的元组视为同一个。所以常简记为 <strong>R(U)</strong> 或 R(A1，…，An)，域和映像往往直接写成属性的类型、长度。</p>
+
+<p>DOM 在同一域被多个属性使用时最明显：导师与研究生都取自域 PERSON，则 DOM(SUPERVISOR)=DOM(POSTGRADUATE)=PERSON，两个属性不同名、同域。</p>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>关系模式与关系的区别（简答题原题）：</p><ul>
+<li><strong>关系模式是型</strong>，是对关系的描述，<strong>静态、稳定</strong>；</li>
+<li><strong>关系是值</strong>，是模式在某一时刻的状态或内容，<strong>动态、随时间变化</strong>；</li>
+<li>关系模式由 R(U，D，DOM，F) 四元组刻画，核心是 U 与 F；</li>
+<li>二者常被笼统称为"关系"，要靠上下文区分。</li>
+</ul></div>
+
+<div class="trap"><p class="t">易错</p><p>"一个关系模式对应一张固定的表"是错的：模式稳定，表中的行却随插入、删除、修改不断变化。另一处：F 是<strong>属性间的数据依赖</strong>（如 Sno→Sname），不是完整性约束，二者不要混为一谈。</p></div>
+
+<div class="eg"><p class="t">例题</p><p>（补充例题）写出学生关系模式 S(Sno，Sname，Ssex，Sage，Sdept) 的四元组表示，并指出 DOM 与 F 的含义。</p><div class="sol"><p>R=S；U=｛Sno，Sname，Ssex，Sage，Sdept｝；D=｛学号域，姓名域，性别域，年龄域，系名域｝；DOM(Ssex)=｛男，女｝，DOM(Sage)=整数；F=｛Sno→Sname，Sno→Ssex，Sno→Sage，Sno→Sdept｝。只写 S(Sno，…，Sdept) 是简记形式，不是完整四元组。</p></div></div>
+
+<h2 id="s3"><span class="h2no">2.1.3</span>关系数据库与关系模型的存储结构</h2>
+
+<p>一个应用领域中<strong>所有关系的集合</strong>构成关系数据库。它同样分型与值：<strong>型是关系数据库模式</strong>（所有关系模式的集合），<strong>值是某一时刻这些关系的集合</strong>。</p>
+
+<p>存储结构分两个层次：实体与联系都用 Table 表示，但 <strong>Table 只是逻辑模型，不是物理存储单位</strong>。物理组织由 DBMS 决定：有的系统（如 FoxPro）一个表对应一个操作系统文件，交给操作系统管理；有的大型 DBMS 申请若干大文件，自己划分空间、组织表与索引并统一管理。</p>
+
+<table>
+<thead><tr><th>类别</th><th>来源</th><th>是否实际存储数据</th></tr></thead>
+<tbody>
+<tr><td>基本表（基表）</td><td>实际存在的表，是实际存储数据的逻辑表示</td><td>是</td></tr>
+<tr><td>查询表</td><td>查询结果对应的表</td><td>否，临时结果</td></tr>
+<tr><td>视图表</td><td>由基本表或其他视图表导出</td><td>否，是虚表</td></tr>
+</tbody>
+<caption>表 2.2　三类关系的区别</caption>
+</table>
+
+<div class="trap"><p class="t">易错</p><p>"关系数据库的数据都存放在表中"只对<strong>基本表</strong>成立。视图表是虚表，数据库只保存视图定义、不保存视图数据；查询表更是临时结果。三者混为一谈是判断题的送分点。</p></div>
+
+<div class="sum"><p class="t">本节小结</p><ul>
+<li>域 → 笛卡尔积（基数 ∏mi）→ 关系（有意义的子集），目 = 属性数。</li>
+<li>码体系：候选码（最小、可多个）→ 主码（选定一个）→ 主属性 / 非主属性；极端情形是全码。</li>
+<li>基本关系六性质：列同质、异列可同域、列序无关、行序无关、候选码不重复、分量原子。</li>
+<li>关系模式 R(U，D，DOM，F) 是型，关系是值；关系数据库的型是模式集合，值是关系集合。</li>
+<li>表是逻辑结构，物理组织由 DBMS 决定；视图表不存数据。</li>
+</ul></div>
+
+<h2 id="s4"><span class="h2no">2.2</span>关系操作与关系数据语言</h2>
+
+<p>关系操作分查询与更新：<strong>查询</strong>有选择、投影、连接、除、并、交、差、笛卡尔积；<strong>更新</strong>有插入、删除、修改。查询的表达能力是其中最主要的部分。</p>
+
+<p>关系操作的特点是<strong>集合操作方式（set-at-a-time）</strong>：操作对象和结果都是集合；层次、网状模型是 record-at-a-time（一次一记录）。</p>
+
+<p>五种<strong>基本操作</strong>是<strong>选择、投影、并、差、笛卡尔积</strong>。交、连接、除均可由这五种导出，引进它们不增加语言能力，只简化表达。关系代数表达式就是这些运算经有限次复合得到的式子。</p>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>五个基本运算与三个导出运算：</p><ul>
+<li>基本：<strong>σ（选择）、π（投影）、∪（并）、−（差）、×（笛卡尔积）</strong>。</li>
+<li>导出：R∩S = R−(R−S) = S−(S−R)；R⋈S = π<sub>属性表</sub>(σ<sub>公共属性相等</sub>(R×S))；R÷S = π<sub>X</sub>(R) − π<sub>X</sub>(π<sub>X</sub>(R)×π<sub>Y</sub>(S) − R)。</li>
+<li>传统集合运算从<strong>行</strong>的角度进行；专门的关系运算<strong>不仅涉及行而且涉及列</strong>。</li>
+</ul></div>
+
+<figure class="fig">
+<svg viewBox="0 0 720 226" role="img" aria-label="关系代数运算符分为集合运算与专门的关系运算两类" width="720" height="226">
+<rect class="box" x="280" y="8" width="160" height="44" rx="8"/>
+<text class="lbl" x="360" y="35" text-anchor="middle">关系代数</text>
+<line class="ln" x1="360" y1="52" x2="360" y2="74"/>
+<line class="ln" x1="170" y1="74" x2="550" y2="74"/>
+<line class="ln" x1="170" y1="74" x2="170" y2="94"/>
+<line class="ln" x1="550" y1="74" x2="550" y2="94"/>
+<rect class="box" x="40" y="94" width="260" height="60" rx="8"/>
+<text class="lbl" x="170" y="118" text-anchor="middle">集合运算（按行）</text>
+<text class="lbl" x="170" y="140" text-anchor="middle">∪　−　∩　×</text>
+<rect class="acc" x="420" y="94" width="260" height="60" rx="8"/>
+<text class="lbl" x="550" y="118" text-anchor="middle">专门的关系运算（行＋列）</text>
+<text class="lbl" x="550" y="140" text-anchor="middle">σ　π　⋈　÷</text>
+<line class="ln-m" x1="170" y1="154" x2="170" y2="170"/>
+<line class="ln-m" x1="550" y1="154" x2="550" y2="170"/>
+<line class="ln-m" x1="170" y1="170" x2="550" y2="170"/>
+<line class="ln-m" x1="360" y1="170" x2="360" y2="184"/>
+<rect class="box" x="180" y="184" width="360" height="34" rx="8"/>
+<text class="lbl" x="360" y="206" text-anchor="middle">五种基本运算：σ　π　∪　−　×</text>
+</svg>
+<figcaption>图 2.1　关系代数运算符的两大类；交、连接、除均可由五种基本运算导出</figcaption>
+</figure>
+
+<p>关系数据语言分三类：<strong>关系代数语言</strong>（对关系的运算，代表 ISBL）；<strong>关系演算语言</strong>（用谓词，元组演算代表 ALPHA、QUEL，域演算代表 QBE）；<strong>双重特点的 SQL</strong>。三者表达能力完全等价；关系语言高度非过程化，存取路径由 DBMS 优化机制选择。</p>
+
+<table>
+<thead><tr><th>语言</th><th>表达方式</th><th>典型代表</th><th>特点</th></tr></thead>
+<tbody>
+<tr><td>关系代数语言</td><td>对关系的运算</td><td>ISBL</td><td>过程性相对强，可直接写成表达式</td></tr>
+<tr><td>元组关系演算语言</td><td>谓词，变元是元组变量</td><td>ALPHA、QUEL</td><td>非过程化，描述"找什么样的元组"</td></tr>
+<tr><td>域关系演算语言</td><td>谓词，变元是域变量</td><td>QBE</td><td>按表格填写，非过程化</td></tr>
+<tr><td>SQL</td><td>双重特点</td><td>SQL</td><td>与存取路径无关，可优化，能嵌入高级语言</td></tr>
+</tbody>
+<caption>表 2.3　关系数据语言的分类</caption>
+</table>
+
+<div class="eg"><p class="t">例题</p><p>用三种语言表达"查询计算机系的学生姓名"（课件原例）。</p><div class="sol"><p>关系代数：π<sub>Sname</sub>(σ<sub>Sdept='CS'</sub>(Student))。<br>元组演算：｛t[Sname] | t∈Student ∧ t[Sdept]='CS'｝。<br>域演算：｛⟨name⟩ | ∃dept(⟨name，dept⟩∈Student ∧ dept='CS')｝。<br>三者共同点：先限定元组（选择/谓词），再取姓名（投影/输出变量）。</p></div></div>
+
+<div class="mem">口诀：<b>选投并差积，五样打天下</b>——五种基本运算足以表达全部关系代数，交、连接、除都是"语法糖"。</div>
+
+<div class="trap"><p class="t">易错</p><p>① 交、连接、除<strong>不是</strong>基本运算。② 三种语言"表达能力等价"，不是"关系演算更强"；SQL 是双重特点语言，既非纯代数也非纯演算。③ "一次一记录"是层次/网状模型的特征，不是关系模型。</p></div>
+
+<h2 id="s5"><span class="h2no">2.3.1</span>实体完整性</h2>
+
+<p><strong>规则 2.1（实体完整性）</strong>：若属性 A 是基本关系 R 的主属性，则 A <strong>不能取空值</strong>。空值表示"不知道/不存在/无意义"，不是确定取值，不能承担标识实体的任务。</p>
+
+<p>理解要抓四点：① 规则<strong>针对基本关系</strong>，一个基本表通常对应现实世界的一个实体集；② 现实中的实体可区分，具有唯一性标识；③ 关系模型以<strong>主码</strong>作唯一性标识；④ 主属性取空值就会出现不可标识、不可区分的实体，与②矛盾，规则因此得名。实现上由 DBMS 自动检查主码<strong>非空且唯一</strong>，违约<strong>拒绝</strong>；"非空"与"唯一"是两条检查，缺一不可。</p>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>实体完整性三句话：</p><ul>
+<li>规则：<strong>主属性不能取空值</strong>（主码非空且唯一）。</li>
+<li>理由：实体必须可区分，主码是唯一标识，主码为空 = 存在不可标识的实体。</li>
+<li>实现：DBMS 自动检查，违约<strong>拒绝</strong>；只对基本表提要求，视图不受此约束。</li>
+</ul></div>
+
+<div class="eg"><p class="t">例题</p><p>学生（学号，姓名，性别，系名）已有 0101、0102、0203 三行。下列能否插入？A.('0203'，'张'，男，null)　B.(null，'吴'，女，'IS')　C.('0301'，null，null，null)　D.('0105'，'张'，男，'MA')</p><div class="sol"><p>A 不能：主码 0203 已存在。B 不能：主码为 null。C 能：主码 0301 非空且不重复，其它属性为空不违反实体完整性（若无非空约束）。D 能：主码 0105 非空且不重复。<br>判断顺序：<strong>主码是否为空 → 是否重复 → 其它约束</strong>。</p></div></div>
+
+<div class="trap"><p class="t">易错</p><p>实体完整性<strong>只管主属性</strong>。非主属性（姓名、性别、系名）可以为空，除非另有用户定义的非空约束——把"所有属性都不能为空"当成实体完整性是典型错误。一个表可有多个候选码，但只能有一个主码。</p></div>
+
+<h2 id="s6"><span class="h2no">2.3.2</span>参照完整性</h2>
+
+<p>实体与实体间的联系都用关系描述，于是出现关系间的引用。【例 2.1】学生（学号，姓名，性别，专业号，年龄）引用专业（专业号，专业名）的主码；【例 2.2】选修（学号，课程号，成绩）的"学号"引用学生、"课程号"引用课程；【例 2.3】学生（…，班长）的"班长"引用<strong>本关系</strong>的学号——同一关系内部也能引用。</p>
+
+<p><strong>外码</strong>：设 F 是基本关系 R 的一个或一组属性，但<strong>不是 R 的码</strong>；若 F 与基本关系 S 的主码 Ks 相对应，则 F 是 R 的外码。R 称<strong>参照关系</strong>，S 称<strong>被参照关系</strong>。四个要点：R 与 S 可同一；Ks 与 F 必须同域；外码不必与主码同名；外码取值由规则 2.2 约束。</p>
+
+<p><strong>规则 2.2（参照完整性）</strong>：R 中每个元组在 F 上的值必须<strong>或者取空值（F 的每个属性均为空），或者等于 S 中某个元组的主码值</strong>，二者必居其一。对照三例："专业号"只能取空值（未分配专业）或专业表中确实存在的主码值；选修的"学号""课程号"是主属性，不能为空，只能取已存在的主码值；"班长"可为空，非空时必须是本关系中某元组的学号。</p>
+
+<p>违约处理（<strong>补充</strong>，SQL 标准三策略）：删除或修改被参照表的主码值而仍有外码引用时，DBMS 按预先声明的策略处理，否则引用就断了。</p>
+
+<ol class="steps">
+<li><strong>拒绝（NO ACTION / RESTRICT）</strong>：有引用就拒绝删除或修改，语句报错回滚。最安全，常为默认策略。</li>
+<li><strong>级联（CASCADE）</strong>：删除被参照元组时连带删除引用它的元组；修改主码时把外码值一起改。引用始终一致，但可能连锁删除。</li>
+<li><strong>置空（SET NULL）</strong>：把引用元组的外码置为 NULL。要求该外码可空且不是参照表主码的组成部分，否则会违反实体完整性。</li>
+</ol>
+
+<table>
+<thead><tr><th>策略</th><th>删除被参照元组时</th><th>修改被参照主码时</th><th>适用条件与风险</th></tr></thead>
+<tbody>
+<tr><td>拒绝 NO ACTION / RESTRICT</td><td>有引用则拒绝删除</td><td>有引用则拒绝修改</td><td>任何情况可用；最安全，需先手工清理</td></tr>
+<tr><td>级联 CASCADE</td><td>连带删除参照元组</td><td>连带修改外码值</td><td>引用必须一致时用；有连锁删除风险</td></tr>
+<tr><td>置空 SET NULL</td><td>把外码置为 NULL</td><td>把外码置为 NULL</td><td>外码可空且非主属性；会丢失引用信息</td></tr>
+</tbody>
+<caption>表 2.4　参照完整性违约的三种处理策略</caption>
+</table>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>参照完整性答题模板：</p><ul>
+<li>先指外码：F 不是 R 的码，却与 S 的主码 Ks 对应；R 是参照关系，S 是被参照关系。</li>
+<li>再写规则：F 取<strong>空值或等于 S 中某元组的主码值</strong>。</li>
+<li>最后写违约处理：<strong>拒绝、级联、置空</strong>，并说明置空要求外码可空且非主属性。</li>
+</ul></div>
+
+<div class="eg"><p class="t">例题</p><p>供应商 S（主码：供应商号）已有 B01、S10、T20、Z01；零件 P（主码：零件号，外码：供应商号）已有 010、312、201。下列 P 的行能否插入？A.('037'，'绿'，null)　B.(null，'黄'，'T20')　C.('201'，'红'，'T20')　D.('105'，'蓝'，'B01')　E.('101'，'黄'，'T11')</p><div class="sol"><p>A 能：零件号新，供应商号为空，参照完整性允许。B 不能：主码为 null，违反实体完整性。C 不能：主码 201 重复。D 能：零件号新，B01 存在。E 不能：T11 不存在，违反参照完整性。<br>判断顺序：<strong>实体完整性 → 参照完整性 → 用户定义完整性</strong>。</p></div></div>
+
+<div class="trap"><p class="t">易错</p><p>"外码一定可以取空值"是错的。若 F 恰是参照关系的主属性（如【例 2.2】的学号、课程号），它同时受实体完整性约束，<strong>不能为空</strong>，只能取被参照表中已存在的主码值——这是两条规则叠加的高频判断。另一处：外码与主码不要求同名，只要求同域。</p></div>
+
+<div class="mem">口诀：<b>外码"空或有"，删除"拒级空"</b>——外码取值要么为空、要么等于被参照表某个主码值；违约处理是拒绝、级联、置空。</div>
+
+<h2 id="s7"><span class="h2no">2.3.3</span>用户定义的完整性</h2>
+
+<p>用户定义的完整性是针对某一具体数据库的约束，反映具体应用的<strong>语义要求</strong>。课件例子：课程号唯一；非主属性课程名也不能为空；学分只能取｛1，2，3，4｝；成绩在 0～100；学号为 8 位整数；性别取"男"或"女"；年龄在 15～25。</p>
+
+<p>分工是：实体完整性、参照完整性是关系模型<strong>必须</strong>满足的条件，称关系的两个不变性，系统必须自动支持；用户定义完整性体现领域语义，<strong>由用户定义后交系统支持</strong>。实现方式是 DBMS 提供定义接口（UNIQUE、NOT NULL、CHECK、DEFAULT 等，第 5 章展开），在插入、修改时自动检查，违约<strong>拒绝</strong>。</p>
+
+<table>
+<thead><tr><th>完整性</th><th>约束对象</th><th>规则</th><th>违约处理</th><th>是否自动支持</th></tr></thead>
+<tbody>
+<tr><td>实体完整性</td><td>基本表的主属性</td><td>主码非空且唯一</td><td>拒绝</td><td>关系系统必须自动支持</td></tr>
+<tr><td>参照完整性</td><td>外码</td><td>取空值或等于被参照表某主码值</td><td>拒绝 / 级联 / 置空</td><td>大型系统能自动支持</td></tr>
+<tr><td>用户定义完整性</td><td>具体应用的属性</td><td>由语义定，如 CHECK、UNIQUE、NOT NULL</td><td>拒绝</td><td>用户定义后由系统检查</td></tr>
+</tbody>
+<caption>表 2.5　三类完整性约束对比</caption>
+</table>
+
+<div class="eg"><p class="t">例题</p><p>学生表要求 GPA 不超过 4.0。现插入 (124，John，4.5，20)，能否成功？</p><div class="sol"><p>不能。GPA=4.5 超过上限 4.0，违反用户定义完整性，DBMS 检查后拒绝插入。注意主码 124 非空且不重复，所以不是实体完整性问题；也没有引用其它表，不是参照完整性问题。答题必须点明"违反的是用户定义完整性的取值范围约束"。</p></div></div>
+
+<div class="trap"><p class="t">易错</p><p>用户定义完整性<strong>不是</strong>"由应用程序自己检查"，也<strong>不是</strong>"用户想定就定、系统不管"。正确表述：用户通过 DBMS 提供的手段定义，DBMS 在更新时自动检查并拒绝违约操作。加在非主属性上的唯一性约束（如课程名）属于用户定义完整性，不要答成实体完整性。</p></div>
+
+<div class="sum"><p class="t">本节小结</p><ul>
+<li>实体完整性：主属性不能取空值，主码非空且唯一；DBMS 自动检查，违约拒绝。</li>
+<li>参照完整性：外码取空值或等于被参照表某主码值；违约可拒绝、级联、置空。</li>
+<li>用户定义完整性：反映具体语义（范围、格式、非空、唯一），用户定义、系统检查。</li>
+<li>前两者合称两个不变性；三类完整性的实现机制统一为"定义接口 + 自动检查 + 违约拒绝"。</li>
+</ul></div>
+
+<h2 id="s8"><span class="h2no">2.4.1</span>传统的集合运算</h2>
+
+<p>传统集合运算是二目运算，从<strong>行</strong>的角度进行。除笛卡尔积外，都要求两个关系<strong>相容</strong>：① 同度；② R 的第 i 个属性与 S 的第 i 个属性来自同一个域。</p>
+
+<p><strong>并 R∪S</strong>：n 目，属于 R 或属于 S 的元组，重复只留一个。<strong>差 R−S</strong>：属于 R 而不属于 S 的元组，方向不可交换。<strong>交 R∩S</strong>：既属于 R 又属于 S，且 R∩S = R−(R−S) = S−(S−R)。<strong>笛卡尔积 R×S</strong>：R 为 n 目 k1 个元组、S 为 m 目 k2 个元组，结果为 <strong>n+m 列、k1×k2 行</strong>；它不要求相容，作用是把两个关系无条件拼成新关系，供连接使用。</p>
+
+<pre><code>R ∪ S = { t | t∈R ∨ t∈S }
+R − S = { t | t∈R ∧ t∉S }
+R ∩ S = { t | t∈R ∧ t∈S } = R−(R−S) = S−(S−R)
+R × S = { tr ts | tr∈R ∧ ts∈S }</code></pre>
+
+<table>
+<thead><tr><th>运算</th><th>结果度</th><th>结果元组数</th><th>是否要求相容</th></tr></thead>
+<tbody>
+<tr><td>R∪S</td><td>n</td><td>≤ m+n，重复元组只留一份</td><td>是（同度、对应列同域）</td></tr>
+<tr><td>R−S</td><td>n</td><td>≤ m</td><td>是</td></tr>
+<tr><td>R∩S</td><td>n</td><td>≤ min(m，n)</td><td>是</td></tr>
+<tr><td>R×S</td><td>n+m</td><td>k1×k2</td><td>否</td></tr>
+</tbody>
+<caption>表 2.6　四种传统集合运算的结果规模与相容性要求</caption>
+</table>
+
+<div class="eg"><p class="t">例题</p><p>R=｛(a1，b1，c1)，(a1，b2，c2)，(a2，b2，c1)｝，S=｛(a1，b2，c2)，(a1，b3，c2)，(a2，b2，c1)｝，求 R∪S、R−S、R∩S。</p><div class="sol"><p>R∪S=｛(a1，b1，c1)，(a1，b2，c2)，(a2，b2，c1)，(a1，b3，c2)｝，共 4 个元组（两个重复只留一份）。<br>R−S=｛(a1，b1，c1)｝。<br>R∩S=｛(a1，b2，c2)，(a2，b2，c1)｝。<br>验算：R−S 与 R∩S 合起来恰是 R，且二者不相交。</p></div></div>
+
+<div class="mem">口诀：<b>并去重、差单向、交取共、积全配</b>——并集去掉重复，差有方向，交取公共元组，笛卡尔积两两配对。</div>
+
+<div class="trap"><p class="t">易错</p><p>① 并、差、交要求<strong>相容</strong>，笛卡尔积不要求。② 并、差、交结果都是 n 度，只有笛卡尔积是 n+m 列。③ R−S ≠ S−R。④ 关系是集合，并运算自动去重，保留重复元组就错。</p></div>
+
+<h2 id="s9"><span class="h2no">2.4.2</span>专门的关系运算（一）：选择、投影与连接</h2>
+
+<p><strong>选择 σ<sub>F</sub>(R) =｛t | t∈R ∧ F(t)='真'｝</strong>：F 由比较运算符（＞、≥、＜、≤、＝、&lt;&gt;）和逻辑运算符（¬、∧、∨）组成，基本形式 XθY，X、Y 可为属性名、列序号、常量或简单函数。选择从<strong>行的角度</strong>运算，是水平分割，度不变。例2.4 查 IS 系学生：σ<sub>Sdept='IS'</sub>(Student)；例2.5 查年龄小于 20 岁：σ<sub>Sage&lt;20</sub>(Student)，也可写 σ<sub>[4]&lt;20</sub>(Student)。</p>
+
+<p><strong>投影 π<sub>A</sub>(R) =｛t[A] | t∈R｝</strong>：从<strong>列的角度</strong>运算。投影后不仅取消某些列，还可能<strong>取消某些元组</strong>——关系不允许重复元组，重复行必须去掉；列可重排。例2.6：π<sub>Sname,Sdept</sub>(Student)；例2.7 查有哪些系：π<sub>Sdept</sub>(Student)，4 个学生只得到 3 个系。</p>
+
+<p><strong>θ 连接：R⋈<sub>AθB</sub>S = σ<sub>R[A]θS[B]</sub>(R×S)</strong>，A、B 是度数相等且可比的属性组，θ 为比较运算符，即"笛卡尔积＋选择"。<strong>等值连接</strong>是 θ 取"＝"，两份重复属性都保留。<strong>自然连接</strong>是特殊的等值连接：比较的必须是<strong>相同的公共属性组</strong>，并在结果中<strong>去掉重复的属性列</strong>，设公共属性集为 B、全体属性为 U，则 R⋈S =｛tr ts[U−B] | tr∈R ∧ ts∈S ∧ tr[B]=ts[B]｝。θ 连接只看行，自然连接同时看行和列。</p>
+
+<p>用基本运算表达：R(A，B，C) 与 S(C，D) 时 <strong>R⋈S = π<sub>1,2,3,5</sub>(σ<sub>[3]=[4]</sub>(R×S))</strong>；一般地 R⋈S = π<sub>Attr(R)∪Attr(S)</sub>(σ<sub>R.A1=S.A1 ∧ … ∧ R.An=S.An</sub>(R×S))。<strong>若两关系无公共属性，则 R⋈S = R×S</strong>：等值条件恒真、无重复列可去，自然连接退化为笛卡尔积，而不是空集。</p>
+
+<p><strong>悬浮元组</strong>：自然连接时在对方找不到公共属性相等的元组，被舍弃，称悬浮元组。<strong>外连接</strong>把它保留、其它属性填 NULL：<strong>左外连接</strong>只保留左关系 R 的悬浮元组，<strong>右外连接</strong>只保留右关系的。</p>
+
+<div class="eg"><p class="t">例题</p><p>【例 2.8】R(A，B，C)=｛(a1，b1，5)，(a1，b2，6)，(a2，b3，8)，(a2，b4，12)｝，S(B，E)=｛(b1，3)，(b2，7)，(b3，10)，(b3，2)，(b5，2)｝。求 θ 连接（C&lt;E）、等值连接（R.B=S.B）、自然连接及外连接。</p><div class="sol"><p>① θ 连接：(a1，b1，5，b2，7)、(a1，b1，5，b3，10)、(a1，b2，6，b2，7)、(a1，b2，6，b3，10)、(a2，b3，8，b3，10)，共 5 行。<br>② 等值连接：(a1，b1，5，b1，3)、(a1，b2，6，b2，7)、(a2，b3，8，b3，10)、(a2，b3，8，b3，2)，共 4 行，B 列出现两次。<br>③ 自然连接：在②上去掉重复的 B 列，得 (a1，b1，5，3)、(a1，b2，6，7)、(a2，b3，8，10)、(a2，b3，8，2)。<br>④ 外连接：悬浮元组 (a2，b4，12) 与 (b5，2) 补成 (a2，b4，12，NULL)、(NULL，b5，NULL，2)；左外只补前者，右外只补后者。</p></div></div>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>连接与投影的四条硬结论：</p><ul>
+<li>θ 连接 = 笛卡尔积 + 选择：R⋈<sub>AθB</sub>S = σ<sub>R[A]θS[B]</sub>(R×S)。</li>
+<li>自然连接 = 等值连接 + 去掉重复列，比较的必须是<strong>公共属性组</strong>。</li>
+<li>无公共属性时 R⋈S = R×S，不是空关系。</li>
+<li>投影一定检查<strong>去重</strong>；选择不改变度，投影可能减少行。</li>
+</ul></div>
+
+<div class="trap"><p class="t">易错</p><p>① 自然连接去掉的必须是比较用的公共属性中重复的那一份，非公共属性一列都不能少。② 等值连接保留两份连接列，自然连接只留一份，这是两者唯一区别。③ 悬浮元组是<strong>被舍弃</strong>的元组，左外连接保留左表的，别写反。④ 用列序号时，R×S 的后 m 列序号从 n+1 起，π 的下标从 1 连续数。</p></div>
+
+<h2 id="s10"><span class="h2no">2.4.2</span>专门的关系运算（二）：除运算</h2>
+
+<p>除运算表达"<strong>全部</strong>""<strong>所有</strong>"这类全称量词（∀）查询：找出与另一关系中<strong>每一个</strong>元组都能匹配的元组。典型题干："选修了所有课程的学生""购买了所有商品的顾客"。它是本章最容易失分的地方。</p>
+
+<p><strong>象集</strong>：给定 R(X，Z)，当 t[X]=x 时，x 在 R 中的象集 Z<sub>x</sub> =｛t[Z] | t∈R，t[X]=x｝，即固定 X 的某个值后 Z 上所有出现过的分量组合。</p>
+
+<p><strong>除的定义</strong>：给定 R(X，Y) 与 S(Y，Z)，R 中的 Y 与 S 中的 Y 可不同名但必须同域。R÷S 得到 P(X)，由 R 中满足"x 的象集 Y<sub>x</sub> <strong>包含</strong> S 在 Y 上投影集合"的元组在 X 上的投影组成：<strong>R÷S =｛tr[X] | tr∈R ∧ π<sub>Y</sub>(S) ⊆ Y<sub>x</sub>｝</strong>。直观含义：x 与 S 中每一个 y 都能在 R 中配上对。结果只有 X 的属性。</p>
+
+<p>按定义硬算容易漏，标准做法是四步算法：</p>
+
+<ol class="steps">
+<li>T = π<sub>X</sub>(R)：R 在 X 上的投影，即所有候选的 x。</li>
+<li>W = T × π<sub>Y</sub>(S)：所有"x 与 S 中每个 y"的应有组合。</li>
+<li>V = π<sub>X</sub>(W − R)：W 中 R 里缺失的组合，投影出"有缺口的 x"。</li>
+<li>R÷S = T − V：去掉有缺口的 x，剩下的就是与每个 y 都配对的 x。</li>
+</ol>
+
+<pre><code>R ÷ S = πX(R) − πX( πX(R) × πY(S) − R )</code></pre>
+
+<div class="eg"><p class="t">例题</p><p>【例 2.9】R(A，B，C)=｛(a1，b1，c2)，(a2，b3，c7)，(a3，b4，c6)，(a1，b2，c3)，(a4，b6，c6)，(a2，b2，c3)，(a1，b2，c1)｝，S(B，C，D)=｛(b1，c2，d1)，(b2，c1，d1)，(b2，c3，d2)｝，求 R÷S。</p><div class="sol"><p>π<sub>BC</sub>(S)=｛(b1，c2)，(b2，c1)，(b2，c3)｝。<br>a1 的象集=｛(b1，c2)，(b2，c3)，(b2，c1)｝，包含 π<sub>BC</sub>(S)，保留；a2 的象集=｛(b3，c7)，(b2，c3)｝、a3 的象集=｛(b4，c6)｝、a4 的象集=｛(b6，c6)｝都缺，舍去。<br>所以 R÷S=｛a1｝，结果只有 A 一列。<br>四步验算：T=｛a1，a2，a3，a4｝；W=T×π<sub>BC</sub>(S) 共 12 行；W−R 中 a2、a3、a4 都有缺失；V=｛a2，a3，a4｝；T−V=｛a1｝。</p></div></div>
+
+<div class="eg"><p class="t">例题</p><p>【例 2.10】查询至少选修了 1 号课程和 3 号课程的学生学号。</p><div class="sol"><p>构造临时关系 K(Cno)=｛1，3｝，再算 π<sub>Sno,Cno</sub>(SC) ÷ K。202215121 的象集为｛1，2，3｝⊇｛1，3｝，保留；202215122 的象集为｛2，3｝，缺 1，舍去。结果为｛202215121｝。<br>K 只含"要求覆盖"的课程 1 和 3，<strong>不是全部课程</strong>；"至少选修两门"不能用这个 K，要用自连接。</p></div></div>
+
+<table>
+<thead><tr><th>查询语义</th><th>关系代数表达式</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>选修了全部课程的学生学号</td><td>π<sub>Sno,Cno</sub>(SC) ÷ π<sub>Cno</sub>(Course)</td><td>被除关系必须先投影到 (Sno,Cno)</td></tr>
+<tr><td>选修了全部课程的学生姓名</td><td>π<sub>Sname</sub>(Student ⋈ (π<sub>Sno,Cno</sub>(SC) ÷ π<sub>Cno</sub>(Course)))</td><td>除完再与学生表连接取姓名</td></tr>
+<tr><td>全部学生都选修了的课程号</td><td>π<sub>Sno,Cno</sub>(SC) ÷ π<sub>Sno</sub>(Student)</td><td>X 与 Y 互换，问的是"课程"</td></tr>
+<tr><td>选课集合包含 202215121 全部课程的学生</td><td>π<sub>Sno,Cno</sub>(SC) ÷ π<sub>Cno</sub>(σ<sub>Sno='202215121'</sub>(SC))</td><td>除数的 Y 是某人的选课集合</td></tr>
+</tbody>
+<caption>表 2.7　"全部 / 所有"类查询的除运算模板</caption>
+</table>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>除运算的三条判据：</p><ul>
+<li>题干出现"<strong>全部、所有、每一门、都</strong>"，优先想除；"至少两门"用自连接，"没有选修"用差。</li>
+<li>被除关系必须是 R(X，Y)，<strong>Y 只能是 S 中用于比较的属性组</strong>，多余属性先投影掉。</li>
+<li>结果只有 X 的属性；要姓名就再与 Student 自然连接后投影。</li>
+</ul></div>
+
+<div class="trap"><p class="t">易错</p><p>把"选修了全部课程的学生"写成 <strong>SC ÷ π<sub>Cno</sub>(Course)</strong> 是本章第一大错：SC 的属性是 (Sno，Cno，Grade)，Y 必须恰好是 Cno，多出的 Grade 使"象集包含"永远不成立，结果恒为空。正确写法是先投影：π<sub>Sno,Cno</sub>(SC) ÷ π<sub>Cno</sub>(Course)。第二处：除的结果不含 Y，要"学生姓名"必须再连接 Student。第三处：除不满足交换律，R÷S 与 S÷R 完全不同。</p></div>
+
+<div class="mem">口诀：<b>全称先投影，X 除 Y；T、W、V、T−V</b>——先把被除关系投影到 X∪Y，再按"投影、乘、差、再差"四步求商。</div>
+
+<h2 id="s11"><span class="h2no">2.4</span>关系代数综合举例</h2>
+
+<p>综合题考"把一句中文翻译成一串运算"。下面统一使用课件的学生-课程数据库（与例 2.4～2.13 数据一致）：</p>
+
+<table>
+<thead><tr><th>Sno</th><th>Sname</th><th>Ssex</th><th>Sage</th><th>Sdept</th></tr></thead>
+<tbody>
+<tr><td>202215121</td><td>李勇</td><td>男</td><td>20</td><td>CS</td></tr>
+<tr><td>202215122</td><td>刘晨</td><td>女</td><td>19</td><td>CS</td></tr>
+<tr><td>202215123</td><td>王敏</td><td>女</td><td>18</td><td>MA</td></tr>
+<tr><td>202215125</td><td>张立</td><td>男</td><td>19</td><td>IS</td></tr>
+</tbody>
+<caption>表 2.8　Student 关系</caption>
+</table>
+
+<p>Course(Cno，Cname，Cpno，Ccredit)：1 数据库（先行课 5，4 学分）、2 数学（无，2）、3 信息系统（先行课 1，4）、4 操作系统（先行课 6，3）、5 数据结构（先行课 7，4）、6 数据处理（无，2）、7 C 语言（先行课 6，4）。SC(Sno，Cno，Grade)：202215121 选 1 得 92、选 2 得 85、选 3 得 88；202215122 选 2 得 90、选 3 得 80。</p>
+
+<p>【例 2.11】查选修了 2 号课程的学号：π<sub>Sno</sub>(σ<sub>Cno='2'</sub>(SC))，结果为｛202215121，202215122｝。<strong>先选择、后投影</strong>是最基本的单表套路，顺序颠倒会丢失判断依据。</p>
+
+<p>【例 2.12】查至少选修了一门其直接先行课为 5 号课程的学生姓名。先行课为 5 的只有 1 号"数据库"，故 π<sub>Sname</sub>(π<sub>Sno</sub>(σ<sub>Cpno='5'</sub>(Course) ⋈ SC) ⋈ Student)，结果是"李勇"。</p>
+
+<p>【例 2.13】查选修了全部课程的学生号码和姓名：π<sub>Sno,Sname</sub>(Student ⋈ (π<sub>Sno,Cno</sub>(SC) ÷ π<sub>Cno</sub>(Course)))。在课件这份小数据上没有人覆盖 7 门课，结果为空集——<strong>表达式正确而结果为空是正常的</strong>，考试只考表达式。</p>
+
+<p>"至少选修两门课程"用自连接：π<sub>1</sub>(σ<sub>1=4 ∧ 2&lt;&gt;5</sub>(SC×SC))。SC×SC 的列序为 1=Sno、2=Cno、3=Grade、4=Sno、5=Cno、6=Grade，"1=4"保证同一学生，"2&lt;&gt;5"保证两门课不同，最后投影第 1 列。用自然连接 SC⋈SC 是错的：它在 Sno、Cno 上同时相等，只剩"自己配自己"。</p>
+
+<p>"没有选修 C1 的学生"用差：π<sub>Sno</sub>(Student) − π<sub>Sno</sub>(σ<sub>Cno='1'</sub>(SC))。差运算两侧必须相容，要姓名就两边都投影成 (Sno，Sname) 再相减。</p>
+
+<table>
+<thead><tr><th>查询</th><th>关系代数表达式</th><th>关键点</th></tr></thead>
+<tbody>
+<tr><td>IS 系全体学生</td><td>σ<sub>Sdept='IS'</sub>(Student)</td><td>单表选择</td></tr>
+<tr><td>年龄小于 20 岁的学生</td><td>σ<sub>Sage&lt;20</sub>(Student)</td><td>可用列序号 σ<sub>[4]&lt;20</sub></td></tr>
+<tr><td>学生的姓名和所在系</td><td>π<sub>Sname,Sdept</sub>(Student)</td><td>投影去重</td></tr>
+<tr><td>选修 2 号课程的学号</td><td>π<sub>Sno</sub>(σ<sub>Cno='2'</sub>(SC))</td><td>先 σ 后 π</td></tr>
+<tr><td>2 号课程的学生姓名和成绩</td><td>π<sub>Sname,Grade</sub>(σ<sub>Cno='2'</sub>(Student ⋈ SC))</td><td>先连接再选择</td></tr>
+<tr><td>选修"数学"的学号、姓名、成绩</td><td>π<sub>Sno,Sname,Grade</sub>(σ<sub>Cname='数学'</sub>(Student ⋈ SC ⋈ Course))</td><td>三表连接</td></tr>
+<tr><td>至少选修 1 号和 3 号课程</td><td>π<sub>Sno,Cno</sub>(SC) ÷ K（K=｛1，3｝）</td><td>除，K 是临时关系</td></tr>
+<tr><td>选修了全部课程的学生姓名</td><td>π<sub>Sname</sub>(Student ⋈ (π<sub>Sno,Cno</sub>(SC) ÷ π<sub>Cno</sub>(Course)))</td><td>先投影再除</td></tr>
+<tr><td>全部学生都选修了的课程号</td><td>π<sub>Sno,Cno</sub>(SC) ÷ π<sub>Sno</sub>(Student)</td><td>除数和被除数互换</td></tr>
+<tr><td>至少选修两门课程</td><td>π<sub>1</sub>(σ<sub>1=4 ∧ 2&lt;&gt;5</sub>(SC×SC))</td><td>自连接，不能用自然连接</td></tr>
+<tr><td>没有选修 C1 的学生</td><td>π<sub>Sno</sub>(Student) − π<sub>Sno</sub>(σ<sub>Cno='1'</sub>(SC))</td><td>差，两侧相容</td></tr>
+</tbody>
+<caption>表 2.9　本章典型查询与关系代数表达式对照</caption>
+</table>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>复杂查询四步套路（大题按这个顺序写，步骤分稳拿）：</p><ul>
+<li><strong>定表</strong>：涉及哪几个关系，先按主码-外码自然连接。</li>
+<li><strong>筛行</strong>：把"某系、某课、某年龄"等条件写成 σ，字符串加引号。</li>
+<li><strong>取列</strong>：题目要什么就 π 什么，多一列少一列都扣分。</li>
+<li><strong>判全称</strong>："全部/所有"用除；"没有/不"用差；"至少两门"用自连接。</li>
+</ul></div>
+
+<div class="trap"><p class="t">易错</p><p>① 关系代数<strong>没有聚集函数</strong>，"平均成绩""人数""最高分"不能写成 π 或 σ，必须说明用 SQL 的 AVG/COUNT/MAX，这是概念题高频陷阱。② 多表连接后忘投影，或投影时漏掉连接键导致无法再连。③ "没有选修"用差时两侧属性列必须完全一致。④ 字符串用单引号、数字不加引号；列序号按连接后的列序从 1 数。</p></div>
+
+<div class="mem">口诀：<b>先连表、再筛行、后取列；全部用除、没有用差、两门自连</b>——四步套路加三个关键词，综合题不会跑偏。</div>
+
+<div class="sum"><p class="t">本节小结</p><ul>
+<li>单表查询：σ 管行、π 管列，先选择后投影，投影记得去重。</li>
+<li>多表查询：按主码-外码自然连接，再 σ 筛行、π 取列；三表按"学生-选修-课程"顺序写。</li>
+<li>"全部/所有"用除：被除关系先投影到 X∪Y，结果为 X，要姓名再连接。</li>
+<li>"至少两门"用自连接；"没有/不"用差，两侧投影列必须相容。</li>
+<li>关系代数不含聚集函数，涉及统计必须转 SQL，这是本章与第 3 章的分界。</li>
+</ul></div>
+
+    </div>
+    <div class="selftest">
+      <span class="st-n">本章共 24 道自测题（选择 / 判断 / 填空 / 简答），作答后立即判分并给出解析。</span>
+      <a href="quiz.html?ch=2">刷本章题</a>
+    </div>
+    <nav class="pager" aria-label="翻页"><a class="prev" href="1.html">‹ 第 1 章 绪论</a><a class="next" href="3.html">第 3 章 关系数据库标准语言 SQL ›</a></nav>
+  </article>
+
+</div>
+</main>
+
+<footer class="footer">
+  <div class="wrap foot-inner">
+    <div class="foot-cols">
+      <div class="foot-brand">
+        <div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="7" ry="2.6"/><path d="M5 6v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6V6"/><path d="M5 12v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6v-6"/></svg>数据库系统概论</div>
+        <p>据本学期 14 个课件文件整理，教材为王珊《数据库系统概论》（第 6 版）。题目均为自编练习，不是真题。</p>
+      </div>
+      <div>
+        <h4>学习</h4>
+        <ul>
+          <li><a href="../index.html">备考首页</a></li>
+          <li><a href="../db.html">十章讲义</a></li>
+          <li><a href="../db/cheatsheet.html">考前速查卡</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>练习</h4>
+        <ul>
+          <li><a href="../db/quiz.html">题库 · 239 题</a></li>
+          <li><a href="../db/exam.html">模拟卷 · 3 套</a></li>
+          <li><a href="../index.html#plan">七天冲刺表</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>说明</h4>
+        <ul>
+          <li>课件未含第 8 章</li>
+          <li>进度只存在本机</li>
+          <li>可离线打开</li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-legal"><span>© <span id="year">2026</span> 数据库系统概论 · 期末备考</span><span>据课件整理 · 仅供复习使用</span></div>
+  </div>
+</footer>
+<button class="backtop" id="backtop" type="button" aria-label="回到顶部" hidden>↑</button>
+<script src="../assets/site.js?v=2"></script>
+<script src="../assets/study.js?v=2"></script>
+</body>
+</html>

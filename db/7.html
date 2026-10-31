@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 7 章 数据库设计 · 数据库系统概论 · 备考</title>
+<meta name="description" content="设计六阶段、E-R 图绘制与冲突、E-R 转关系模式、规范化优化、B+ 树/聚簇、实施与运行维护。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/theme.css?v=2">
+<link rel="stylesheet" href="../assets/site.css?v=2">
+<link rel="stylesheet" href="../assets/course.css?v=2">
+<script>(function(){var d=document.documentElement;d.classList.add('js');try{var t=localStorage.getItem('site-theme');if(t==='light'||t==='dark')d.setAttribute('data-theme',t);}catch(e){}})();</script>
+</head>
+<body data-ch="7">
+<a class="skip" href="#main">跳到正文</a>
+<header class="topbar" id="topbar">
+  <div class="wrap-wide bar">
+    <a class="brand" href="../index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="7" ry="2.6"/><path d="M5 6v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6V6"/><path d="M5 12v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6v-6"/></svg><span>数据库系统概论</span></a>
+    <nav class="nav" aria-label="站点导航"><a href="../index.html">首页</a><a href="../db.html" aria-current="page">讲义</a><a href="quiz.html">题库</a><a href="exam.html">模拟卷</a><a href="cheatsheet.html">速查卡</a></nav>
+    <button class="icon-btn" id="themeBtn" type="button" title="主题：跟随系统（点击切换）" aria-label="主题：跟随系统（点击切换）"><span id="themeIcon" aria-hidden="true">◐</span></button>
+  </div>
+</header>
+<div id="readbar"></div>
+
+<main id="main">
+<div class="doc">
+
+  <aside class="doc-toc" aria-label="讲义目录">
+  <details class="toc-fold" open>
+  <summary>讲义目录</summary>
+  <nav class="mod-switch" aria-label="课程模块">
+    <a href="../db.html" aria-current="page">讲义</a>
+    <a href="quiz.html">题库</a>
+    <a href="exam.html">模拟卷</a>
+    <a href="cheatsheet.html">速查卡</a>
+  </nav>
+  <a class="toc-home" href="../db.html">数据库系统概论</a>
+  <p class="toc-ver"><span>本学期课件</span>10 章</p>
+  <div class="toc-body">
+  <div class="toc-ch">
+    <h2>全部章节</h2>
+    <ul class="toc-list"><li><a href="1.html"><span class="num">第 1 章</span>绪论</a></li><li><a href="2.html"><span class="num">第 2 章</span>关系数据库</a></li><li><a href="3.html"><span class="num">第 3 章</span>关系数据库标准语言 SQL</a></li><li><a href="4.html"><span class="num">第 4 章</span>数据库安全性</a></li><li><a href="5.html"><span class="num">第 5 章</span>数据库完整性</a></li><li><a href="6.html"><span class="num">第 6 章</span>关系数据理论</a></li><li><a href="7.html" aria-current="page"><span class="num">第 7 章</span>数据库设计</a></li><li><a href="9.html"><span class="num">第 9 章</span>关系查询处理和查询优化</a></li><li><a href="10.html"><span class="num">第 10 章</span>数据库恢复技术</a></li><li><a href="11.html"><span class="num">第 11 章</span>并发控制</a></li></ul>
+  </div>
+  <div class="toc-ch">
+    <h2>本章小节</h2>
+    <ul class="toc-list"><li><a href="#s1"><span class="num">7.1</span>数据库设计概述</a></li><li><a href="#s2"><span class="num">7.2</span>需求分析</a></li><li><a href="#s3"><span class="num">7.3.1</span>概念模型与 E-R 模型</a></li><li><a href="#s4"><span class="num">7.3.5</span>概念结构的集成：冲突与冗余</a></li><li><a href="#s5"><span class="num">7.4.1</span>E-R 图向关系模型的转换</a></li><li><a href="#s6"><span class="num">7.4.2</span>数据模型的优化与用户子模式</a></li><li><a href="#s7"><span class="num">7.5</span>数据库的物理结构设计</a></li><li><a href="#s8"><span class="num">7.6</span>数据库的实施与运行维护</a></li><li><a href="#s9"><span class="num">7.7</span>小结：全章串讲与答题模板</a></li></ul>
+  </div>
+  </div>
+  </details>
+  </aside>
+
+  <article class="doc-body">
+    <header class="doc-head">
+      <p class="crumb"><a href="../db.html">数据库系统概论</a> · 第 7 章</p>
+      <h1>数据库设计</h1>
+      <p class="meta">共 9 节 <span class="dot">·</span> 约 7,992 字 <span class="dot">·</span> 课件 183 页 <span class="dot">·</span> 本章自测 24 题</p>
+      <p class="status"><span>已掌握 <b data-mastery-count>0 / 9</b> 节</span>
+        <span class="track"><i data-mastery-bar></i></span></p>
+    </header>
+    <div class="note">
+
+<p class="lead">本章回答“怎样从零设计一个数据库”：从用户需求出发，经概念结构、逻辑结构、物理结构三级抽象，最后实施并长期维护。它是关系模型、SQL、范式理论之后的综合应用章，期末必有一道 10 分左右的 E-R 图转关系模式大题；六阶段流程、数据字典五部分、三类冲突几乎年年以简答、填空形式出现。</p>
+
+<h2 id="s1"><span class="h2no">7.1</span>数据库设计概述</h2>
+
+<p>数据库设计是指<strong>对给定应用环境，构造（设计）优化的数据库逻辑模式和物理结构，并据此建立数据库及其应用系统，使之能够有效地存储和管理数据，满足各种用户的应用需求</strong>。需求分两类：<strong>信息管理要求</strong>（存哪些数据对象）与<strong>数据操作要求</strong>（查询、增、删、改、统计）。目标是提供信息基础设施和高效率运行环境：<strong>存取效率高、存储空间利用率高、运行管理效率高</strong>。</p>
+
+<p>建设规律是<strong>三分技术，七分管理，十二分基础数据</strong>；<strong>结构（数据）设计与行为（处理）设计要结合</strong>。传统软件工程重行为，早期数据库设计重结构，都把二者割裂。</p>
+
+<p>方法上，<strong>手工试凑法</strong>靠经验、质量难保证、维护代价高；<strong>规范设计法</strong>强调<strong>过程迭代和逐步求精</strong>，代表有新奥尔良方法（需求分析、概念设计、逻辑设计、物理设计）、基于 E-R 模型的方法、3NF 方法、面向对象方法与 UML 方法。</p>
+
+<ol class="steps"><li>需求分析</li><li>概念结构设计</li><li>逻辑结构设计</li><li>物理结构设计</li><li>数据库实施</li><li>运行维护</li></ol>
+
+<p>六阶段中，<strong>需求分析与概念结构设计独立于任何 DBMS</strong>，<strong>逻辑与物理设计同选用的 DBMS 密切相关</strong>；六阶段往往反复。人员：<strong>设计人员自始至终参与</strong>；<strong>DBA 与用户代表参加需求分析和运行维护</strong>；开发人员实施阶段参与。</p>
+
+<p>各级模式随阶段形成：需求分析综合各用户需求；概念设计形成独立于机器与 DBMS 的<strong>概念模式（E-R 图）</strong>；逻辑设计先转数据模型成<strong>逻辑模式</strong>，再建视图成<strong>外模式</strong>；物理设计做存储安排、建索引，成<strong>内模式</strong>。</p>
+
+<table>
+<thead><tr><th>阶段</th><th>主要任务</th><th>形成的模式</th><th>依赖 DBMS</th></tr></thead>
+<tbody>
+<tr><td>需求分析</td><td>调查组织与业务，明确信息、处理与安全完整性要求</td><td>综合需求（数据字典）</td><td>独立</td></tr>
+<tr><td>概念结构设计</td><td>归纳抽象用户需求，建概念模型</td><td>概念模式（E-R 图）</td><td>独立</td></tr>
+<tr><td>逻辑结构设计</td><td>E-R 图转数据模型、优化、建视图</td><td>逻辑模式＋外模式</td><td>密切相关</td></tr>
+<tr><td>物理结构设计</td><td>选存取方法、定存储结构并评价</td><td>内模式</td><td>密切相关</td></tr>
+<tr><td>数据库实施</td><td>建库、编程序、数据入库、试运行</td><td>—</td><td>密切相关</td></tr>
+<tr><td>运行和维护</td><td>转储恢复、安全完整、性能监督、重组重构</td><td>—</td><td>密切相关</td></tr>
+</tbody>
+<caption>表 1　数据库设计六阶段及其形成的各级模式</caption>
+</table>
+
+<figure class="fig">
+<svg viewBox="0 0 760 200" role="img" aria-label="数据库设计六阶段与各级模式的对应关系" width="760" height="200">
+  <rect class="acc" x="10" y="15" width="170" height="42" rx="4"/>
+  <text x="95" y="41" text-anchor="middle" font-size="13">需求分析</text>
+  <path class="ln" d="M95,57 L95,100 M90,93 L95,101 L100,93"/>
+  <rect class="box" x="10" y="105" width="170" height="52" rx="4"/>
+  <text x="95" y="127" text-anchor="middle" font-size="12">综合需求</text>
+  <text class="lbl" x="95" y="145" text-anchor="middle">（数据字典）</text>
+  <rect class="acc" x="200" y="15" width="170" height="42" rx="4"/>
+  <text x="285" y="41" text-anchor="middle" font-size="13">概念结构设计</text>
+  <path class="ln" d="M285,57 L285,100 M280,93 L285,101 L290,93"/>
+  <rect class="box" x="200" y="105" width="170" height="52" rx="4"/>
+  <text x="285" y="127" text-anchor="middle" font-size="12">概念模式</text>
+  <text class="lbl" x="285" y="145" text-anchor="middle">（E-R 图）</text>
+  <rect class="acc" x="390" y="15" width="170" height="42" rx="4"/>
+  <text x="475" y="41" text-anchor="middle" font-size="13">逻辑结构设计</text>
+  <path class="ln" d="M475,57 L475,100 M470,93 L475,101 L480,93"/>
+  <rect class="box" x="390" y="105" width="170" height="52" rx="4"/>
+  <text x="475" y="127" text-anchor="middle" font-size="12">逻辑模式＋外模式</text>
+  <text class="lbl" x="475" y="145" text-anchor="middle">（视图）</text>
+  <rect class="acc" x="580" y="15" width="170" height="42" rx="4"/>
+  <text x="665" y="41" text-anchor="middle" font-size="13">物理结构设计</text>
+  <path class="ln" d="M665,57 L665,100 M660,93 L665,101 L670,93"/>
+  <rect class="box" x="580" y="105" width="170" height="52" rx="4"/>
+  <text x="665" y="127" text-anchor="middle" font-size="12">内模式</text>
+  <text class="lbl" x="665" y="145" text-anchor="middle">（存储与索引）</text>
+  <text class="lbl" x="380" y="185" text-anchor="middle">实施与运行维护不产生新模式，只调整已有模式</text>
+</svg>
+<figcaption>图 1　数据库设计六阶段与各级模式的对应关系</figcaption>
+</figure>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>六阶段名称、顺序、产出模式、是否依赖 DBMS 是简答得分点。</p><ul><li><strong>需求分析</strong>出数据字典；<strong>概念设计</strong>出 E-R 图，二者独立于 DBMS。</li><li><strong>逻辑设计</strong>转关系模型成逻辑模式，建视图成外模式。</li><li><strong>物理设计</strong>选存取方法、定存储结构成内模式。</li><li><strong>实施</strong>建库、编程序、入库、试运行；<strong>运行维护</strong>转储、安全完整、性能、重组重构。</li></ul></div>
+
+<div class="trap"><p class="t">易错</p><p>“逻辑结构设计独立于 DBMS”错，<strong>只有需求分析和概念结构设计独立</strong>。也别轻视需求分析：它是否充分准确，直接决定建库速度和质量。</p></div>
+
+<div class="mem">口诀：<b>需、概、逻、物、实、维</b>——需求概念逻辑物理，实施维护六步齐；前三步出图出表，后三步建库运维。</div>
+
+<h2 id="s2"><span class="h2no">7.2</span>需求分析</h2>
+
+<p>需求分析<strong>是设计数据库的起点</strong>，结果是否准确直接影响后续各阶段是否合理实用。任务是：调查现实世界要处理的对象，了解原系统概况，明确用户需求，确定新系统功能，并<strong>充分考虑今后可能的扩充和改变</strong>。调查重点是<strong>“数据”和“处理”</strong>，要获得三方面要求：<strong>信息要求</strong>（需要获得信息的内容与性质，由此导出存哪些数据）、<strong>处理要求</strong>（完成哪些功能、性能要求如何）、<strong>安全性与完整性要求</strong>。</p>
+
+<p>难点是双方知识不对称：用户缺计算机知识、需求常变；设计人员缺用户专业知识。解法是<strong>不断深入与用户交流</strong>。调查四步：组织机构、各部门业务活动、明确三类要求、确定系统边界。六种方法：<strong>跟班作业、开调查会、请专人介绍、询问、设计调查表请用户填写、查阅记录</strong>。分析表达用<strong>结构化分析方法（SA）</strong>：<strong>从最上层组织机构入手，自顶向下、逐层分解</strong>。分析报告必须交用户认可。</p>
+
+<p><strong>数据字典是关于数据流图中数据的描述，不是数据本身</strong>（与元数据有区别）；需求分析阶段建立，设计过程中不断修改、充实、完善，是详细数据收集和数据分析的主要结果。它由五部分组成：<strong>数据项、数据结构、数据流、数据存储、处理过程</strong>。<strong>数据项是不可再分的最小单位</strong>，若干数据项组成数据结构，字典通过定义数据项和数据结构来描述数据流、数据存储的逻辑内容。</p>
+
+<table>
+<thead><tr><th>成分</th><th>定义</th><th>描述内容</th><th>要点</th></tr></thead>
+<tbody>
+<tr><td>数据项</td><td>不可再分的数据单位</td><td>{数据项名，含义说明，别名，数据类型，长度，取值范围，取值含义，与其他数据项的逻辑关系，数据项之间的联系}</td><td>“取值范围”“逻辑关系”定义完整性约束，是数据检验的依据</td></tr>
+<tr><td>数据结构</td><td>数据之间的组合关系</td><td>{数据结构名，含义说明，组成：{数据项或数据结构}}</td><td>可由数据项、数据结构或二者混合组成</td></tr>
+<tr><td>数据流</td><td>数据结构在系统内传输的路径</td><td>{数据流名，说明，来源，去向，组成：{数据结构}，平均流量，高峰期流量}</td><td>平均流量是单位时间传输次数</td></tr>
+<tr><td>数据存储</td><td>数据结构停留或保存的地方，也是数据流的来源和去向之一</td><td>{数据存储名，说明，编号，输入数据流，输出数据流，组成：{数据结构}，数据量，存取频度，存取方式}</td><td>存取方式：批处理/联机、检索/更新、顺序/随机</td></tr>
+<tr><td>处理过程</td><td>对处理逻辑的说明性描述</td><td>{处理过程名，说明，输入：{数据流}，输出：{数据流}，处理：{简要说明}}</td><td>逻辑用判定表/判定树；处理要求是物理设计与评价依据</td></tr>
+</tbody>
+<caption>表 2　数据字典的五个组成部分</caption>
+</table>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>五部分名称与定义是高频填空，必须默写。</p><ul><li><strong>数据项</strong>：最小单位，取值范围与逻辑关系定义完整性约束。</li><li><strong>数据结构</strong>：数据项或数据结构的组合关系。</li><li><strong>数据流</strong>：传输路径，含来源、去向、平均流量、高峰期流量。</li><li><strong>数据存储</strong>：停留或保存处，含输入/输出流、数据量、频度、方式。</li><li><strong>处理过程</strong>：只写说明性信息，逻辑交给判定表/判定树。</li></ul></div>
+
+<div class="trap"><p class="t">易错</p><p>①数据字典不是数据库里的数据，而是<strong>关于数据流图中数据的描述</strong>。②处理过程不是程序流程，字典只写说明性信息，逻辑用<strong>判定表或判定树</strong>。③调查重点“数据”与“处理”并重。</p></div>
+
+<div class="mem">口诀：<b>项、构、流、储、过程</b>——最小数据项，组合成结构，结构流动成流，停留成存储，加工成处理。</div>
+
+<h2 id="s3"><span class="h2no">7.3.1</span>概念模型与 E-R 模型</h2>
+
+<p>把需求抽象为信息结构（概念模型）的过程就是概念结构设计。概念模型<strong>真实充分反映现实、易于理解、易于更改、易于向关系/网状/层次模型转换</strong>，描述工具是 E-R 图，三要素：<strong>实体型用矩形，属性用椭圆形，联系用菱形</strong>，均以无向边连接，边上标 1∶1、1∶n 或 m∶n；<strong>联系也可以有属性</strong>（如选修的“成绩”）。</p>
+
+<p>三类联系：<strong>1∶1</strong>——A 中每个实体在 B 中至多一个（也可没有），反之亦然，如班级与正班长；<strong>1∶n</strong>——A 中每个实体在 B 中有 n 个（n≥0），反之 B 中每个实体在 A 中至多一个，如班级与学生；<strong>m∶n</strong>——A 中每个实体在 B 中有 n 个（n≥0），反之 B 中每个实体在 A 中也有 m 个（m≥0），如课程与学生。两个以上实体型之间也有这三类联系；<strong>联系的度＝参与联系的实体型数目</strong>。三元例：课程、教师、参考书，一门课可由若干教师讲授、用若干参考书，每个教师只讲一门课、每本参考书只供一门课，故<strong>课程与教师、参考书之间是 1∶n</strong>。单个实体型内部也可有联系，如职工“领导”职工是 1∶n。</p>
+
+<p><strong>【补充】弱实体</strong>：自身属性不足以形成主码、必须依附属主实体才能存在的实体，如“订单细节”依附“订单”。E-R 图中弱实体用双矩形、依赖联系用双菱形；其码＝<strong>属主实体的码＋弱实体的部分码</strong>，转换时以此组合为主码，属主码作外码。</p>
+
+<p>实体与属性划分两准则：<strong>（1）属性不能再具有需要描述的性质，必须是不可分的数据项，不能包含其他属性；（2）属性不能与其他实体具有联系</strong>。能当属性就尽量当属性以简化 E-R 图，需要被描述或参与联系则上升为实体。三例：职称不与工资福利挂钩可作属性，否则应作实体；病房号若一个病人只住一个病房可作属性，若病房还要与医生发生“负责”联系则应作实体；仓库号若一种货物只存一个仓库可作属性，若可存多个仓库、仓库有面积属性或与职工有管理联系，则仓库应作实体。【例 7.1】销售管理中，订单细节含零件号、数量，按准则（1）应上升为实体，订单与订单细节是 1∶n；每种产品有不同订货量的折扣，应增设“折扣规则”实体。</p>
+
+<div class="trap"><p class="t">易错</p><p>①1∶n 方向写反：班级与学生是 1∶n，<strong>n 端是学生</strong>，“班级号”作外码放进学生表。②漏画联系属性：成绩、供应量必须挂菱形。③两个方向都是“多个”却判成 1∶n——A 对 B 多、B 对 A 也多，就是 m∶n。</p></div>
+
+<div class="mem">口诀：<b>方框装实体，椭圆挂属性，菱形连联系；一一互唯一，一多单向多，多多人人广</b>——判定时先固定一端问“它对面有几个”。</div>
+
+<h2 id="s4"><span class="h2no">7.3.5</span>概念结构的集成：冲突与冗余</h2>
+
+<p>各分 E-R 图面向的问题不同，集成时必有不一致，称为冲突。集成分两步：<strong>合并</strong>——解决冲突，生成初步 E-R 图；<strong>修改和重构</strong>——消除不必要冗余，生成基本 E-R 图。</p>
+
+<p>冲突分三类。<strong>属性冲突</strong>：属性域冲突（类型、范围或集合不同，如零件号一处整数、一处字符型）与单位冲突（公斤/斤/克）。<strong>命名冲突</strong>：同名异义（不同对象同名）与异名同义（同一对象不同名，如科研项目在财务科叫“项目”、科研处叫“课题”、生产管理处叫“工程”）；可发生在实体、联系或属性一级，靠讨论、协商等行政手段解决。<strong>结构冲突</strong>：同一对象抽象不同（职工一处是实体、一处是属性），把属性变换为实体或反之；同一实体在各图中属性个数与次序不同，<strong>取各子系统属性的并集</strong>再调次序；联系类型不同（一处 m∶n、一处 1∶n），<strong>按应用语义综合或调整</strong>。</p>
+
+<table>
+<thead><tr><th>类型</th><th>典型表现</th><th>解决办法</th></tr></thead>
+<tbody>
+<tr><td>属性冲突</td><td>域冲突（类型、范围、集合不同）；单位冲突（公斤/斤/克）</td><td>统一类型、范围与单位</td></tr>
+<tr><td>命名冲突</td><td>同名异义；异名同义（项目/课题/工程）</td><td>讨论、协商统一命名</td></tr>
+<tr><td>结构冲突</td><td>同一对象抽象不同；同一实体属性集不同；联系类型不同</td><td>实体属性互转；属性取并集；按语义调整联系类型</td></tr>
+</tbody>
+<caption>表 3　分 E-R 图集成的三类冲突</caption>
+</table>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>冲突与冗余的结论要能直接背写。</p><ul><li>集成两步：合并出初步 E-R 图，重构出基本 E-R 图。</li><li>三类冲突：属性（域/单位）、命名（同名异义/异名同义）、结构（抽象/属性集/联系类型）。</li><li>冗余联系一定在 D＝FL－GL 中，D 中不一定冗余；为效率可保留冗余。</li></ul></div>
+
+<p>冗余数据是<strong>可由基本数据导出的数据</strong>，冗余联系是<strong>可由其他联系导出的联系</strong>。消除冗余用分析方法，以数据字典和数据流图为依据。图 7.26 中 Q3＝Q1×Q2、Q4＝∑Q5，故 Q3、Q4 可消去；Q3 消去后产品与材料间 m∶n 的冗余联系也应消去。但<strong>并非所有冗余都必须消除</strong>，为提高效率可以容忍冗余。</p>
+
+<p>用规范化理论消除冗余：①用实体码间的函数依赖表示联系，得函数依赖集 FL（如“职工号→部门号”“（职工号，产品号）→工作天数”）；②求 FL 的最小覆盖 GL，差集 D＝FL－GL，逐一考察 D 中依赖，若是冗余联系就去掉。两个限制必须写：<strong>冗余联系一定在 D 中，而 D 中的联系不一定是冗余的</strong>；实体间存在多种联系时要在形式上加以区分。【例 7.2】视图集成三处理：“项目”与“产品”异名同义，统一为“产品”；职工与仓库的工作关系已含在部门与职工联系中，取消；职工间领导关系可由部门与职工（经理）的领导关系、部门与职工的从属关系导出，取消。</p>
+
+<div class="eg"><p class="t">例题</p><p>【补充例题】集成时发现：甲图“零件号”为整型、乙图为字符型；甲图称“项目”、乙图称“产品”；甲图“职工”是实体，乙图“职工号”只是部门属性。指出冲突类型与解决办法。</p><div class="sol"><p>①属<strong>属性冲突中的域冲突</strong>，统一数据类型。②属<strong>命名冲突中的异名同义</strong>，协商统一实体名（例 7.2 统一为“产品”）。③属<strong>结构冲突中抽象不同</strong>，把属性变换为实体，本题统一“职工”为实体。</p></div></div>
+
+<div class="trap"><p class="t">易错</p><p>①“冗余必须全部消除”错，为效率可保留。②“D 中的依赖都是冗余联系”错，<strong>冗余联系一定在 D 中，D 中不一定冗余</strong>。③同名异义与异名同义说反：前者同名指不同对象，后者不同名指同一对象。</p></div>
+
+<h2 id="s5"><span class="h2no">7.4.1</span>E-R 图向关系模型的转换</h2>
+
+<p>逻辑结构设计把基本 E-R 图转换为所选 DBMS 支持的数据模型的逻辑结构。E-R 图由实体型、属性、联系组成，关系模型是一组关系模式，所以转换就是<strong>把实体型、属性和联系转为关系模式</strong>。总原则：<strong>一个实体型转为一个关系模式，属性＝实体的属性，码＝实体的码</strong>。</p>
+
+<p><strong>（1）1∶1 联系</strong>：可独立成表，也可与任意一端合并。独立成表时属性＝两端实体的码＋联系属性，<strong>每个实体的码都是候选码</strong>（如“管理（BH，XH）”）；合并到某一端时，该端加入另一端的码和联系属性，<strong>合并后码不变</strong>。</p>
+
+<p><strong>（2）1∶n 联系</strong>：可独立成表，也可与 n 端合并。独立成表时属性＝两端码＋联系属性，<strong>码是 n 端实体的码</strong>（不是组合码）；合并到 n 端时，n 端加入 1 端的码和联系属性，<strong>码不变</strong>，可减少关系个数，<strong>一般更倾向于合并</strong>。如部门 dept(dno,dname) 与职工 1∶n：可建 r(dno,cno)，或写成职工(cno,cname,dno)。</p>
+
+<p><strong>（3）m∶n 联系</strong>必须独立成表：属性＝各实体的码＋联系属性，<strong>码是各实体码的组合</strong>，如选修（学号，课程号，成绩）。<strong>（4）三个及以上实体的多元联系</strong>也独立成表，属性＝各实体码＋联系属性，<strong>码是各实体码的组合</strong>，如供应（产品号，供应商号，零件号，供应量）。<strong>（5）具有相同码的模式可合并</strong>：把一个模式的全部属性加入另一个，去掉同义属性（可能同名也可能不同名），调整次序。</p>
+
+<table>
+<thead><tr><th>联系类型</th><th>独立成表的属性</th><th>独立成表的码</th><th>合并方式</th></tr></thead>
+<tbody>
+<tr><td>1∶1</td><td>两端实体的码＋联系属性</td><td>每个实体的码都是候选码</td><td>可并入任意一端，加另一端码；码不变</td></tr>
+<tr><td>1∶n</td><td>两端实体的码＋联系属性</td><td><strong>n 端实体的码</strong></td><td>并入 n 端，加 1 端码；码不变（更常用）</td></tr>
+<tr><td>m∶n</td><td>两端实体的码＋联系属性</td><td><strong>两端码的组合</strong></td><td>不能合并，必须独立成表</td></tr>
+<tr><td>三元及以上</td><td>各实体的码＋联系属性</td><td><strong>各实体码的组合</strong></td><td>不能合并，必须独立成表</td></tr>
+</tbody>
+<caption>表 4　三类联系及多元联系的转换规则</caption>
+</table>
+
+<p>图 7.28 上半部转换：部门（加经理的职工号）、职工（加部门号）、产品（加产品组长的职工号）分别是并入 1∶1“领导”、1∶n“属于”、1∶1“负责”的结果；职工工作（职工号，产品号，工作天数）来自 m∶n“参加”；供应（产品号，供应商号，零件号，供应量）来自三元联系，码为三码组合。</p>
+
+<p>校园例：学生（<u>学号</u>，姓名，性别，年龄）、课程（<u>课程号</u>，课程名）、教师（<u>教师号</u>，姓名，性别，职称）、系（<u>系名</u>，电话）；联系转成属于（教师号，系名）、讲授（教师号，课程号）、选修（学号，课程号，成绩）、拥有（系名，学号）。属于、拥有可分别并入教师与学生；讲授、选修是 m∶n，必须独立成表。</p>
+
+<pre><code><span class="c">-- m∶n 联系“选修”独立成表：组合码＋两个外码</span>
+CREATE TABLE SC (
+  Sno   CHAR(8)  NOT NULL,
+  Cno   CHAR(4)  NOT NULL,
+  Grade SMALLINT,
+  PRIMARY KEY (Sno, Cno),
+  FOREIGN KEY (Sno) REFERENCES Student(Sno),
+  FOREIGN KEY (Cno) REFERENCES Course(Cno)
+);
+<span class="c">-- 1∶n 联系“属于”并入 n 端（学生），加入 1 端（系）的码</span>
+ALTER TABLE Student ADD Sdept CHAR(20);
+ALTER TABLE Student ADD FOREIGN KEY (Sdept) REFERENCES Dept(Dno);</code></pre>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>本章分值最高，判分点是“属性取哪些、码是谁”。</p><ul><li>实体：一实体一关系，属性＝实体属性，码＝实体码。</li><li>1∶1：独立表两端码都是候选码；或并入任一端，码不变。</li><li>1∶n：独立表码是 <strong>n 端码</strong>；或并入 n 端，n 端加 1 端码。</li><li>m∶n 与多元联系：必须独立成表，码＝<strong>各实体码的组合</strong>。</li><li>相同码的模式可合并，去同义属性、调次序。</li></ul></div>
+
+<div class="eg"><p class="t">例题</p><p>【补充例题】“供应商—项目—零件”是 m∶n 的“供应”联系，供应量为联系属性；另有 1∶1 的“仓库—主任”。写出关系模式与码，并给 1∶1 的两种方案。</p><div class="sol"><p>三元联系独立成表：<strong>供应（供应商号，项目号，零件号，供应量）</strong>，码为（供应商号，项目号，零件号），三个属性同时是参照供应商、项目、零件的外码。1∶1 方案一：负责（仓库号，主任职工号），两属性<strong>都是候选码</strong>；方案二：并入仓库端 仓库（仓库号，面积，电话，主任职工号）或并入主任端，<strong>码均不变</strong>。</p></div></div>
+
+<div class="trap"><p class="t">易错</p><p>①1∶n 独立成表时把码写成“两端码的组合”——组合码只属于 m∶n 和多元联系。②1∶1 合并后改变主码——合并只加属性，<strong>码不变</strong>。③把 m∶n 硬并入一端，产生多值属性、违反 1NF。④合并时忘删同义属性。</p></div>
+
+<div class="mem">口诀：<b>实体先成表，联系看类型；一一合并任意端，一多合并多端算；多多年年建新表，三元码是全组合</b>——1∶1 各码皆候选，1∶n 取 n 端，m∶n 取全组合。</div>
+
+<h2 id="s6"><span class="h2no">7.4.2</span>数据模型的优化与用户子模式</h2>
+
+<p>逻辑设计结果不唯一，得到初步模型后还要调整结构以提高性能，即数据模型的优化，通常以规范化理论为指导。五步：<strong>①确定数据依赖</strong>；<strong>②极小化处理</strong>，消除冗余联系；<strong>③范式分析</strong>，考察部分函数依赖、传递函数依赖、多值依赖，确定属于第几范式；<strong>④按处理要求分析</strong>，确定是否合并或分解；<strong>⑤必要时分解</strong>，提高操作效率和存储利用率，分水平分解与垂直分解。</p>
+
+<p>必须记住一个反直觉结论：<strong>并不是规范化程度越高的关系就越优</strong>。查询经常涉及多个模式的属性时会频繁连接，而连接代价相当高，因此<strong>第二范式甚至第一范式也许是适合的</strong>；非 BCNF 模式虽有更新异常，但若实际只查询、不更新，就不会产生实际影响。规范化到什么程度，要<strong>权衡响应时间和潜在问题两者的利弊</strong>。</p>
+
+<p><strong>水平分解</strong>把关系的元组分为若干子集合，每个子集合定义一个子关系：对符合 80/20 的，把经常使用的数据（约 20%）分解出来；或使<strong>每个事务存取的数据对应一个子关系</strong>。<strong>垂直分解</strong>把 R 的属性分为若干子集合，原则是<strong>经常一起使用的属性分解出来</strong>；优点是提高某些事务效率，缺点是另一些事务不得不做连接而降低效率，<strong>是否采用取决于分解后所有事务的总效率是否提高</strong>，且必须<strong>保持无损连接性和保持函数依赖</strong>。</p>
+
+<p>7.4.3 用户子模式：定义数据库模式主要考虑时间效率、空间效率、易维护；定义外模式（视图）更注重用户习惯与方便，有三方面：<strong>①使用更符合用户习惯的别名</strong>；<strong>②针对不同级别用户定义不同视图以保证安全性</strong>——如产品关系上给一般顾客建 产品 1（产品号，产品名，规格，单价），给销售部门建 产品 2（再加车间、生产负责人），成本、合格率等敏感列不出现；<strong>③简化用户对系统的使用</strong>，把常用复杂查询定义为视图。</p>
+
+<div class="trap"><p class="t">易错</p><p>①“规范化程度越高越好”是最经典的错误选项。②水平分解分的是<strong>行（元组）</strong>，垂直分解分的是<strong>列（属性）</strong>，别说反。③垂直分解不一定提高效率，要看所有事务总效率。④视图作用是习惯、安全和简化，不是提高物理查询效率。</p></div>
+
+<div class="sum"><p class="t">本节小结</p><ul><li>优化五步：定依赖、极小化、判范式、按处理要求权衡、必要时分解。</li><li>高范式≠高性能；连接代价高时可降范式，只查不更时非 BCNF 可接受。</li><li>水平分解按元组，垂直分解按属性且须无损连接、保持函数依赖。</li><li>外模式面向用户：改名、分级授权、封装复杂查询。</li></ul></div>
+
+<h2 id="s7"><span class="h2no">7.5</span>数据库的物理结构设计</h2>
+
+<p>物理结构是数据库在物理设备上的存储结构与存取方法，依赖选定的 DBMS；为其选取最适合应用要求的结构就是物理设计。两步：<strong>①确定物理结构</strong>（存取方法和存储结构）；<strong>②评价</strong>，重点是时间与空间效率。不满足则修改结构，甚至返回逻辑设计。</p>
+
+<p>准备两项：充分了解应用环境、分析要运行的事务以获取参数；充分了解所用 DBMS 的内部特征，特别是存取方法和存储结构。</p>
+
+<p><strong>B+ 树索引</strong>三条选择规则：属性经常在<strong>查询条件</strong>中出现→建（组合）索引；经常作<strong>最大值、最小值等聚集函数的参数</strong>→建索引；经常在<strong>连接条件</strong>中出现→建索引。索引过多会增加维护索引和查找索引的开销。<strong>HASH 索引</strong>适合属性主要出现在<strong>等值连接或等值比较选择条件</strong>，且满足其一：关系大小可预知且不变；大小动态改变但 DBMS 提供动态 Hash。</p>
+
+<p><strong>聚簇</strong>：为提高某属性（组）的查询速度，把该属性（<strong>聚簇码</strong>）上值相同的元组<strong>集中存放于连续物理块</strong>。建聚簇索引后，基表数据按聚簇属性值升序或降序存放，<strong>索引项顺序与元组物理顺序一致</strong>；<strong>一个基本表最多只能建一个聚簇索引</strong>，适用条件是<strong>很少增删、很少修改变长列</strong>。</p>
+
+<p>聚簇的主要用途是大大提高按聚簇属性查询的效率——计算机系 500 名学生若分布在 500 个物理块上，至少要 500 次 I/O；同系元组集中后，每读一块可得多个满足条件的元组，显著减少磁盘访问。局限：只能提高某些特定应用的性能；建立与维护开销大，对已有关系建聚簇会使元组物理位置移动、原有索引失效必须重建。适用范围：通过聚簇码访问或连接是主要应用；<strong>SQL 中含与聚簇码有关的 ORDER BY、GROUP BY、UNION、DISTINCT 时特别有利</strong>。</p>
+
+<p>选择聚簇：候选聚簇有三条——常在一起连接的关系可建组合聚簇；一组属性常在相等比较条件中出现；某属性值重复率很高。再取消：经常全表扫描的、更新远多于连接的、重复出现的（多方案中选总代价最小者）。</p>
+
+<p>存储结构包括关系、索引、聚簇、日志、备份等的存储安排与系统配置，要综合<strong>存取时间、存储空间利用率、维护代价</strong>，三者常相互矛盾，须权衡折中。存放位置：<strong>易变与稳定分开、常用与低频分开</strong>；如大表分放两个磁盘以加快存取（多用户下特别有效），日志文件与数据库对象分放不同磁盘。系统配置参数（用户数、缓冲区、物理块大小、装填因子、锁数等）有合理缺省值，物理设计时按环境调整，运行后还要再调。</p>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>聚簇的定义、唯一性、适用条件是必背三连；B+ 树与 Hash 的分工是选择题常客。</p><ul><li><strong>聚簇</strong>：聚簇码值相同的元组集中存放在连续物理块；索引项顺序＝元组物理顺序。</li><li><strong>一个基本表最多一个聚簇索引</strong>；很少增删、很少改变长列才适用。</li><li>B+ 树管范围与连接；Hash 只管等值；聚簇管“相邻存放”。</li><li>存放位置：易变/稳定、常用/低频、日志与数据分开。</li><li>评价三指标：存储空间、存取时间、维护代价。</li></ul></div>
+
+<div class="eg"><p class="t">例题</p><p>【补充例题】Student 表每块存 20 行，信息系 500 名学生随机分布在各块，查询“信息系全部学生”需多少次 I/O？按系聚簇后约多少次？</p><div class="sol"><p>随机分布时 500 个元组可能落在 500 个不同块，最坏需 <strong>500 次 I/O</strong>。按系聚簇后同系元组物理相邻，读一块约得 20 行，约需 <strong>500÷20＝25 次 I/O</strong>。聚簇把“按聚簇码选择”从随机访问变成块内批量访问，且聚簇码不必逐元组存储，既提速又省空间。</p></div></div>
+
+<div class="mem">口诀：<b>B+ 树管范围，Hash 管等值，聚簇管相邻</b>——一个表一个聚簇，增删频繁别去碰。</div>
+
+<h2 id="s8"><span class="h2no">7.6</span>数据库的实施与运行维护</h2>
+
+<p>实施三件事：<strong>建立数据库结构、组织数据入库、编写与调试应用程序</strong>。<strong>组织数据入库是实施阶段最主要的工作</strong>，方法分<strong>人工方法</strong>和<strong>计算机辅助数据入库</strong>；应用程序设计应与数据设计并行，在入库同时调试程序。程序调试完成、少量数据入库后，开始联合调试（<strong>试运行</strong>），主要工作是<strong>功能测试</strong>（运行程序、测试各种功能）和<strong>性能测试</strong>（测量指标、分析是否符合设计目标）。物理设计评价结果粗糙，试运行要实测；不合格需返回物理设计调结构、改参数，有时甚至返回逻辑设计。因入库工作量太大，应采用<strong>分期入库</strong>：先小批量调试，基本合格后再大批量。试运行阶段系统不稳定、故障随时可能发生，操作人员又不熟悉，<strong>必须做好转储和恢复</strong>。</p>
+
+<p>运行维护由 DBA 负责，四项：<strong>①转储和恢复</strong>——制定转储计划，定期备份数据库和日志，故障时尽快恢复；<strong>②安全性、完整性控制</strong>——初始定义（授予不同操作权限、定义完整性约束）与修改定义（环境变化后修改安全控制、修正约束）；<strong>③性能的监督、分析和改进</strong>——用监测工具获取性能参数，分析是否处于最佳状态，否则调参改进；<strong>④重组织与重构造</strong>。</p>
+
+<p><strong>重组织</strong>：运行一段时间后记录的不断增删改使物理存储变坏，降低空间利用率和存取效率，故需重组织；分<strong>全部重组织</strong>和<strong>部分重组织</strong>（只对频繁增删的表），目标是提高性能；工作是重排存储位置、回收垃圾、减少指针链。<strong>重组织不改变原设计的数据逻辑结构和物理结构</strong>。<strong>重构造</strong>：应用环境变化使原设计不能满足新需求，需<strong>调整数据库的模式和内模式</strong>——增删数据项、改变数据项类型、增删表、改变容量、增删索引。重构造程度有限：变化太大或代价太大，说明系统生命周期结束，应重新设计。</p>
+
+<table>
+<thead><tr><th>对比项</th><th>重组织</th><th>重构造</th></tr></thead>
+<tbody>
+<tr><td>动因</td><td>增删改使物理存储变坏，效率下降</td><td>应用环境变化，原设计不能满足新需求</td></tr>
+<tr><td>改变什么</td><td>只重排物理存储：移位置、回收垃圾、减少指针链</td><td>调整模式与内模式：增删数据项/表/索引，改类型、改容量</td></tr>
+<tr><td>是否改结构</td><td><strong>不改变逻辑结构和物理结构</strong></td><td>改变逻辑模式与内模式</td></tr>
+<tr><td>程度</td><td>可全部或部分进行</td><td>程度有限，变化过大则重新设计新系统</td></tr>
+</tbody>
+<caption>表 5　重组织与重构造的区别</caption>
+</table>
+
+<div class="trap"><p class="t">易错</p><p>①把重组织说成“重新设计表结构”——它<strong>不改逻辑结构和物理结构</strong>。②试运行只做功能测试——还要做性能测试并实测指标。③试运行不合格只能改物理结构——也可能返回逻辑设计。④数据入库是实施阶段<strong>最主要</strong>的工作，不是次要工作。</p></div>
+
+<h2 id="s9"><span class="h2no">7.7</span>小结：全章串讲与答题模板</h2>
+
+<p>全章一条线：<strong>需求分析</strong>出数据字典（现实世界需求）→<strong>概念设计</strong>出 E-R 图（信息世界模型）→<strong>逻辑设计</strong>出逻辑模式与外模式→<strong>物理设计</strong>出内模式→<strong>实施</strong>→<strong>运行维护</strong>（转储、安全、性能、重组重构），过程中常有反复。</p>
+
+<p>设计大题固定套路：①圈实体与联系，判 1∶1、1∶n、m∶n（三元单独标）；②画 E-R 图（矩形实体、椭圆属性、菱形联系，边标基数）；③按“实体先成表、联系看类型”转换，1∶1 并任一端、1∶n 并 n 端、m∶n 与多元独立成表；④标主码（下划线）与外码，说明参照；⑤问优化则答规范化检查、水平/垂直分解、视图；⑥问物理答索引/聚簇与评价指标。</p>
+
+<div class="sum"><p class="t">本节小结</p><ul><li>六阶段可反复；需求分析与概念设计独立于 DBMS，逻辑与物理设计依赖 DBMS。</li><li>模式形成：概念模式（E-R 图）→ 逻辑模式＋外模式 → 内模式。</li><li>转换一句话：实体成表，1∶1 任并、1∶n 并 n 端、m∶n 与多元必独立、同码可合并。</li><li>优化权衡范式与性能；物理抓存取方法、存储位置与评价；维护抓四项日常工作。</li></ul></div>
+
+
+    </div>
+    <div class="selftest">
+      <span class="st-n">本章共 24 道自测题（选择 / 判断 / 填空 / 简答），作答后立即判分并给出解析。</span>
+      <a href="quiz.html?ch=7">刷本章题</a>
+    </div>
+    <nav class="pager" aria-label="翻页"><a class="prev" href="6.html">‹ 第 6 章 关系数据理论</a><a class="next" href="9.html">第 9 章 关系查询处理和查询优化 ›</a></nav>
+  </article>
+
+</div>
+</main>
+
+<footer class="footer">
+  <div class="wrap foot-inner">
+    <div class="foot-cols">
+      <div class="foot-brand">
+        <div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="7" ry="2.6"/><path d="M5 6v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6V6"/><path d="M5 12v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6v-6"/></svg>数据库系统概论</div>
+        <p>据本学期 14 个课件文件整理，教材为王珊《数据库系统概论》（第 6 版）。题目均为自编练习，不是真题。</p>
+      </div>
+      <div>
+        <h4>学习</h4>
+        <ul>
+          <li><a href="../index.html">备考首页</a></li>
+          <li><a href="../db.html">十章讲义</a></li>
+          <li><a href="../db/cheatsheet.html">考前速查卡</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>练习</h4>
+        <ul>
+          <li><a href="../db/quiz.html">题库 · 239 题</a></li>
+          <li><a href="../db/exam.html">模拟卷 · 3 套</a></li>
+          <li><a href="../index.html#plan">七天冲刺表</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>说明</h4>
+        <ul>
+          <li>课件未含第 8 章</li>
+          <li>进度只存在本机</li>
+          <li>可离线打开</li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-legal"><span>© <span id="year">2026</span> 数据库系统概论 · 期末备考</span><span>据课件整理 · 仅供复习使用</span></div>
+  </div>
+</footer>
+<button class="backtop" id="backtop" type="button" aria-label="回到顶部" hidden>↑</button>
+<script src="../assets/site.js?v=2"></script>
+<script src="../assets/study.js?v=2"></script>
+</body>
+</html>

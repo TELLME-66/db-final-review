@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>速查卡 · 数据库系统概论 · 备考</title>
+<meta name="description" content="数据库系统概论考前速查：SQL 模板、关系代数、范式判定、三级模式、完整性违约处理、锁与协议、恢复步骤、E-R 转换、查询优化规则。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/theme.css?v=2">
+<link rel="stylesheet" href="../assets/site.css?v=2">
+<link rel="stylesheet" href="../assets/course.css?v=2">
+<script>(function(){var d=document.documentElement;d.classList.add('js');try{var t=localStorage.getItem('site-theme');if(t==='light'||t==='dark')d.setAttribute('data-theme',t);}catch(e){}})();</script>
+</head>
+<body data-ch="cs" data-nomastery>
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="topbar" id="topbar">
+  <div class="wrap-wide bar">
+    <a class="brand" href="../index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="7" ry="2.6"/><path d="M5 6v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6V6"/><path d="M5 12v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6v-6"/></svg><span>数据库系统概论</span></a>
+    <nav class="nav" aria-label="站点导航">
+      <a href="../index.html">首页</a>
+      <a href="../db.html">讲义</a>
+      <a href="quiz.html">题库</a>
+      <a href="exam.html">模拟卷</a>
+      <a href="cheatsheet.html" aria-current="page">速查卡</a>
+    </nav>
+    <button class="icon-btn" id="themeBtn" type="button" title="主题：跟随系统（点击切换）" aria-label="主题：跟随系统（点击切换）"><span id="themeIcon" aria-hidden="true">◐</span></button>
+  </div>
+</header>
+<div id="readbar"></div>
+
+<main id="main">
+<div class="doc">
+
+  <aside class="doc-toc" aria-label="速查目录">
+  <details class="toc-fold" open>
+  <summary>速查目录</summary>
+  <nav class="mod-switch" aria-label="课程模块">
+    <a href="../db.html">讲义</a>
+    <a href="quiz.html">题库</a>
+    <a href="exam.html">模拟卷</a>
+    <a href="cheatsheet.html" aria-current="page">速查卡</a>
+  </nav>
+  <a class="toc-home" href="../db.html">数据库系统概论</a>
+  <p class="toc-ver"><span>考前 30 分钟</span>一页纸</p>
+  <div class="toc-body">
+    <div class="toc-ch"><h2>速查</h2>
+    <ul class="toc-list">
+      <li><a href="#c1">1　三级模式与数据独立性</a></li>
+      <li><a href="#c2">2　SQL 建表与三类完整性</a></li>
+      <li><a href="#c3">3　SQL 查询模板</a></li>
+      <li><a href="#c4">4　关系代数与 SQL 对照</a></li>
+      <li><a href="#c5">5　授权、角色、视图、触发器</a></li>
+      <li><a href="#c6">6　范式判定流程</a></li>
+      <li><a href="#c7">7　E-R 图转关系模式</a></li>
+      <li><a href="#c8">8　查询优化：规则与语法树</a></li>
+      <li><a href="#c9">9　事务、锁与封锁协议</a></li>
+      <li><a href="#c10">10　恢复：故障与动作对照</a></li>
+      <li><a href="#c11">11　高频简答 18 条</a></li>
+    </ul></div>
+  </div>
+  </details>
+  </aside>
+
+  <article class="doc-body">
+    <header class="doc-head">
+      <p class="crumb"><a href="../db.html">数据库系统概论</a> · 速查卡</p>
+      <h1>考前速查卡</h1>
+      <p class="meta">11 个板块 · 只放「考场上要写出来的东西」 · 建议打印或在手机上快速翻</p>
+    </header>
+
+    <div class="note">
+<p class="lead">这张卡把整门课压缩成「可以直接写进答题纸」的形式：结论、模板、判定流程、对照表。看讲义理解，看这张卡回忆。带 <b>★</b> 的是历年卷面出现频率最高的部分。</p>
+
+<h2 id="c1"><span class="h2no">1</span>三级模式与数据独立性 ★</h2>
+<div class="tbl-wrap"><table>
+<caption>表 1　三级模式的分工与数量</caption>
+<thead><tr><th>层次</th><th>名称</th><th>对应对象</th><th>数量</th><th>谁使用</th></tr></thead>
+<tbody>
+<tr><td>外模式</td><td>子模式 / 用户模式</td><td>视图（局部数据的逻辑结构）</td><td>多个</td><td>应用程序、最终用户</td></tr>
+<tr><td>模式</td><td>逻辑模式</td><td>全体基本表（全局逻辑结构）</td><td>唯一</td><td>DBA、设计人员</td></tr>
+<tr><td>内模式</td><td>存储模式</td><td>存储文件、索引、存储结构</td><td>唯一</td><td>DBMS 内部</td></tr>
+</tbody></table></div>
+<ul>
+<li><b>外模式/模式映像</b>：模式改变时只要改映像、应用程序不变 → <b>逻辑独立性</b>。例：基本表增加一列、拆分表，视图定义不变。</li>
+<li><b>模式/内模式映像</b>：存储结构改变（换索引、换文件组织）时只要改映像、模式不变 → <b>物理独立性</b>。</li>
+<li>一句话：<b>映像保独立，外模式保安全，模式保全局</b>。三级模式是「结构的三个层次」，两级映像是「两种独立性的实现机制」。</li>
+</ul>
+<div class="trap"><p class="t">易错</p><p>「一个数据库只有一个模式和一个内模式，但可以有多个外模式」——数量关系必考；「视图对应外模式，基本表对应模式，存储文件对应内模式」也要能对上。</p></div>
+
+<h2 id="c2"><span class="h2no">2</span>SQL 建表与三类完整性 ★</h2>
+<pre><code><span class="c">-- 学生-课程库：所有 SQL 题的公共模式</span>
+CREATE TABLE Student (
+  Sno    CHAR(9)  PRIMARY KEY,          <span class="c">-- 实体完整性</span>
+  Sname  CHAR(20) UNIQUE NOT NULL,
+  Ssex   CHAR(2)  CHECK (Ssex IN ('男','女')),
+  Sage   SMALLINT CHECK (Sage BETWEEN 15 AND 45),
+  Sdept  CHAR(20)
+);
+CREATE TABLE Course (
+  Cno     CHAR(4) PRIMARY KEY,
+  Cname   CHAR(40) NOT NULL,
+  Cpno    CHAR(4),                       <span class="c">-- 先修课，自反参照</span>
+  Ccredit SMALLINT,
+  FOREIGN KEY (Cpno) REFERENCES Course(Cno)
+);
+CREATE TABLE SC (
+  Sno   CHAR(9),
+  Cno   CHAR(4),
+  Grade SMALLINT,
+  PRIMARY KEY (Sno, Cno),                <span class="c">-- 实体完整性（组合码）</span>
+  FOREIGN KEY (Sno) REFERENCES Student(Sno) ON DELETE CASCADE,
+  FOREIGN KEY (Cno) REFERENCES Course(Cno)
+);</code></pre>
+<div class="tbl-wrap"><table>
+<caption>表 2　三类完整性：定义、检查时机、违约处理</caption>
+<thead><tr><th>完整性</th><th>定义子句</th><th>检查时机</th><th>违约处理</th></tr></thead>
+<tbody>
+<tr><td>实体完整性</td><td>PRIMARY KEY</td><td>插入、更新主码</td><td>拒绝（No Action）</td></tr>
+<tr><td>参照完整性</td><td>FOREIGN KEY … REFERENCES …</td><td>插入/更新外码；删除/更新被参照的主码</td><td>NO ACTION / RESTRICT（默认拒绝）、CASCADE、SET NULL</td></tr>
+<tr><td>用户定义完整性</td><td>NOT NULL、UNIQUE、CHECK、DEFAULT</td><td>插入、更新</td><td>拒绝</td></tr>
+</tbody></table></div>
+<div class="trap"><p class="t">易错</p><p>① 外码可以取空值（除非列上加了 NOT NULL），但<b>主码不能为空</b>；② 参照完整性违约处理要写清「删除被参照元组」和「更新被参照主码」两种情形；③ CHECK 是属性/元组级，跨表的复杂约束要用<b>断言</b>或<b>触发器</b>。</p></div>
+
+<h2 id="c3"><span class="h2no">3</span>SQL 查询模板 ★</h2>
+<pre><code>SELECT [ALL|DISTINCT] 目标列 [,…]
+FROM 表/视图 [,…]
+[WHERE 条件]
+[GROUP BY 列 [,…] [HAVING 组条件]]
+[ORDER BY 列 [ASC|DESC]];
+
+<span class="c">-- 单表：范围、集合、空值、模糊</span>
+SELECT Sname FROM Student WHERE Sage BETWEEN 20 AND 23;
+SELECT Sno FROM SC WHERE Grade IS NULL;          <span class="c">-- 空值只能用 IS (NOT) NULL</span>
+SELECT Sname FROM Student WHERE Sname LIKE '刘%' ESCAPE '\';
+
+<span class="c">-- 聚集 + 分组 + 组条件</span>
+SELECT Cno, COUNT(*) AS 人数, AVG(Grade) AS 平均分
+FROM SC GROUP BY Cno HAVING COUNT(*) &gt;= 10;
+
+<span class="c">-- 连接：等值、自身、外连接</span>
+SELECT Student.Sno, Sname, Cname, Grade
+FROM Student, SC, Course
+WHERE Student.Sno = SC.Sno AND SC.Cno = Course.Cno;
+SELECT S1.Sno, S1.Sname FROM Student S1, Student S2
+WHERE S1.Sdept = S2.Sdept AND S2.Sname = '刘晨' AND S1.Sname &lt;&gt; '刘晨';
+SELECT Student.Sno, Sname, Cno, Grade FROM Student
+LEFT OUTER JOIN SC ON Student.Sno = SC.Sno;       <span class="c">-- 没选课的学生也列出</span>
+
+<span class="c">-- 嵌套：IN / 比较 / ANY / ALL</span>
+SELECT Sname FROM Student
+WHERE Sno IN (SELECT Sno FROM SC WHERE Cno = '1');
+SELECT Sname FROM Student
+WHERE Sage &gt; ALL (SELECT Sage FROM Student WHERE Sdept = 'CS');
+
+<span class="c">-- EXISTS：相关子查询；双重 NOT EXISTS 表达“全部”</span>
+SELECT Sname FROM Student S
+WHERE NOT EXISTS (
+  SELECT * FROM Course C
+  WHERE NOT EXISTS (
+    SELECT * FROM SC WHERE SC.Sno = S.Sno AND SC.Cno = C.Cno));
+
+<span class="c">-- 集合查询</span>
+SELECT Sno FROM SC WHERE Cno = '1'
+UNION SELECT Sno FROM SC WHERE Cno = '2';</code></pre>
+<div class="kp"><p class="t">考点 · 必背的三种固定写法</p>
+<ul>
+<li><b>「全部」</b>＝没有一门课是他没选的：<code>NOT EXISTS (… WHERE NOT EXISTS (…))</code>，外层遍历学生、中层遍历课程、内层查选课。</li>
+<li><b>「至少选了 x 所选全部课程」</b>＝不存在「x 选了而他没选」的课：把上一式中层改成 <code>SELECT * FROM SC X WHERE X.Sno = '202215122'</code>。</li>
+<li><b>「没有选课的学生」</b>：<code>LEFT JOIN … WHERE SC.Sno IS NULL</code> 或 <code>NOT IN (SELECT Sno FROM SC)</code>。</li>
+</ul></div>
+<div class="trap"><p class="t">易错</p><p>① WHERE 中不能用聚集函数，聚集条件只能进 HAVING；② 分组后 SELECT 只能出现分组列和聚集函数；③ <code>COUNT(*)</code> 统计行数、<code>COUNT(列)</code> 跳过 NULL；④ 字符串比较、日期格式与 <code>NOT IN</code> 遇 NULL 返回 UNKNOWN（查不出任何行）。</p></div>
+
+<h2 id="c4"><span class="h2no">4</span>关系代数与 SQL 对照 ★</h2>
+<div class="tbl-wrap"><table>
+<caption>表 3　五种基本运算 + 四个组合运算</caption>
+<thead><tr><th>运算</th><th>符号</th><th>含义</th><th>SQL 对应</th></tr></thead>
+<tbody>
+<tr><td>并</td><td>R ∪ S</td><td>属于 R 或属于 S 的元组（同元）</td><td>UNION</td></tr>
+<tr><td>差</td><td>R − S</td><td>属于 R 而不属于 S</td><td>EXCEPT / NOT IN</td></tr>
+<tr><td>交</td><td>R ∩ S</td><td>同时属于两者</td><td>INTERSECT</td></tr>
+<tr><td>笛卡尔积</td><td>R × S</td><td>任意组合</td><td>FROM R, S</td></tr>
+<tr><td>选择</td><td>σ<sub>条件</sub>(R)</td><td>选行</td><td>WHERE</td></tr>
+<tr><td>投影</td><td>π<sub>列</sub>(R)</td><td>选列（自动去重）</td><td>SELECT DISTINCT</td></tr>
+<tr><td>连接</td><td>R ⋈ S</td><td>自然连接（同名属性等值且去重）</td><td>NATURAL JOIN / JOIN … USING</td></tr>
+<tr><td>除</td><td>R ÷ S</td><td>「对 S 中每个元组都成立」</td><td>双重 NOT EXISTS</td></tr>
+</tbody></table></div>
+<div class="kp"><p class="t">考点 · 除运算三行公式</p>
+<p>设 R(X,Y)、S(Y)，则 <b>R ÷ S = π<sub>X</sub>(R) − π<sub>X</sub>( (π<sub>X</sub>(R) × S) − R )</b>。<br>
+含义：先造出「所有 x 与所有 y 的组合」，减去 R 中已有的，剩下的就是「缺了某些 y 的 x」，再从全部 x 中减掉它们。</p></div>
+<div class="trap"><p class="t">易错</p><p>关系代数没有「计数」，遇到「选修了 3 门以上」要么用 SQL，要么写成「存在 3 个不同课程」的复杂表达式；投影默认去重，SQL 要写 DISTINCT；自然连接按同名属性连接，不写连接条件。</p></div>
+
+<h2 id="c5"><span class="h2no">5</span>授权、角色、视图、触发器 ★</h2>
+<pre><code><span class="c">-- 授权与回收</span>
+GRANT SELECT, UPDATE(Sage) ON TABLE Student TO U1 WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON TABLE SC TO U2, U3;
+REVOKE SELECT ON TABLE Student FROM U1 CASCADE;   <span class="c">-- 级联回收它转授的权限</span>
+
+<span class="c">-- 角色</span>
+CREATE ROLE R1;
+GRANT SELECT, INSERT ON TABLE Student TO R1;
+GRANT R1 TO U1;          <span class="c">-- 把角色授予用户</span>
+REVOKE R1 FROM U1;
+
+<span class="c">-- 视图充当安全机制</span>
+CREATE VIEW CS_Student AS
+  SELECT Sno, Sname, Sage FROM Student WHERE Sdept = 'CS'
+  WITH CHECK OPTION;     <span class="c">-- 更新不得破坏视图定义</span>
+GRANT SELECT ON CS_Student TO U4;
+
+<span class="c">-- 触发器：行级 + WHEN</span>
+CREATE TRIGGER SC_T AFTER UPDATE OF Grade ON SC
+REFERENCING OLD AS OldTuple NEW AS NewTuple
+FOR EACH ROW
+WHEN (NewTuple.Grade &gt;= 1.1 * OldTuple.Grade)
+INSERT INTO SC_U(Sno, Cno, OldGrade, NewGrade)
+VALUES (OldTuple.Sno, OldTuple.Cno, OldTuple.Grade, NewTuple.Grade);</code></pre>
+<div class="tbl-wrap"><table>
+<caption>表 4　四种安全/完整性机制的定位</caption>
+<thead><tr><th>机制</th><th>解决的问题</th><th>粒度</th><th>典型语句</th></tr></thead>
+<tbody>
+<tr><td>视图</td><td>隐藏行列、简化查询</td><td>表 / 列 / 行</td><td>CREATE VIEW … WITH CHECK OPTION</td></tr>
+<tr><td>授权</td><td>谁能对什么做什么</td><td>表 / 列</td><td>GRANT / REVOKE</td></tr>
+<tr><td>角色</td><td>权限批量管理</td><td>权限集合</td><td>CREATE ROLE / GRANT 角色</td></tr>
+<tr><td>审计</td><td>事后追查</td><td>用户级 / 系统级</td><td>AUDIT / 审计日志</td></tr>
+<tr><td>触发器</td><td>复杂业务规则、跨表约束</td><td>行级 / 语句级</td><td>CREATE TRIGGER</td></tr>
+<tr><td>断言</td><td>跨表、聚合类约束</td><td>数据库级</td><td>CREATE ASSERTION</td></tr>
+</tbody></table></div>
+<div class="trap"><p class="t">易错</p><p>视图可更新的条件：<b>由单个基本表导出、保留主码、只做选择与投影（不含聚集、分组、DISTINCT、表达式列）</b>；含这些的视图只能查不能改。触发器里 INSERT 只有 NEW、DELETE 只有 OLD、UPDATE 两者都有。</p></div>
+
+<h2 id="c6"><span class="h2no">6</span>范式判定流程 ★</h2>
+<ol class="steps">
+<li><b>求候选码</b>：把属性分四类——只在左（L）、只在右（R）、两边都有（LR）、都不出现（N）。若 (L∪N)⁺ = U，则 L∪N 是唯一候选码；否则在 LR 中逐个（或组合）求闭包，闭包 = U 即为候选码。</li>
+<li><b>标主属性</b>：出现在任一候选码中的属性是主属性，其余是非主属性。</li>
+<li><b>找函数依赖</b>：主码 → 全部属性；再看有没有「非主属性依赖码的一部分」（部分依赖）、「非主属性依赖非主属性」（传递依赖）。</li>
+<li><b>定级别</b>：1NF → 消除非主属性对码的部分依赖得 2NF → 再消除传递依赖得 3NF → 每个决定因素都含码得 BCNF → 再消除非平凡多值依赖得 4NF。</li>
+</ol>
+<div class="tbl-wrap"><table>
+<caption>表 5　各级范式的判定口径</caption>
+<thead><tr><th>范式</th><th>一句话判据</th><th>要消除的毛病</th></tr></thead>
+<tbody>
+<tr><td>1NF</td><td>每个分量不可再分</td><td>表中有表</td></tr>
+<tr><td>2NF</td><td>不存在非主属性对码的部分函数依赖</td><td>组合码里的「半截依赖」</td></tr>
+<tr><td>3NF</td><td>不存在非主属性对码的传递函数依赖</td><td>非主属性决定非主属性</td></tr>
+<tr><td>BCNF</td><td>每个决定因素都包含码（主属性也不能传递依赖）</td><td>主属性之间的依赖</td></tr>
+<tr><td>4NF</td><td>每个非平凡多值依赖 X→→Y 中 X 都包含码</td><td>一个表里两套独立的多值事实</td></tr>
+</tbody></table></div>
+<div class="eg"><p class="t">例题 · 判定 R(Sno,Sname,Sdept,Mname,Cno,Grade)</p>
+<p>F = {Sno→Sname, Sno→Sdept, Sdept→Mname, (Sno,Cno)→Grade}。</p>
+<div class="sol"><p>(Sno,Cno)⁺ = 全部属性，故码为 (Sno,Cno)，非主属性 Sname、Sdept、Mname、Grade。<br>
+Sname、Sdept 部分依赖于码（只依赖 Sno）→ 不是 2NF。<br>
+若强行分解为 R1(Sno,Sname,Sdept,Mname)、R2(Sno,Cno,Grade)：R1 中 Sdept→Mname 是传递依赖 → R1 只到 2NF，还不是 3NF。<br>
+再分解为 R11(Sno,Sname,Sdept)、R12(Sdept,Mname)：两者都是 BCNF，且分解无损、保持依赖。</p></div></div>
+<div class="mem">口诀：<b>一原子、二完全、三传递、BC 决定含码、四多值</b>——判定时按这个顺序一项项排除。</div>
+
+<h2 id="c7"><span class="h2no">7</span>E-R 图转关系模式 ★</h2>
+<div class="tbl-wrap"><table>
+<caption>表 6　联系类型的转换规则</caption>
+<thead><tr><th>联系</th><th>转换方法</th><th>主码</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>1:1</td><td>并入任一端，或单独建关系</td><td>并入端的主码</td><td>并入「参与少」的一端可减少空值</td></tr>
+<tr><td>1:n</td><td>并入 n 端，加 1 端主码作外码</td><td>n 端原主码</td><td>也可单独建关系（主码为 n 端主码）</td></tr>
+<tr><td>m:n</td><td><b>必须</b>单独建关系</td><td>双方主码的组合</td><td>联系自身的属性一并放入</td></tr>
+<tr><td>三元 m:n:p</td><td>单独建关系</td><td>三个实体主码的组合</td><td>联系属性放入该关系</td></tr>
+<tr><td>自反 1:n / m:n</td><td>同 1:n / m:n，注意角色区分</td><td>视情形加角色列</td><td>如「先修课」Cpno 参照自身 Cno</td></tr>
+</tbody></table></div>
+<div class="trap"><p class="t">易错</p><p>① m:n 联系不能合并进任何一端，否则产生大量冗余；② 1:1 并入端要选「全部参与」的一侧，避免外码为空；③ 转换后要标出主码与外码，题目要求「指出参照关系」时不能只画表。</p></div>
+
+<h2 id="c8"><span class="h2no">8</span>查询优化：规则与语法树 ★</h2>
+<div class="cols2">
+<div><h4>代数优化的五条启发式规则</h4>
+<ol>
+<li><b>选择下推</b>：把 σ 尽量移到叶子（先缩小关系）。</li>
+<li><b>投影下推</b>：只保留后续用到的列。</li>
+<li><b>选择与笛卡尔积合并</b>为连接（避免大中间结果）。</li>
+<li><b>连接交换/结合</b>：先做结果小的连接。</li>
+<li><b>提取公共子表达式</b>，一次计算多次使用。</li>
+</ol></div>
+<div><h4>物理优化的两条路线</h4>
+<ul>
+<li><b>启发式规则</b>：选择条件上有索引且选择率低 → 用索引扫描；连接表小 → 嵌套循环；已排序 → 排序合并；等值连接且内存够 → Hash Join。</li>
+<li><b>基于代价</b>：用统计信息（元组数、块数、不同值个数、索引层数）估算 CPU + I/O 代价，选最小者。</li>
+</ul></div>
+</div>
+<div class="kp"><p class="t">考点 · 画树题的标准答法</p>
+<p>① 写出初始语法树（σ、π、× 按 SQL 结构自上而下）；② 每一步说明用了哪条等价变换规则（如「选择对笛卡尔积分配，σ 下推」）；③ 画出优化后的树，标出连接顺序；④ 一句话说明代价变化（中间结果元组数从 X 降到 Y）。</p></div>
+
+<h2 id="c9"><span class="h2no">9</span>事务、锁与封锁协议 ★</h2>
+<div class="tbl-wrap"><table>
+<caption>表 7　X 锁 / S 锁的相容矩阵（T1 已持有）</caption>
+<thead><tr><th></th><th>T2 请求 X</th><th>T2 请求 S</th></tr></thead>
+<tbody>
+<tr><td>T1 持有 <b>X</b></td><td>不兼容</td><td>不兼容</td></tr>
+<tr><td>T1 持有 <b>S</b></td><td>不兼容</td><td>兼容</td></tr>
+</tbody></table></div>
+<div class="tbl-wrap"><table>
+<caption>表 8　三级封锁协议</caption>
+<thead><tr><th>协议</th><th>加锁规则</th><th>释放时机</th><th>解决</th></tr></thead>
+<tbody>
+<tr><td>一级</td><td>修改前加 X 锁</td><td>事务结束才释放</td><td>丢失修改</td></tr>
+<tr><td>二级</td><td>一级 + 读前加 S 锁</td><td>S 锁读完即放、X 锁到事务结束</td><td>丢失修改 + 读脏数据</td></tr>
+<tr><td>三级</td><td>一级 + 读前加 S 锁</td><td>S 锁也到事务结束才放</td><td>丢失修改 + 脏读 + 不可重复读</td></tr>
+</tbody></table></div>
+<ul>
+<li><b>两段锁（2PL）</b>：扩展阶段只加锁不释放，收缩阶段只释放不加锁。<b>2PL 是可串行化的充分条件，不是必要条件</b>；遵守 2PL 仍可能死锁。</li>
+<li><b>冲突可串行化</b>：构造优先图，若图中无环则可串行化，拓扑序即等价串行顺序。冲突操作指不同事务对<b>同一数据</b>的「读-写」「写-读」「写-写」。</li>
+<li><b>活锁</b>：先来先服务（FCFS）破解；<b>死锁</b>：预防用一次封锁法/顺序封锁法，诊断用超时法/等待图法（有环即死锁），解除靠回滚代价最小的事务。</li>
+<li><b>意向锁</b>：IS、IX、SIX。给后代加锁前，先对祖先加相应意向锁；SIX = 对自身加 S、对后代加 X 的意向。</li>
+</ul>
+<div class="mem">口诀：<b>一级防丢、二级防脏、三级防重读</b>；<b>2PL 充分不必要</b>；<b>等待图有环必死锁</b>。</div>
+
+<h2 id="c10"><span class="h2no">10</span>恢复：故障与动作对照 ★</h2>
+<div class="tbl-wrap"><table>
+<caption>表 9　三类故障的恢复策略</caption>
+<thead><tr><th>故障</th><th>后果</th><th>恢复动作</th><th>执行者</th></tr></thead>
+<tbody>
+<tr><td>事务内部故障</td><td>事务未提交，数据库可能处于不一致状态</td><td><b>UNDO</b> 该事务（反向扫描日志、恢复前像）</td><td>DBMS 自动</td></tr>
+<tr><td>系统故障（断电、崩溃）</td><td>内存丢失，未提交事务可能已写盘，已提交事务可能未写盘</td><td><b>UNDO 未提交 + REDO 已提交</b></td><td>DBMS 自动</td></tr>
+<tr><td>介质故障</td><td>磁盘损坏，数据库本身被破坏</td><td>装入最近副本 + 用日志 <b>REDO</b> 已提交事务</td><td>DBA 介入</td></tr>
+</tbody></table></div>
+<div class="kp"><p class="t">考点 · 日志登记两条原则（必背）</p>
+<ol><li><b>先写日志，后写数据库</b>（Write-Ahead Log）：保证 UNDO 时有前像可回滚。</li>
+<li><b>事务提交前，其日志记录必须已写盘</b>：保证已提交事务的 REDO 有据可依。</li></ol>
+<p>日志记录格式：事务标识、操作类型、操作对象、前像（旧值）、后像（新值）。日志是<b>追加写</b>，不能随意修改。</p></div>
+<div class="eg"><p class="t">例题 · 检查点恢复</p>
+<p>检查点时刻正在执行的事务为 {T2,T5}；此后日志中出现 T2 提交、T3 开始并提交、T4 开始未提交、T5 未提交。</p>
+<div class="sol"><p>从检查点正向扫描：ACTIVE-LIST={T2,T5} 先入 UNDO；遇到 T2 提交 → 移入 REDO；T3 新开始 → 入 UNDO，随后提交 → 移入 REDO；T4 入 UNDO 不提交；T5 不提交。<br>
+结果：<b>REDO={T2,T3}，UNDO={T4,T5}</b>。检查点之前的操作一律不用处理。</p></div></div>
+<div class="trap"><p class="t">易错</p><p>① 系统故障<b>必须</b>既 UNDO 又 REDO，不能只 REDO；② 介质故障的 REDO 起点是「副本时刻」，不是检查点；③ 动态转储必须与日志配合才有意义；④ 「数据库镜像」用于提高可用性，不能替代备份。</p></div>
+
+<h2 id="c11"><span class="h2no">11</span>高频简答 18 条</h2>
+<ol>
+<li><b>数据库系统的特点</b>：数据结构化；共享性高、冗余低、易扩充；独立性高；由 DBMS 统一管理和控制。</li>
+<li><b>数据模型三要素</b>：数据结构（静态）、数据操作（动态）、完整性约束（语义）。</li>
+<li><b>DBMS 的功能</b>：数据定义、组织存储管理、操纵、事务与并发/恢复、建立与维护、其他（通信接口）。</li>
+<li><b>DBA 职责</b>：决定内容与结构、模式设计、存储结构与存取策略、安全性与完整性、监控与调优、转储与恢复。</li>
+<li><b>数据独立性</b>：逻辑独立性靠外模式/模式映像；物理独立性靠模式/内模式映像。</li>
+<li><b>E-R 图三要素</b>：实体（矩形）、属性（椭圆）、联系（菱形），联系上标 1:1/1:n/m:n。</li>
+<li><b>视图的作用</b>：简化查询、逻辑独立性、安全保护、多视角看数据、表达更清晰。</li>
+<li><b>视图可更新的条件</b>：单表、含主码、只含选择与投影，不含聚集/分组/DISTINCT/表达式列。</li>
+<li><b>SQL 特点</b>：综合统一、高度非过程化、面向集合、同一种语法两种使用方式、语言简洁。</li>
+<li><b>完整性 vs 安全性</b>：完整性防「合法用户的无意错误」，安全性防「非法用户的恶意破坏」。</li>
+<li><b>DAC 与 MAC</b>：DAC 由数据属主自主授权（GRANT），灵活但可能被绕过；MAC 由系统按密级强制（下读上写），更严格。</li>
+<li><b>为什么用 2NF/3NF</b>：消除冗余与插入/删除/更新异常；范式过高会增加连接开销，故可反规范化。</li>
+<li><b>无损连接与保持依赖</b>：分解后自然连接可还原原关系（无损）；分解后的依赖可由各子模式依赖推出（保持依赖）。3NF 分解可同时做到，BCNF 分解只能保证无损。</li>
+<li><b>查询处理四阶段</b>：查询分析 → 查询检查 → 查询优化 → 查询执行。</li>
+<li><b>事务 ACID</b>：原子性、一致性、隔离性、持续性（由日志与并发控制保证）。</li>
+<li><b>并发三类不一致</b>：丢失修改、不可重复读、读脏数据。</li>
+<li><b>两段锁与可串行化</b>：2PL 保证冲突可串行化（充分非必要）；遵守 2PL 可能死锁。</li>
+<li><b>日志的作用</b>：记录每次更新，支持 UNDO/REDO，是恢复的基础；必须遵守「先写日志」与「提交前写日志」两条原则。</li>
+</ol>
+
+<div class="sum"><p class="t">考前 30 分钟只看这五行</p>
+<ul>
+<li>三级模式两级映像 → 逻辑/物理独立性；视图=外模式。</li>
+<li>实体完整性、参照完整性、用户定义完整性 + 违约处理（拒绝/级联/置空）。</li>
+<li>范式判定：求候选码 → 部分依赖 → 传递依赖 → 决定因素含码 → 多值依赖。</li>
+<li>三级封锁协议、2PL、冲突可串行化（优先图）。</li>
+<li>恢复三对应：事务故障 UNDO；系统故障 UNDO+REDO；介质故障 副本+REDO。</li>
+</ul></div>
+    </div>
+
+    <nav class="pager" aria-label="翻页">
+      <a href="../db.html">‹ 回到讲义目录</a>
+      <a class="next" href="exam.html">做一套模拟卷 ›</a>
+    </nav>
+  </article>
+</div>
+</main>
+
+<footer class="footer">
+  <div class="wrap foot-inner" style="padding:28px 0 30px">
+    <div class="foot-legal" style="padding-top:0">
+      <span>数据库系统概论（第 6 版）· 速查卡据本学期课件整理</span>
+      <span><a href="../db.html">讲义</a> · <a href="quiz.html">题库</a> · <a href="exam.html">模拟卷</a> · <a href="../index.html">首页</a></span>
+    </div>
+  </div>
+</footer>
+<button class="backtop" id="backtop" type="button" aria-label="回到顶部" hidden>↑</button>
+<script src="../assets/site.js?v=2"></script>
+<script src="../assets/study.js?v=2"></script>
+</body>
+</html>

@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>数据库系统概论 · 期末备考</title>
+<meta name="description" content="数据库系统概论（王珊 第 6 版）期末备考：10 章 98 节考点讲义、239 道自测题、3 套限时模拟卷、1 张考前速查卡。">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/theme.css?v=2">
+<link rel="stylesheet" href="assets/site.css?v=2">
+<link rel="stylesheet" href="assets/course.css?v=2">
+<script>(function(){var d=document.documentElement;d.classList.add('js');try{var t=localStorage.getItem('site-theme');if(t==='light'||t==='dark')d.setAttribute('data-theme',t);}catch(e){}})();</script>
+<style>
+  /* 首页专属：产品页式的分区排版 */
+  .sec{padding:clamp(64px,8vw,104px) 0 0}
+  .sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:26px}
+  .sec-head h2{font-size:clamp(28px,3.6vw,44px);letter-spacing:-.035em;line-height:1.05}
+  .sec-head .lead{color:var(--muted);font-size:16px;max-width:44ch;margin-top:12px;line-height:1.55}
+  .sec-head .side{font-size:13px;color:var(--muted)}
+  .feature-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:clamp(28px,5vw,72px);align-items:center}
+  .feature-row .txt h2{font-size:clamp(26px,3.2vw,38px);letter-spacing:-.03em;margin-bottom:14px;line-height:1.15}
+  .feature-row .txt p{color:var(--muted);font-size:16px;line-height:1.6;max-width:38ch}
+  .feature-row .txt .more{margin-top:20px}
+  .mock{
+    border:1px solid var(--line);border-radius:var(--r-lg);background:var(--card);
+    box-shadow:var(--sh-3);padding:clamp(18px,2.4vw,26px);
+    transform:rotate(-.6deg);
+    transition:transform var(--t) var(--ease-out);
+  }
+  .mock:hover{transform:rotate(0) translateY(-2px)}
+  .mock .bar3{display:flex;gap:6px;margin-bottom:18px}
+  .mock .bar3 i{width:9px;height:9px;border-radius:50%;background:var(--line)}
+  .mock .qq{font-size:15.5px;line-height:1.6;font-weight:500;margin-bottom:14px}
+  .mock .row{display:flex;gap:8px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:7px;font-size:13.5px}
+  .mock .row.ok{border-color:var(--ok);background:rgba(0,128,9,.08)}
+  .mock .row.ok b{color:var(--ok)}
+  .mock .row b{font-weight:600;color:var(--muted);font-size:12px;width:1.4em}
+  .mock .meta{display:flex;justify-content:space-between;margin-top:16px;font-size:11.5px;color:var(--muted)}
+  .split{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:clamp(28px,4vw,56px);align-items:start;padding-top:10px}
+  .plan{list-style:none;margin:0;padding:0;display:grid;gap:0}
+  .plan li{
+    display:flex;gap:16px;align-items:flex-start;padding:15px 4px;border-bottom:1px solid var(--line);
+    font-size:15px;line-height:1.6;transition:background var(--t-fast) var(--ease);
+  }
+  .plan li:hover{background:var(--soft)}
+  .plan li:last-child{border-bottom:0}
+  .plan .chk{
+    flex:0 0 auto;width:21px;height:21px;margin-top:2px;border-radius:50%;
+    border:1.5px solid var(--line);background:transparent;cursor:pointer;
+    display:grid;place-items:center;padding:0;color:transparent;font-size:11px;font-weight:700;
+    transition:background var(--t-fast) var(--ease),border-color var(--t-fast) var(--ease),color var(--t-fast) var(--ease);
+  }
+  .plan .chk:hover{border-color:var(--accent)}
+  .plan .chk[aria-checked="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+  .plan .d{flex:0 0 2.3em;font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.06em;padding-top:3px;font-variant-numeric:tabular-nums}
+  .plan .t{flex:1 1 auto;min-width:0}
+  .plan .t small{display:block;color:var(--muted);font-size:12.5px;margin-top:3px;line-height:1.55}
+  .plan li.done .t{color:var(--muted)}
+  .plan li.done .t strong{text-decoration:line-through;text-decoration-color:var(--line)}
+  .side{position:sticky;top:calc(var(--bar-h) + 24px);display:grid;gap:12px}
+  .side .box{background:var(--panel);border-radius:16px;padding:20px;font-size:13px;line-height:1.7;color:var(--muted)}
+  .side .box h3{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;font-weight:600}
+  .side .box b{color:var(--fg)}
+  .hot{list-style:none;margin:0;padding:0;display:grid;gap:1px}
+  .hot a{display:flex;gap:10px;align-items:baseline;padding:7px 8px;border-radius:8px;font-size:13.5px;color:var(--fg);line-height:1.45}
+  .hot a:hover{background:var(--card);text-decoration:none}
+  .hot .n{flex:0 0 1.5em;color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
+  .hot .t{flex:1 1 auto;min-width:0}
+  .hot .c{flex:0 0 auto;color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
+  @media (max-width:980px){
+    .feature-row{grid-template-columns:1fr;gap:26px}
+    .split{grid-template-columns:1fr}
+    .side{position:static}
+    .mock{transform:none}
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="topbar" id="topbar">
+  <div class="wrap-wide bar">
+    <a class="brand" href="index.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="7" ry="2.6"/><path d="M5 6v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6V6"/><path d="M5 12v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6v-6"/></svg>
+      <span>数据库系统概论</span>
+    </a>
+    <nav class="nav" aria-label="站点导航">
+      <a href="index.html" aria-current="page">首页</a>
+      <a href="db.html">讲义</a>
+      <a href="db/quiz.html">题库</a>
+      <a href="db/exam.html">模拟卷</a>
+      <a href="db/cheatsheet.html">速查卡</a>
+    </nav>
+    <button class="icon-btn" id="themeBtn" type="button" title="主题：跟随系统（点击切换）" aria-label="主题：跟随系统（点击切换）"><span id="themeIcon" aria-hidden="true">◐</span></button>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero wrap">
+    <p class="kicker">2026 秋 · 数据库系统概论</p>
+    <h1>期末备考</h1>
+    <p class="sub">十章讲义、239 道题、3 套模拟卷——把整门课压缩成一条从「看懂」到「会写」的路。</p>
+    <div class="links">
+      <a class="btn" href="db.html">开始复习</a>
+      <a class="more" href="db/quiz.html">直接刷题</a>
+      <a class="more" href="db/cheatsheet.html">考前速查</a>
+    </div>
+    <div class="num">
+      <span><b>10</b>章讲义</span>
+      <span><b>98</b>节考点</span>
+      <span><b>239</b>道自测题</span>
+      <span><b>3</b>套模拟卷</span>
+      <span><b>18</b>条高频简答</span>
+    </div>
+  </section>
+
+  <div class="wrap-wide">
+    <div class="tiles three">
+      <a class="tile sm" href="db.html">
+        <div class="top">
+          <span class="eyebrow">讲义</span>
+          <span class="big-num">98<small>节</small></span>
+          <h2>考点讲义</h2>
+          <p>按课件原顺序重写：定义、对比表、判定流程、例题、易错点与口诀。</p>
+        </div>
+        <span class="more">打开讲义</span>
+      </a>
+      <a class="tile sm" href="db/quiz.html">
+        <div class="top">
+          <span class="eyebrow">练习</span>
+          <span class="big-num">239<small>题</small></span>
+          <h2>刷题</h2>
+          <p>单选、多选、判断、填空、简答。按章筛选，即时判分，错题自动归档。</p>
+        </div>
+        <span class="more">开始刷题</span>
+      </a>
+      <a class="tile sm" href="db/exam.html">
+        <div class="top">
+          <span class="eyebrow">模考</span>
+          <span class="big-num">3<small>套</small></span>
+          <h2>模拟卷</h2>
+          <p>基础、提高、冲刺各 90 分钟。客观题自动判分，综合题按给分点自评。</p>
+        </div>
+        <span class="more">进入考场</span>
+      </a>
+    </div>
+  </div>
+
+  <section class="sec wrap" id="why">
+    <div class="feature-row">
+      <div class="txt reveal">
+        <h2>先看懂，<br>再练熟。</h2>
+        <p>每一节都从「考什么」写起：结论可以直接背，例题来自课件原例，易错点专挑阅卷老师爱扣分的地方。</p>
+        <a class="more" href="db.html">十章目录</a>
+      </div>
+      <div class="reveal d1">
+        <div class="mock" aria-hidden="true">
+          <div class="bar3"><i></i><i></i><i></i></div>
+          <p class="qq">关系模式 R&lt;U,F&gt; 中，F 表示的是（　）。</p>
+          <div class="row ok"><b>A</b>属性组 U 上的一组数据依赖</div>
+          <div class="row"><b>B</b>属性到域的映射</div>
+          <div class="row"><b>C</b>属性组 U 中各属性的取值范围</div>
+          <div class="meta"><span>第 6 章 · 关系数据理论</span><span>1 / 24</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec wrap">
+    <div class="sec-head">
+      <div>
+        <h2>十章，一张图</h2>
+        <p class="lead">全书进度：<b data-prog-all>0 / 98 小节已掌握</b>。卡片上是你在该章勾选过的掌握度。</p>
+      </div>
+      <a class="more" href="db.html">全部小节</a>
+    </div>
+    <div class="chgrid">
+      <a class="chcard" href="db/1.html" data-prog-ch="1" data-prog-total="11">
+        <span class="cno">第 1 章</span><h3>绪论</h3><p>四个基本概念、数据管理三阶段、数据模型、E-R、三级模式。</p>
+        <span class="pbar"><i></i></span><span class="cmeta"><span>11 节 · 188 页</span><span class="prog">0/11 节</span></span>
+      </a>
+      <a class="chcard" href="db/2.html" data-prog-ch="2" data-prog-total="11">
+        <span class="cno">第 2 章</span><h3>关系数据库</h3><p>域与笛卡尔积、关系模式与码、三类完整性、关系代数。</p>
+        <span class="pbar"><i></i></span><span class="cmeta"><span>11 节 · 178 页</span><span class="prog">0/11 节</span></span>
+      </a>
+      <a class="chcard" href="db/3.html" data-prog-ch="3" data-prog-total="11">
+        <span class="cno">第 3 章</span><h3>SQL</h3><p>建表与索引、单表/连接/嵌套/集合查询、更新、空值、视图。</p>
+        <span class="pbar"><i></i></span><span class="cmeta"><span>11 节 · 306 页</span><span class="prog">0/11 节</span></span>
+      </a>
+      <a class="chcard" href="db/4.html" data-prog-ch="4" data-prog-total="11">
+        <span class="cno">第 4 章</span><h3>数据库安全性</h3><p>身份鉴别、DAC/MAC、GRANT 与级联回收、角色、审计。</p>
+        <span class="pbar"><i></i></span><span class="cmeta"><span>11 节 · 115 页</span><span class="prog">0/11 节</span></span>
+      </a>
+      <a class="chcard" href="db/5.html" data-prog-ch="5" data-prog-total="8">
+        <span class="cno">第 5 章</span><h3>数据库完整性</h3><p>三类完整性与违约处理、命名约束、断言、触发器。</p>
+        <span class="pbar"><i></i></span><span class="cmeta"><span>8 节 · 77 页</span><span class="prog">0/8 节</span></span>
+      </a>
+      <a class="chcard" href="db/6.html" data-prog-ch="6" data-prog-total="10">
+        <span class="cno">第 6 章</span><h3>关系数据理论</h3><p>函数依赖、闭包与候选码、1NF～BCNF、多值依赖、分解。</p>
+        <span class="pbar"><i></i></span><span class="cmeta"><span>10 节 · 120 页</span><span class="prog">0/10 节</span></span>
+      </a>
+      <a class="chcard" href="db/7.html" data-prog-ch="7" data-prog-total="9">
+        <span class="cno">第 7 章</span><h3>数据库设计</h3><p>六阶段、数据字典、E-R 图与冲突、E-R 转关系、物理设计。</p>
+        <span class="pbar"><i></i></span><span class="cmeta"><span>9 节 · 183 页</span><span class="prog">0/9 节</span></span>
+      </a>
+      <a class="chcard" href="db/9.html" data-prog-ch="9" data-prog-total="9">
+        <span class="cno">第 9 章</span><h3>查询处理和优化</h3><p>查询处理四步、等价变换、语法树启发式优化、代价估算。</p>
+        <span class="pbar"><i></i></span><span class="cmeta"><span>9 节 · 118 页</span><span class="prog">0/9 节</span></span>
+      </a>
+      <a class="chcard" href="db/10.html" data-prog-ch="10" data-prog-total="9">
+        <span class="cno">第 10 章</span><h3>数据库恢复技术</h3><p>事务 ACID、故障、转储与日志、恢复策略、检查点、镜像。</p>
+        <span class="pbar"><i></i></span><span class="cmeta"><span>9 节 · 104 页</span><span class="prog">0/9 节</span></span>
+      </a>
+      <a class="chcard" href="db/11.html" data-prog-ch="11" data-prog-total="9">
+        <span class="cno">第 11 章</span><h3>并发控制</h3><p>三类不一致、S/X 锁、三级封锁协议、可串行化、2PL、意向锁。</p>
+        <span class="pbar"><i></i></span><span class="cmeta"><span>9 节 · 122 页</span><span class="prog">0/9 节</span></span>
+      </a>
+    </div>
+    <p class="done-note" style="margin-top:18px">课件未提供第 8 章「数据库编程」（嵌入式 SQL、存储过程、ODBC/JDBC），故章号从第 7 章直接到第 9 章。<br>
+      教材：王珊、杜小勇、陈红《数据库系统概论》（第 6 版），高等教育出版社，2023。</p>
+  </section>
+
+  <section class="sec wrap" id="plan">
+    <div class="sec-head">
+      <div>
+        <h2>七天冲刺表</h2>
+        <p class="lead">每天 1.5～2 小时。勾选存在本机，刷新不丢；考期紧就按天合并。</p>
+      </div>
+      <span class="side" id="planCount">0 / 7 已完成</span>
+    </div>
+    <div class="split">
+      <ul class="plan" id="planList">
+        <li data-d="1"><button class="chk" type="button" role="checkbox" aria-checked="false" aria-label="标记第一天完成">✓</button><span class="d">D1</span><span class="t"><strong>第 1–2 章讲义</strong>：三级模式两级映像、三类完整性、关系代数<small>读 <a href="db/1.html">第 1 章</a>、<a href="db/2.html">第 2 章</a>；刷 <a href="db/quiz.html?ch=1">第 1 章</a> 与 <a href="db/quiz.html?ch=2">第 2 章</a> 共 48 题</small></span></li>
+        <li data-d="2"><button class="chk" type="button" role="checkbox" aria-checked="false" aria-label="标记第二天完成">✓</button><span class="d">D2</span><span class="t"><strong>第 3 章上</strong>：SQL 数据定义 + 单表查询<small>手写一遍 Student / Course / SC 建表；讲义 <a href="db/3.html">第 3 章</a> 前 5 节；刷第 3 章单选与填空</small></span></li>
+        <li data-d="3"><button class="chk" type="button" role="checkbox" aria-checked="false" aria-label="标记第三天完成">✓</button><span class="d">D3</span><span class="t"><strong>第 3 章下</strong>：连接、嵌套、EXISTS、视图与更新<small>双重 NOT EXISTS 默写三遍；做 <a href="db/exam.html?paper=A">A 卷</a> 的两道 SQL 大题</small></span></li>
+        <li data-d="4"><button class="chk" type="button" role="checkbox" aria-checked="false" aria-label="标记第四天完成">✓</button><span class="d">D4</span><span class="t"><strong>第 4–5 章</strong>：授权与完整性<small>默写 GRANT / REVOKE 级联、触发器 NEW/OLD 规则；刷 <a href="db/quiz.html?ch=4">第 4 章</a>、<a href="db/quiz.html?ch=5">第 5 章</a></small></span></li>
+        <li data-d="5"><button class="chk" type="button" role="checkbox" aria-checked="false" aria-label="标记第五天完成">✓</button><span class="d">D5</span><span class="t"><strong>第 6–7 章</strong>：范式判定 + E-R 设计<small>按速查卡流程做 3 道候选码题；独立画一张 E-R 图并转成关系模式</small></span></li>
+        <li data-d="6"><button class="chk" type="button" role="checkbox" aria-checked="false" aria-label="标记第六天完成">✓</button><span class="d">D6</span><span class="t"><strong>第 9–11 章</strong>：优化、恢复、并发<small>重点：语法树五条规则、三类故障对应动作、三级封锁协议与 2PL</small></span></li>
+        <li data-d="7"><button class="chk" type="button" role="checkbox" aria-checked="false" aria-label="标记第七天完成">✓</button><span class="d">D7</span><span class="t"><strong>模考 + 错题 + 速查卡</strong><small>限时做 <a href="db/exam.html?paper=B">B 卷</a> 与 <a href="db/exam.html?paper=C">C 卷</a>；错题刷到 0；最后看 <a href="db/cheatsheet.html">速查卡</a></small></span></li>
+      </ul>
+      <aside class="side">
+        <div class="box">
+          <h3>本站组卷结构</h3>
+          <p style="margin:0">单选 10×2 ＋ 判断 8×1 ＋ 填空 6×2 ＋ 综合 6×10 ＝ <b>100 分</b>，限时 90 分钟。真实卷面以老师通知为准。</p>
+        </div>
+        <div class="box">
+          <h3>最该先拿下的考点</h3>
+          <ol class="hot">
+            <li><a href="db/3.html#s6"><span class="n">01</span><span class="t">SQL 嵌套与 EXISTS 全称量词</span><span class="c">3</span></a></li>
+            <li><a href="db/6.html#s3"><span class="n">02</span><span class="t">候选码求解与范式判定</span><span class="c">6</span></a></li>
+            <li><a href="db/7.html#s5"><span class="n">03</span><span class="t">E-R 图转关系模式</span><span class="c">7</span></a></li>
+            <li><a href="db/1.html#s8"><span class="n">04</span><span class="t">三级模式与两级映像</span><span class="c">1</span></a></li>
+            <li><a href="db/11.html#s3"><span class="n">05</span><span class="t">三级封锁协议与 2PL</span><span class="c">11</span></a></li>
+            <li><a href="db/10.html#s7"><span class="n">06</span><span class="t">检查点恢复与 REDO/UNDO</span><span class="c">10</span></a></li>
+            <li><a href="db/5.html#s3"><span class="n">07</span><span class="t">参照完整性违约处理</span><span class="c">5</span></a></li>
+            <li><a href="db/9.html#s6"><span class="n">08</span><span class="t">语法树启发式优化</span><span class="c">9</span></a></li>
+          </ol>
+        </div>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap foot-inner">
+    <div class="foot-cols">
+      <div class="foot-brand">
+        <div class="mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="7" ry="2.6"/><path d="M5 6v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6V6"/><path d="M5 12v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6v-6"/></svg>
+          数据库系统概论
+        </div>
+        <p>据本学期 14 个课件文件整理，教材为王珊《数据库系统概论》（第 6 版）。题目均为自编练习，不是真题。</p>
+      </div>
+      <div>
+        <h4>学习</h4>
+        <ul>
+          <li><a href="db.html">十章讲义</a></li>
+          <li><a href="db/cheatsheet.html">考前速查卡</a></li>
+          <li><a href="#plan">七天冲刺表</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>练习</h4>
+        <ul>
+          <li><a href="db/quiz.html">题库 · 239 题</a></li>
+          <li><a href="db/exam.html">模拟卷 · 3 套</a></li>
+          <li><a href="db/quiz.html?mode=wrong">错题本</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>说明</h4>
+        <ul>
+          <li>课件未含第 8 章</li>
+          <li>进度只存在本机</li>
+          <li>可离线打开</li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-legal"><span>© <span id="year">2026</span> 数据库系统概论 · 期末备考</span><span>据课件整理 · 仅供复习使用</span></div>
+  </div>
+</footer>
+<button class="backtop" id="backtop" type="button" aria-label="回到顶部" hidden>↑</button>
+<script src="assets/site.js?v=2"></script>
+<script src="assets/study.js?v=2"></script>
+<script>
+(function(){
+  var KEY='db-plan', box=document.getElementById('planList'); if(!box) return;
+  var saved={};
+  try{ saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{}; }catch(e){}
+  var lis=[].slice.call(box.querySelectorAll('li'));
+  var cnt=document.getElementById('planCount');
+  function count(){
+    var n=lis.filter(function(x){return x.classList.contains('done');}).length;
+    if(cnt) cnt.textContent=n+' / 7 已完成';
+  }
+  lis.forEach(function(li){
+    var b=li.querySelector('.chk');
+    var k=li.getAttribute('data-d');
+    b.setAttribute('aria-checked', saved[k]?'true':'false');
+    li.classList.toggle('done', !!saved[k]);
+    b.addEventListener('click', function(){
+      var on=b.getAttribute('aria-checked')!=='true';
+      b.setAttribute('aria-checked', on?'true':'false');
+      li.classList.toggle('done', on);
+      saved[k]=on;
+      try{ localStorage.setItem(KEY, JSON.stringify(saved)); }catch(e){}
+      count();
+    });
+  });
+  count();
+})();
+</script>
+</body>
+</html>

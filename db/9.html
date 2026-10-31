@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 9 章 关系查询处理和查询优化 · 数据库系统概论 · 备考</title>
+<meta name="description" content="查询分析/检查/优化/执行、选择与连接算法、等价变换规则、语法树启发式优化、代价估算与索引选择。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/theme.css?v=2">
+<link rel="stylesheet" href="../assets/site.css?v=2">
+<link rel="stylesheet" href="../assets/course.css?v=2">
+<script>(function(){var d=document.documentElement;d.classList.add('js');try{var t=localStorage.getItem('site-theme');if(t==='light'||t==='dark')d.setAttribute('data-theme',t);}catch(e){}})();</script>
+</head>
+<body data-ch="9">
+<a class="skip" href="#main">跳到正文</a>
+<header class="topbar" id="topbar">
+  <div class="wrap-wide bar">
+    <a class="brand" href="../index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="7" ry="2.6"/><path d="M5 6v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6V6"/><path d="M5 12v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6v-6"/></svg><span>数据库系统概论</span></a>
+    <nav class="nav" aria-label="站点导航"><a href="../index.html">首页</a><a href="../db.html" aria-current="page">讲义</a><a href="quiz.html">题库</a><a href="exam.html">模拟卷</a><a href="cheatsheet.html">速查卡</a></nav>
+    <button class="icon-btn" id="themeBtn" type="button" title="主题：跟随系统（点击切换）" aria-label="主题：跟随系统（点击切换）"><span id="themeIcon" aria-hidden="true">◐</span></button>
+  </div>
+</header>
+<div id="readbar"></div>
+
+<main id="main">
+<div class="doc">
+
+  <aside class="doc-toc" aria-label="讲义目录">
+  <details class="toc-fold" open>
+  <summary>讲义目录</summary>
+  <nav class="mod-switch" aria-label="课程模块">
+    <a href="../db.html" aria-current="page">讲义</a>
+    <a href="quiz.html">题库</a>
+    <a href="exam.html">模拟卷</a>
+    <a href="cheatsheet.html">速查卡</a>
+  </nav>
+  <a class="toc-home" href="../db.html">数据库系统概论</a>
+  <p class="toc-ver"><span>本学期课件</span>10 章</p>
+  <div class="toc-body">
+  <div class="toc-ch">
+    <h2>全部章节</h2>
+    <ul class="toc-list"><li><a href="1.html"><span class="num">第 1 章</span>绪论</a></li><li><a href="2.html"><span class="num">第 2 章</span>关系数据库</a></li><li><a href="3.html"><span class="num">第 3 章</span>关系数据库标准语言 SQL</a></li><li><a href="4.html"><span class="num">第 4 章</span>数据库安全性</a></li><li><a href="5.html"><span class="num">第 5 章</span>数据库完整性</a></li><li><a href="6.html"><span class="num">第 6 章</span>关系数据理论</a></li><li><a href="7.html"><span class="num">第 7 章</span>数据库设计</a></li><li><a href="9.html" aria-current="page"><span class="num">第 9 章</span>关系查询处理和查询优化</a></li><li><a href="10.html"><span class="num">第 10 章</span>数据库恢复技术</a></li><li><a href="11.html"><span class="num">第 11 章</span>并发控制</a></li></ul>
+  </div>
+  <div class="toc-ch">
+    <h2>本章小节</h2>
+    <ul class="toc-list"><li><a href="#s1"><span class="num">9.1.1</span>查询处理的四个阶段</a></li><li><a href="#s2"><span class="num">9.1.2</span>实现查询操作的算法</a></li><li><a href="#s3"><span class="num">9.2.1</span>查询优化概述</a></li><li><a href="#s4"><span class="num">9.2.2</span>一个实例：一万倍的差距</a></li><li><a href="#s5"><span class="num">9.3.1</span>关系代数等价变换规则</a></li><li><a href="#s6"><span class="num">9.3.2</span>语法树的启发式优化</a></li><li><a href="#s7"><span class="num">9.4.1</span>基于启发式规则的存取路径选择</a></li><li><a href="#s8"><span class="num">9.4.2</span>基于代价的优化</a></li><li><a href="#s9"><span class="num">9.6</span>小结与答题模板</a></li></ul>
+  </div>
+  </div>
+  </details>
+  </aside>
+
+  <article class="doc-body">
+    <header class="doc-head">
+      <p class="crumb"><a href="../db.html">数据库系统概论</a> · 第 9 章</p>
+      <h1>关系查询处理和查询优化</h1>
+      <p class="meta">共 9 节 <span class="dot">·</span> 约 7,997 字 <span class="dot">·</span> 课件 118 页 <span class="dot">·</span> 本章自测 24 题</p>
+      <p class="status"><span>已掌握 <b data-mastery-count>0 / 9</b> 节</span>
+        <span class="track"><i data-mastery-bar></i></span></p>
+    </header>
+    <div class="note">
+
+<p class="lead">本章回答一个问题：一条 SQL 交给 DBMS 之后，系统凭什么把它变成"跑得快"的执行方案。它是第三篇"系统篇"的开篇，把前面几章的关系代数、SQL、索引知识第一次串成一条工程流水线。期末卷上，本章几乎必出一道"给 SQL、画语法树、用等价变换规则优化成标准树"的 8～10 分大题，外加 2～3 道选择、填空，属于"理解 + 会画 + 会算"三者都要的章节。</p>
+
+<h2 id="s1"><span class="h2no">9.1.1</span>查询处理的四个阶段</h2>
+
+<p>查询处理的任务，是把用户交给 DBMS 的查询语句转换为高效的查询执行计划。这条流水线固定分四步：<strong>查询分析、查询检查、查询优化、查询执行</strong>。四步的产物依次是语法树、内部表示（等价的关系代数表达式）、查询执行计划、查询结果，考试最爱考"某一步做什么、产出什么"。</p>
+
+<p>查询分析只做"字面"上的事：扫描语句、词法分析（识别出正确的语言符号，如关键字、关系名、常量）、语法分析（按文法检查结构是否合法）。它<strong>不查数据字典</strong>，所以"Student 表是否存在""有没有 SELECT 权限"都不属于分析阶段。</p>
+
+<p>查询检查才动数据字典：<strong>合法权检查</strong>（根据数据字典中的模式定义检查关系名、属性名是否存在和有效）、<strong>视图消解</strong>（若操作对象是视图，用视图消解方法把对视图的操作转换成对基本表的操作）、<strong>安全性检查</strong>（按用户权限和完整性约束定义检查存取权限）、<strong>完整性初步检查</strong>。检查通过后，SQL 被转换成内部表示，即<strong>等价的关系代数表达式</strong>，一般用语法树来表示。</p>
+
+<p>查询优化即"选择一个高效执行的查询处理策略"，分<strong>代数优化（逻辑优化）</strong>——只改关系代数表达式的运算次序与组合、不涉存取路径，和<strong>物理优化</strong>——选择存取路径与底层操作算法；依据有基于规则、基于代价、基于语义三种。</p>
+
+<p>查询执行由代码生成器（code generator）依据优化器给出的策略生成执行查询计划的代码；执行方法有<strong>自顶向下</strong>与<strong>自底向上</strong>两种。9.5 节标星，知道这两种方式即可。</p>
+
+
+<div class="kp"><p class="t">考点 · 必背</p><p>四阶段的"任务—产物"要能一一对应，选择题与简答题都从这里出。</p><ul>
+<li>查询分析 = 词法分析 + 语法分析，产物是语法树，<strong>不访问数据字典</strong>。</li>
+<li>查询检查 = 合法权检查 + 视图消解 + 安全性检查 + 完整性初步检查，产物是以语法树表示的<strong>关系代数表达式</strong>。</li>
+<li>查询优化 = 代数优化（逻辑优化）+ 物理优化，产物是<strong>查询执行计划</strong>。</li>
+<li>查询执行 = 代码生成器生成代码 + 自顶向下/自底向上执行。</li>
+</ul></div>
+
+<div class="trap"><p class="t">易错</p><p>把"视图消解""安全性检查"划进查询分析，是最常见的失分点。判据只有一条：<strong>凡是要查数据字典（对象是否存在、权限、约束、视图定义）的，都在查询检查阶段</strong>；凡只按文法看语句本身写没写对的，才在查询分析阶段。"WHERE 后面少了一个表达式"是语法错误，属分析；"Student 表不存在"是语义错误，属检查。</p></div>
+
+
+<div class="sum"><p class="t">本节小结</p><ul><li>四阶段顺序固定：分析 → 检查 → 优化 → 执行，产物依次为语法树、关系代数表达式、执行计划、结果。</li><li>优化分代数优化与物理优化；依据分基于规则、基于代价、基于语义。</li><li>"视图消解""权限检查"属检查阶段，"选索引还是全表扫"属优化阶段。</li></ul></div>
+
+<h2 id="s2"><span class="h2no">9.1.2</span>实现查询操作的算法</h2>
+
+<p>查询处理中最费时的两类操作是选择和连接，它们的实现算法直接决定物理优化有多少可选项。选择操作有两种典型实现：<strong>全表扫描</strong>（Table Scan）按物理次序顺序扫描基本表，逐一检查每个元组是否满足条件；<strong>索引扫描</strong>（Index Scan）先通过 B+ 树索引或 Hash 索引找到满足条件的元组主码或元组指针，再按元组指针回基本表取出元组。前者适合小表，后者适合选择条件中的属性上建有索引、且结果集不大的情形。</p>
+
+<p>【例9.1】<code>SELECT * FROM Student WHERE &lt;条件表达式&gt;</code> 的四种条件，是理解选择算法的最小题库：C1 无条件；C2 为 Sno='202215121'；C3 为 Sage&gt;20；C4 为 Sdept='CS' AND Sage&gt;20。全表扫描的算法是：按物理次序读入 M 块到内存，检查内存中每个元组、满足条件就输出，还有未处理的块就重复。索引扫描按条件分三种情形：C2 用索引直接得到该元组的指针再回表；C3 用 B+ 树索引先找到 Sage=20 的索引项，以此为入口在 B+ 树的顺序集上取出所有 Sage&gt;20 的元组指针；C4 有两种做法，分别用两个索引各取一组指针求交集，或只用一个索引取出一组元组、回表时再检查另一个条件。</p>
+
+<p>连接是查询处理中最耗时的操作之一，课件只讨论等值连接（自然连接）的四种实现。【例9.2】<code>SELECT * FROM Student, SC WHERE Student.Sno=SC.Sno</code>：</p>
+
+<ol class="steps">
+<li><strong>嵌套循环</strong>（nested loop join）：对外层表每个元组，检索内层表全部元组，检查连接属性是否相等，相等就串接输出，直到外层表处理完。</li>
+<li><strong>排序-合并</strong>（sort-merge join）：两表先按连接属性排序；取 Student 第一个 Sno，扫描 SC 中相同 Sno 的元组，遇到第一个不同的 Sno 就换 Student 的下一个元组。两表各扫一遍，无序时要加排序时间。</li>
+<li><strong>索引连接</strong>（index join）：SC 的 Sno 上已建索引，对 Student 每个元组用其 Sno 值查 SC 索引，取出匹配的 SC 元组并与 Student 元组连接。</li>
+<li><strong>hash join</strong>：以连接属性为 hash 码，用同一 hash 函数把两表元组散列到 hash 表；划分阶段（building/partitioning）处理<strong>较小</strong>的表，把它散列进内存的桶；试探阶段（probing/join）处理另一个表，边散列边与桶中匹配的元组连接。</li>
+</ol>
+
+<table>
+<thead><tr><th>算法</th><th>前提</th><th>代价特征</th><th>适用</th></tr></thead>
+<tbody>
+<tr><td>嵌套循环</td><td>无前提，任何连接条件都能用</td><td>Br + Br·Bs/(K−1)，与两表块数都相关</td><td>表小、内存少、无索引无顺序</td></tr>
+<tr><td>排序-合并</td><td>两表按连接属性有序（否则先排序）</td><td>有序时 Br+Bs；无序另加约 2B+2B·log₂B 排序代价</td><td>大表、连接属性上已有序或聚簇索引</td></tr>
+<tr><td>索引连接</td><td>被连接表在连接属性上有索引</td><td>外表每个元组一次索引查找，约 L+1 块</td><td>外表元组少、内表连接属性有索引</td></tr>
+<tr><td>hash join</td><td>较小的表散列后能全部放入内存的 hash 桶</td><td>两表各扫一遍，无排序代价</td><td>等值连接、无索引、内存充足</td></tr>
+</tbody>
+<caption>表 1　四种等值连接算法的前提与代价特征</caption>
+</table>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>四种连接算法要背"名字 + 前提 + 一句话过程"，选择题常把前提张冠李戴。</p><ul>
+<li>嵌套循环：无前提；<strong>块数少的表当外表</strong>，代价 Br + Br·Bs/(K−1)。</li>
+<li>排序-合并：两表已按连接属性有序时各扫一遍；无序先排序，大表仍常更快。</li>
+<li>索引连接：内表连接属性上<strong>已有索引</strong>，且外表元组数不多。</li>
+<li>hash join：无索引无顺序，但<strong>小表能全部装进内存 hash 桶</strong>；划分阶段处理小表，试探阶段处理大表。</li>
+</ul></div>
+
+<div class="mem">口诀：<b>小表全扫、有索引用索引；连接四法——嵌套、排序、索引、哈希</b>——前半句管选择，后半句是等值连接四法；答题要写前提，只报名字不给分。</div>
+
+<div class="trap"><p class="t">易错</p><p>"排序-合并两表各扫一遍"是有前提的：<strong>只在两表已按连接属性有序时成立</strong>；无序时必须把排序时间加进总时间。另有两个高频错点：hash join 的划分阶段处理的是<strong>小表</strong>（大表在试探阶段流过），不是大表；嵌套循环的代价取决于<strong>块数</strong>而不是元组数，选外表看 B 不看 N。</p></div>
+
+
+<div class="sum"><p class="t">本节小结</p><ul><li>选择两种实现：全表扫描（适合小表）、索引扫描（等值、范围、合取各有套路）。</li><li>等值连接四种实现：嵌套循环、排序-合并、索引连接、hash join，各自的前提必须背准。</li><li>判断优劣看块数、看有无索引与顺序、看内存能否容下小表，这是 9.4 全部规则与公式的来源。</li></ul></div>
+
+<h2 id="s3"><span class="h2no">9.2.1</span>查询优化概述</h2>
+
+<p>查询优化在关系系统中的地位特殊：它既是 DBMS 实现的关键技术，又是关系系统的优点所在。理由有两条。<strong>必要性</strong>来自 SQL 的非过程化——用户只说明"要什么"，不指明存取路径，数据独立性因此实现，但用户也无法干预系统实现。<strong>可能性</strong>来自关系表达式语义级别高——同一个查询可以有多种效率相差极大的等价实现，系统可以从关系表达式本身分析查询语义，替用户挑一个快的。</p>
+
+<p>非关系系统中用户用过程化语言表达查询，操作序列与存取路径都由用户决定，<strong>选得不当初系统也无法改进</strong>。关系系统把这份负担接了过来，而且能做得比用户程序的"优化"更好，理由有四条：优化器能从数据字典拿到用户程序拿不到的统计信息；物理统计信息变化后能自动重新优化，非关系系统则要重写程序（实际往往不可能）；一次能比较数百种计划，程序员通常只能考虑有限的几种；优化器沉淀的复杂优化技术，相当于让所有人都有专家级优化能力。</p>
+
+<p>优化器靠<strong>代价模型</strong>比较方案：集中式的执行开销包括磁盘存取块数（I/O 代价）、处理机时间（CPU 代价）和内存开销，其中 <strong>I/O 代价最主要</strong>；分布式数据库的总代价 = I/O 代价 + CPU 代价 + 内存代价 + <strong>通信代价</strong>。查询优化的总目标是：选择有效策略、求得给定关系表达式的值、使查询代价最小——教材的措辞是"最小（实际上是较小）"，优化器给的是可接受的较优解，不保证全局最优。</p>
+
+
+<div class="kp"><p class="t">考点 · 必背</p><p>简答题"为什么关系系统要做查询优化、为什么能做得比用户好"，按下面四点答，一点一分。</p><ul>
+<li>必要性：SQL 非过程化，用户不指明存取路径、无法干预系统实现。</li>
+<li>可能性：关系表达式语义级别高，同一查询有多种效率不同的等价实现。</li>
+<li>优势：能获取数据字典统计信息；物理信息变化后可自动重新优化；一次可比较数百种计划；内含复杂优化技术。</li>
+<li>代价：集中式为 I/O + CPU + 内存，<strong>I/O 最主要</strong>；分布式再加<strong>通信代价</strong>。</li>
+</ul></div>
+
+<div class="trap"><p class="t">易错</p><p>两个措辞陷阱。其一，"查询优化就是代数优化"是错的，代数优化只改表达式结构，选存取路径属于物理优化。其二，"优化的目标是找到代价最小的计划"在教材语境里要补一句"实际上是较小"——优化器是<strong>启发式 + 代价估算</strong>的组合，在有限候选里挑较优，不穷举所有计划。</p></div>
+
+<div class="sum"><p class="t">本节小结</p><ul><li>必要性与可能性分别来自 SQL 的非过程化和关系表达式语义级别高。</li><li>优化器强于用户程序的四条理由要能复述。</li><li>集中式看 I/O，分布式还要加通信代价；目标是"最小（实际较小）"。</li></ul></div>
+
+<h2 id="s4"><span class="h2no">9.2.2</span>一个实例：一万倍的差距</h2>
+
+<p>【例9.3】求选修了 2 号课程的学生姓名。数据库为 Student、Course、SC 三表；Student 有 1000 个学生记录，SC 有 10000 个选课记录，其中选修 2 号课程的仅 50 个。设一块能装 10 个 Student 元组或 100 个 SC 元组，5 个内存块放 Student、1 块放 SC，则 Student 占 100 块、SC 占 100 块。</p>
+
+<pre><code><span class="c">-- Q0：SQL 写法</span>
+SELECT Student.Sname
+FROM   Student, SC
+WHERE  Student.Sno = SC.Sno AND SC.Cno = '2';</code></pre>
+
+<p>三个等价表达式，代价却差四个数量级：</p>
+
+<p>Q1 = π<sub>Sname</sub>(σ<sub>Student.Sno=SC.Sno ∧ SC.Cno='2'</sub>(Student × SC))。先做笛卡尔积：读 Student 100 块，SC 读 20 遍（5 块装 50 个元组）、每遍 100 块，共 2100 块；积的结果 10³×10⁴ = 10⁷ 个元组，每块 10 个，写出 10⁶ 块；选择再读回这 10⁶ 块。总代价 = 2100 + 10⁶ + 10⁶ = <strong>2 002 100 块</strong>。</p>
+
+<p>Q2 = π<sub>Sname</sub>(σ<sub>SC.Cno='2'</sub>(Student ⋈ SC))。换成自然连接，读表策略不变仍是 2100 块，但连接结果只有 10⁴ 个元组，写出、读回各 10³ 块。总代价 = 2100 + 10³ + 10³ = <strong>4100 块</strong>，约为 Q1 的 1/488。</p>
+
+<p>Q3 = π<sub>Sname</sub>(Student ⋈ σ<sub>SC.Cno='2'</sub>(SC))。先对 SC 做选择，只读一遍 SC 共 100 块，满足条件的仅 50 个元组，可全放内存、不必写中间文件；再读一遍 Student 共 100 块，与内存中的 SC 元组连接后投影。总代价 = 100 + 100 = <strong>200 块</strong>，约为 Q1 的<strong>万分之一</strong>、Q2 的 1/20。有人把这个差距比作"花 500 元才能办成的事，5 元就办成了"——数量级的差别，正是代数优化存在的理由。</p>
+
+<table>
+<thead><tr><th>方案</th><th>关系代数表达式</th><th>读表块数</th><th>中间结果读/写</th><th>总代价（块）</th><th>相对 Q1</th></tr></thead>
+<tbody>
+<tr><td>Q1</td><td>π<sub>Sname</sub>(σ<sub>连接条件∧SC.Cno='2'</sub>(Student×SC))</td><td>2100</td><td>写 10⁶ / 读 10⁶</td><td>2 002 100</td><td>1</td></tr>
+<tr><td>Q2</td><td>π<sub>Sname</sub>(σ<sub>SC.Cno='2'</sub>(Student⋈SC))</td><td>2100</td><td>写 10³ / 读 10³</td><td>4100</td><td>约 1/488</td></tr>
+<tr><td>Q3</td><td>π<sub>Sname</sub>(Student⋈σ<sub>SC.Cno='2'</sub>(SC))</td><td>200</td><td>无（50 个元组在内存）</td><td>200</td><td>约 1/10000</td></tr>
+</tbody>
+<caption>表 2　同一查询三种等价方案的代价对比</caption>
+</table>
+
+<p>若 SC 的 Cno 上有索引，Q3 第一步只读 Cno='2' 的记录，索引块加数据块约 3～4 块；若 Student 的 Sno 上也有索引，连接时最多涉及 50 个学生记录，代价还能再降。这就是物理优化：<strong>先由代数优化决定"做什么、按什么次序做"，再由物理优化决定"用什么算法、走哪条存取路径"</strong>。</p>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>这道例题是全章的计算母题，三个数字必须背下来并能现场推导。</p><ul>
+<li>Q1 = 2100 + 10⁶ + 10⁶ ≈ <strong>2×10⁶ 块</strong>；Q2 = 2100 + 10³ + 10³ = <strong>4100 块</strong>；Q3 = 100 + 100 = <strong>200 块</strong>。</li>
+<li>代价差的根源：<strong>笛卡尔积产生 10⁷ 个元组</strong>，而选择把 SC 先缩到 50 个元组。</li>
+<li>结论：有选择和连接时<strong>先做选择</strong>，使参加连接的元组大大减少——这就是代数优化。</li>
+<li>再做索引扫描、索引连接，把 200 块压到几块——这就是物理优化。</li>
+</ul></div>
+
+<div class="mem">口诀：<b>先选后连，百万变两百</b>——选择下推使中间结果从 10⁷ 降到 50，代价从 2×10⁶ 块降到 200 块；再给 Cno、Sno 建索引，200 块还能降到个位数。</div>
+
+<div class="eg"><p class="t">例题</p><p>补充例题：仍用例9.3 的数据，若选修 2 号课程的选课记录不是 50 个而是 5000 个（占 SC 的一半），Q3 的代价变成多少？此时还应不应该用索引扫描取 SC 的元组？</p><div class="sol"><p>选择结果 5000 个元组，每块装 100 个，共 50 块，已超过 6 块内存，需要写中间文件 50 块、再读回 50 块；连接时读 Student 100 块。总代价 = 100（读 SC）+ 50（写）+ 50（读）+ 100（读 Student）= <strong>300 块</strong>，仍远小于 Q1 的 200 万块，说明"选择下推"这一代数优化结论与选择率无关。<br>但索引扫描不再划算：选择率 50% 远大于 10% 的经验阈值，用 Cno 索引逐条回表的代价高于顺序读一遍 SC 的 100 块，此时<strong>应改用全表扫描</strong>再在内存中筛选。这说明代数优化与物理优化要分开判断，不能一句"有索引就用索引"包打天下。</p></div></div>
+
+<div class="sum"><p class="t">本节小结</p><ul><li>Q1、Q2、Q3 的差别只在"选择什么时候做、笛卡尔积是否变成连接"，代价相差约 1 万倍。</li><li>计算套路：读表块数 + 中间结果写块数 + 中间结果读块数，逐项相加。</li><li>代数优化决定次序，物理优化决定算法与存取路径，两者叠加才是完整的查询优化。</li></ul></div>
+
+<h2 id="s5"><span class="h2no">9.3.1</span>关系代数等价变换规则</h2>
+
+<p>代数优化的全部武器就是等价变换规则。两个关系表达式 E1 和 E2 等价，指用相同的关系代替两个表达式中相应的关系后结果相同，记作 E1 ≡ E2。难点在于"看到一条变换能报出是第几条规则"，这是语法树大题的给分点。</p>
+
+<table>
+<thead><tr><th>编号</th><th>名称</th><th>表达式</th><th>使用要点</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>连接、笛卡尔积交换律</td><td>E1×E2 ≡ E2×E1；E1⋈E2 ≡ E2⋈E1；E1⋈<sub>F</sub>E2 ≡ E2⋈<sub>F</sub>E1</td><td>改变连接次序，配合规则 2 调整连接顺序</td></tr>
+<tr><td>2</td><td>连接、笛卡尔积结合律</td><td>(E1×E2)×E3 ≡ E1×(E2×E3)；(E1⋈E2)⋈E3 ≡ E1⋈(E2⋈E3)</td><td>多表连接时用来改连接顺序</td></tr>
+<tr><td>3</td><td>投影的串接</td><td>π<sub>A1…An</sub>(π<sub>B1…Bm</sub>(E)) ≡ π<sub>A1…An</sub>(E)，{A}⊆{B}</td><td>合并两层投影，去掉多余投影</td></tr>
+<tr><td>4</td><td>选择的串接</td><td>σ<sub>F1</sub>(σ<sub>F2</sub>(E)) ≡ σ<sub>F1∧F2</sub>(E)</td><td>合并条件一次检查，也可反向分解</td></tr>
+<tr><td>5</td><td>选择与投影交换</td><td>σ<sub>F</sub>(π<sub>A</sub>(E)) ≡ π<sub>A</sub>(σ<sub>F</sub>(E))，F 只涉及 A</td><td>一般形式要补投影：π<sub>A</sub>(σ<sub>F</sub>(E)) ≡ π<sub>A</sub>(σ<sub>F</sub>(π<sub>A∪B</sub>(E)))</td></tr>
+<tr><td>6</td><td>选择与笛卡尔积交换</td><td>σ<sub>F</sub>(E1×E2) ≡ σ<sub>F</sub>(E1)×E2（F 只涉及 E1）</td><td>F=F1∧F2 时拆成 σ<sub>F1</sub>(E1)×σ<sub>F2</sub>(E2)；部分涉及两表时写成 σ<sub>F2</sub>(σ<sub>F1</sub>(E1)×E2)</td></tr>
+<tr><td>7</td><td>选择与并的分配</td><td>σ<sub>F</sub>(E1∪E2) ≡ σ<sub>F</sub>(E1)∪σ<sub>F</sub>(E2)</td><td>E1、E2 属性名相同</td></tr>
+<tr><td>8</td><td>选择与差的分配</td><td>σ<sub>F</sub>(E1−E2) ≡ σ<sub>F</sub>(E1)−σ<sub>F</sub>(E2)</td><td>E1、E2 属性名相同</td></tr>
+<tr><td>9</td><td>选择对自然连接的分配</td><td>σ<sub>F</sub>(E1⋈E2) ≡ σ<sub>F</sub>(E1)⋈σ<sub>F</sub>(E2)</td><td><strong>F 只涉及公共属性</strong>，否则不成立</td></tr>
+<tr><td>10</td><td>投影与笛卡尔积的分配</td><td>π<sub>A1…An,B1…Bm</sub>(E1×E2) ≡ π<sub>A</sub>(E1)×π<sub>B</sub>(E2)</td><td>投影下推的主要依据</td></tr>
+<tr><td>11</td><td>投影与并的分配</td><td>π<sub>A</sub>(E1∪E2) ≡ π<sub>A</sub>(E1)∪π<sub>A</sub>(E2)</td><td>E1、E2 属性名相同</td></tr>
+</tbody>
+<caption>表 3　关系代数等价变换规则速查</caption>
+</table>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>语法树大题真正用到的只有三四条，其余是干扰项。按使用频率排序：</p><ul>
+<li><strong>规则 4（选择串接）</strong>：分解 σ<sub>F1∧F2</sub>，让每个选择能单独下推。</li>
+<li><strong>规则 6（选择与笛卡尔积交换）</strong>：把只涉及单表的条件推到该表上方。</li>
+<li><strong>规则 3、10（投影串接、投影与积分配）</strong>：投影下推、合并、删掉连接后再也不用的属性。</li>
+<li><strong>规则 1、2（交换律、结合律）</strong>：调整连接顺序，让中间结果最小。</li>
+</ul></div>
+
+<div class="trap"><p class="t">易错</p><p>三条规则的条件最容易被忽略。规则 5 的一般形式必须<strong>补投影</strong> π<sub>A∪B</sub>，因为 F 里用到的属性 B 不能提前被投影掉；规则 6 的第三种情形是 σ<sub>F2</sub>(σ<sub>F1</sub>(E1)×E2)，<strong>不是</strong> σ<sub>F1</sub>(E1)×σ<sub>F2</sub>(E2)；规则 9 要求 F 只涉及<strong>公共属性</strong>，跨表的条件不能分别下推到两边，否则语义就变了。</p></div>
+
+<div class="eg"><p class="t">例题</p><p>补充例题：判断下列等价是否成立，成立的指出依据的规则。(1) σ<sub>Sage&gt;20</sub>(Student×SC) ≡ σ<sub>Sage&gt;20</sub>(Student)×SC；(2) π<sub>Sname</sub>(σ<sub>Sdept='CS'</sub>(Student)) ≡ σ<sub>Sdept='CS'</sub>(π<sub>Sname</sub>(Student))；(3) σ<sub>Grade&gt;90</sub>(Student×SC) ≡ Student×σ<sub>Grade&gt;90</sub>(SC)。</p><div class="sol"><p>(1) 成立。Sage 只是 Student 的属性，按规则 6（选择与笛卡尔积交换）可以直接下推，先选出年龄大于 20 的学生再与 SC 做笛卡尔积。<br>(2) <strong>不成立</strong>。右侧先做 π<sub>Sname</sub> 把 Sdept 投影掉了，再对 Sdept 做选择就无属性可选；正确写法是 π<sub>Sname</sub>(σ<sub>Sdept='CS'</sub>(Student))，若要下推必须按规则 5 的一般形式补投影，即 π<sub>Sname</sub>(σ<sub>Sdept='CS'</sub>(π<sub>Sname,Sdept</sub>(Student)))。<br>(3) 成立。Grade 只是 SC 的属性，按规则 6（先用规则 1 交换积的两侧）可以把选择下推到 SC 一侧，避免先做 10⁷ 元组的笛卡尔积。</p></div></div>
+
+<h2 id="s6"><span class="h2no">9.3.2</span>语法树的启发式优化</h2>
+
+<p>等价变换的方向由启发式规则决定。转换的最终目的是减少查询开销（I/O 次数），直接目的是<strong>减少中间关系的元组数、元组大小</strong>。课件给了五条典型规则：</p>
+
+<ol class="steps">
+<li><strong>选择运算尽可能先做</strong>，减小中间结果集的规模。这是优化策略中最重要、最基本的一条。</li>
+<li><strong>把投影运算和选择运算同时进行</strong>，避免重复扫描：若有若干投影和选择都对同一个关系操作，可在扫描该关系时一次完成。</li>
+<li><strong>把投影同其前或其后的双目运算结合起来</strong>，不必为了去掉某些字段而单独扫描一遍关系。</li>
+<li><strong>把某些选择同在它前面要执行的笛卡尔积结合起来成为一个连接运算</strong>，等值连接比同样关系上的笛卡尔积省很多时间。例：σ<sub>Student.Sno=SC.Sno</sub>(Student×SC) ≡ Student ⋈ SC。多表查询时再用规则 1、2 调整连接顺序，把能产生小中间结果的连接放前面。</li>
+<li><strong>找出公共子表达式</strong>：若重复出现的子表达式结果不大、且从外存读它比重新计算便宜得多，就先算一次并写入中间文件；查询视图时，定义视图的表达式往往就是公共子表达式。</li>
+</ol>
+
+<p>按这五条规则，课件给出"关系表达式的优化"算法，五步固定：</p>
+
+<ol class="steps">
+<li>利用规则 4 分解选择运算，把 σ<sub>F1∧F2∧…∧Fn</sub>(E) 变换为 σ<sub>F1</sub>(σ<sub>F2</sub>(…σ<sub>Fn</sub>(E)…))。</li>
+<li>对每个选择，利用规则 4～9 尽可能把它移到树的叶端。</li>
+<li>对每个投影，利用规则 3、5、10、11 的一般形式尽可能把它移向树的叶端（规则 3 使一些投影消失或出现，规则 5 把一个投影分裂为两个）。</li>
+<li>利用规则 3～5 合并串接的选择和投影，使多个选择或投影能同时执行、或在一次扫描中完成。</li>
+<li>对内结点分组：每个双目运算（×、⋈、∪、−）和它所有的直接祖先（σ、π）为一组；若其后代直到叶子全是单目运算，也并入该组。<strong>但双目是笛卡尔积 ×、且后面不是与它组成等值连接的选择时，选择不能与这个 × 同组。</strong></li>
+</ol>
+
+<figure class="fig">
+<svg viewBox="0 0 460 250" role="img" aria-label="例9.4 的初始关系代数语法树" width="460" height="250">
+<rect class="acc" x="170" y="8" width="120" height="34" rx="6"/>
+<text x="230" y="30" text-anchor="middle" font-size="14">π Sname</text>
+<rect class="box" x="60" y="74" width="340" height="44" rx="6"/>
+<text x="230" y="94" text-anchor="middle" font-size="12">σ Student.Sno=SC.Sno</text>
+<text x="230" y="110" text-anchor="middle" font-size="12">∧ SC.Cno='2'</text>
+<rect class="box" x="200" y="150" width="60" height="32" rx="6"/>
+<text x="230" y="171" text-anchor="middle" font-size="14">×</text>
+<rect class="box" x="100" y="206" width="100" height="32" rx="6"/>
+<text x="150" y="227" text-anchor="middle" font-size="13">Student</text>
+<rect class="box" x="275" y="206" width="90" height="32" rx="6"/>
+<text x="320" y="227" text-anchor="middle" font-size="13">SC</text>
+<line class="ln" x1="230" y1="42" x2="230" y2="74"/>
+<line class="ln" x1="230" y1="118" x2="230" y2="150"/>
+<path class="ln" d="M230 182 L230 194 L150 194 L150 206"/>
+<path class="ln" d="M230 182 L230 194 L320 194 L320 206"/>
+<text x="4" y="96" class="lbl">合取条件</text>
+<text x="4" y="112" class="lbl">未分解</text>
+</svg>
+<figcaption>图 9-1　例9.4 的初始关系代数语法树：σ 把连接条件与 SC.Cno='2' 捆在一起，压在笛卡尔积之上</figcaption>
+</figure>
+
+<div class="eg"><p class="t">例题</p><p>【例9.4】把 <code>SELECT Student.Sname FROM Student, SC WHERE Student.Sno=SC.Sno AND SC.Cno='2'</code> 优化成标准语法树，并注明每一步依据的规则。</p><div class="sol"><p>① 内部表示：顶层 π<sub>Sname</sub>，其下 σ<sub>Student.Sno=SC.Sno ∧ SC.Cno='2'</sub>，再下是 ×，叶子为 Student、SC（图 9-1）。<br>② <strong>规则 4</strong> 分解选择：拆成 σ<sub>SC.Cno='2'</sub> 与 σ<sub>Student.Sno=SC.Sno</sub> 两层。<br>③ <strong>规则 6</strong> 选择下移：只涉及 SC 的 σ<sub>SC.Cno='2'</sub> 越过 × 落到 SC 之上；涉及两表的连接条件 σ<sub>Student.Sno=SC.Sno</sub> 留在 × 之上，不能再下移。<br>④ <strong>规则 3、10</strong> 投影下移：Student 侧插入 π<sub>Sname,Sno</sub>，SC 侧插入 π<sub>Sno,Cno</sub>；选择已用完 Cno，再用<strong>规则 3</strong>把 SC 上方投影收缩为 π<sub>Sno</sub>（必须先选后投，否则选择无属性可用）。<br>⑤ <strong>规则 4、5</strong> 合并串接：SC 上的 σ<sub>SC.Cno='2'</sub> 与 π<sub>Sno</sub> 合并成一次扫描内先选后投。<br>⑥ <strong>启发式规则 4</strong> 把 σ<sub>Student.Sno=SC.Sno</sub> 与 × 合并为等值连接 ⋈，得到标准树：π<sub>Sname</sub>(π<sub>Sname,Sno</sub>(Student) ⋈<sub>Sno</sub> π<sub>Sno</sub>(σ<sub>SC.Cno='2'</sub>(SC)))。<br>⑦ <strong>分组</strong>：连接与它上方的 π<sub>Sname</sub> 同组；σ<sub>SC.Cno='2'</sub> 与 π<sub>Sno</sub> 同组；两个叶子各自成组，组内一次扫描完成。这与 9.2.2 的 Q3 是同一棵树的两种写法。</p></div></div>
+
+
+<div class="mem">口诀：<b>选先做、投合并、积成连、公共提、组内并</b>——对应五条启发式规则；算法五步则是"分解选择、选择下移、投影下移、合并串投、内结点分组"，答题按这五步写，一步一分。</div>
+
+<div class="trap"><p class="t">易错</p><p>算法第 4 步"合并串接的选择和投影"看起来<strong>违背了"投影尽可能早做"</strong>，教材专门说明：这样做效率更高，因为一次扫描能同时完成选择和投影，省掉一遍 I/O。另一个失分点是第 5 步分组：当双目运算是笛卡尔积 ×、且后面没有与它组成等值连接的选择时，<strong>不能</strong>把选择与这个 × 分到同一组，否则会把过滤拖到积之后，等于没优化。</p></div>
+
+<div class="sum"><p class="t">本节小结</p><ul><li>五条启发式规则：选择先做、投影与选择同时、投影与双目运算结合、选择与积合成连接、提取公共子表达式。</li><li>算法五步：分解选择 → 选择下移 → 投影下移 → 合并串投 → 内结点分组。</li><li>标准树大题按"画初始树 → 规则 4 分解 → 规则 6 下推 → 规则 3/10 投影 → 合并成连接 → 分组"六步写，每步注明规则号。</li></ul></div>
+
+<h2 id="s7"><span class="h2no">9.4.1</span>基于启发式规则的存取路径选择</h2>
+
+<p>代数优化只改运算次序，不涉及存取路径；同一个表达式仍有许多存取方案，效率差别很大，因此物理优化有两条路线：<strong>基于规则的启发式优化</strong>（规则在多数情况下适用，但不保证最好）与<strong>基于代价估算的优化</strong>（估算各策略代价，选最小者）。实用系统常先用启发式规则选出若干候选以减少估算量，再对候选算代价定案。</p>
+
+<p>选择操作的启发式规则，先按关系大小分：<strong>小关系用全表顺序扫描，即使选择列上有索引</strong>；大关系再按条件类型分五种情形，归纳为表 4。</p>
+
+<table>
+<thead><tr><th>选择条件</th><th>索引情况</th><th>采用的算法</th></tr></thead>
+<tbody>
+<tr><td>小关系，任意条件</td><td>有无索引都一样</td><td>全表顺序扫描</td></tr>
+<tr><td>主码 = 值</td><td>主码索引（系统自动建）</td><td>主码索引扫描，结果最多一个元组</td></tr>
+<tr><td>非主属性 = 值</td><td>选择列上有索引</td><td>估算结果比例，低于 10% 用索引，否则全表</td></tr>
+<tr><td>非等值或范围查询（&gt;、≥、&lt;、≤）</td><td>选择列上有索引</td><td>结果少则用索引，否则全表扫描</td></tr>
+<tr><td>AND 合取条件</td><td>有组合索引</td><td>优先组合索引扫描；只有一般索引则求指针交集，或用一个索引取元组、回表再验其余条件</td></tr>
+<tr><td>OR 析取条件</td><td>任意</td><td>一般用全表顺序扫描</td></tr>
+</tbody>
+<caption>表 4　选择操作的启发式决策表</caption>
+</table>
+
+<p>连接操作的启发式规则四条，按优先级排：两表都已按连接属性排序，选<strong>排序-合并</strong>；一个表在连接属性上有索引，选<strong>索引连接</strong>；两者都不适用且其中一个表较小，选 <strong>hash join</strong>；以上都不满足，用<strong>嵌套循环</strong>，并选<strong>块数少</strong>的表作外表。</p>
+
+<p>外表为什么选块数少的？设 R、S 占用块数分别为 Br、Bs，内存缓冲区块数为 K，分 K−1 块给外表。若 R 为外表，嵌套循环存取块数为 <strong>Br + Br·Bs/(K−1)</strong>；若 S 为外表则为 Bs + Br·Bs/(K−1)。两式只有第一项不同，显然第一项小的（块数少的表）作外表更省。</p>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>这一节是"场景选择题"的题库，判断顺序：先看关系大小，再看条件类型，最后看索引。</p><ul>
+<li>小关系：<strong>一律全表扫描</strong>，有索引也不用。</li>
+<li>主码 = 值：主码索引；非主属性 = 值：结果比例<strong>低于 10%</strong> 才用索引。</li>
+<li>AND：组合索引优先；OR：一般全表扫描。</li>
+<li>连接：有序→排序-合并；有索引→索引连接；一表较小→hash join；都不行→嵌套循环，<strong>块数少的当外表</strong>，代价 Br + Br·Bs/(K−1)。</li>
+</ul></div>
+
+<div class="eg"><p class="t">例题</p><p>补充例题：Student 表 5000 行、占 500 块。判断下列查询应采用的存取路径。(1) <code>WHERE Sno='202215121'</code>；(2) <code>WHERE Sdept='CS'</code>，估计 200 行；(3) <code>WHERE Sage&gt;18</code>，估计 4500 行；(4) <code>WHERE Sdept='CS' OR Sage&gt;18</code>。</p><div class="sol"><p>(1) 主码 = 值，走 Sno 主码索引，最多一个元组，代价约 L+1 块。<br>(2) 非主属性 = 值，200/5000 = 4%，低于 10%，用 Sdept 索引扫描。<br>(3) 范围查询，4500/5000 = 90%，比例过大，逐条回表的随机 I/O 远超顺序读 500 块，用<strong>全表扫描</strong>。<br>(4) OR 析取条件无法用单个索引覆盖两个分支而不重复回表，一般用<strong>全表扫描</strong>。</p></div></div>
+
+<div class="trap"><p class="t">易错</p><p>三个高频错误：小关系"有索引就必须用索引"是错的，<strong>小关系一律全表扫描</strong>；OR 条件误以为可"两个索引各查一遍再并"，课件明确一般全表扫描；10% 指<strong>结果元组占总元组的比例</strong>，不是索引块占比。</p></div>
+
+<div class="sum"><p class="t">本节小结</p><ul><li>选择：小关系全表；主码等值用主码索引；非主属性等值低于 10% 用索引；范围看结果多少；AND 优先组合索引；OR 一般全表。</li><li>连接：有序→排序-合并，有索引→索引连接，一表小→hash join，否则嵌套循环且小块表作外表。</li><li>嵌套循环代价 Br + Br·Bs/(K−1)，外表选择只看块数。</li></ul></div>
+
+<h2 id="s8"><span class="h2no">9.4.2</span>基于代价的优化</h2>
+
+<p>启发式规则是定性选择，适合解释执行的系统（优化开销计入查询总开销）；编译执行的系统中优化与执行分开，可用更精细的基于代价的优化。它要算各方案的执行代价，<strong>与数据库状态密切相关</strong>，所需统计信息分三类：</p>
+
+<ol class="steps">
+<li>对每个基本表：元组总数 N、元组长度 l、占用块数 B、溢出块数 BO。</li>
+<li>对基表的每个列：不同值的个数 m、最大最小值、是否已建索引、索引类型（B+ 树、Hash、聚集），据此算<strong>选择率 f</strong>——均匀分布 f = 1/m，不均匀则 f = 具有该值的元组数 / N。</li>
+<li>对索引：索引层数 L、不同索引值个数、索引的选择基数 S（有 S 个元组具有某个索引值）、索引叶结点数 Y。</li>
+</ol>
+
+<table>
+<thead><tr><th>操作</th><th>条件</th><th>代价公式</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>全表扫描</td><td>任意</td><td>cost = B</td><td>"码 = 值"的平均搜索代价为 B/2</td></tr>
+<tr><td>索引扫描</td><td>码 = 值，B+ 树层数 L</td><td>cost = L + 1</td><td>根到叶 L 块 + 元组所在 1 块</td></tr>
+<tr><td>索引扫描</td><td>非码属性等值，选择基数 S</td><td>cost = L + S（最坏）</td><td>满足条件的元组可能分散在不同块</td></tr>
+<tr><td>索引扫描</td><td>范围比较 &gt;、≥、&lt;、≤</td><td>cost = L + Y/2 + B/2</td><td>假设一半元组满足，取一半叶结点与一半表块</td></tr>
+<tr><td>嵌套循环连接</td><td>R 为外表，内存 K 块</td><td>cost = Br + Br·Bs/(K−1)</td><td>写回结果时再加 (Frs·Nr·Ns)/Mrs</td></tr>
+<tr><td>排序-合并连接</td><td>两表已排序</td><td>cost = Br + Bs + (Frs·Nr·Ns)/Mrs</td><td>需排序时另加约 2B + 2B·log₂B</td></tr>
+</tbody>
+<caption>表 5　常用代价估算公式（Frs 为连接选择性，Mrs 为结果块因子）</caption>
+</table>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>代价估算题只考"套公式 + 比大小"，公式与符号含义必须记死。</p><ul>
+<li>全表扫描 B；"码 = 值"平均 B/2。</li>
+<li>索引等值（码）L+1；索引等值（非码）最坏 L+S；索引范围 L + Y/2 + B/2。</li>
+<li>嵌套循环 Br + Br·Bs/(K−1)；排序-合并有序 Br + Bs；排序代价约 2B + 2B·log₂B。</li>
+<li>选择率：均匀 f = 1/m，不均匀 f = 该值元组数 / N。</li>
+</ul></div>
+
+<div class="eg"><p class="t">例题</p><p>补充例题：Student 表 N=5000、B=500 块（每块 10 个元组），Sno 上 B+ 树层数 L=3，Sage 上 B+ 树叶结点数 Y=1000，Sage 有 100 个不同值且分布均匀。内存 K=6 块，SC 表 Bs=1000 块。估算：(1) Sno='202215121' 的两种方案代价；(2) Sage&gt;20 的两种方案代价；(3) 两表嵌套循环连接的外表选择。</p><div class="sol"><p>(1) 全表扫描：B/2 = 250 块（等值平均要扫一半）；索引扫描：L+1 = 4 块。索引远优，选主码索引。<br>(2) 选择率 f = 1/100，满足条件约 50 个元组，但按范围公式 cost = L + Y/2 + B/2 = 3 + 500 + 250 = <strong>753 块</strong>，大于全表扫描的 <strong>500 块</strong>，应选全表扫描——<strong>范围查询即使有索引也不一定用索引</strong>。<br>(3) 若 Student（Br=500）为外表：500 + 500×1000/5 = 100 500 块；若 SC（Bs=1000）为外表：1000 + 1000×500/5 = 101 000 块。选 <strong>Student 作外表</strong>，省 500 块——与"块数少的表作外表"一致。</p></div></div>
+
+<div class="mem">口诀：<b>等值看层数，范围看一半，连接看外表</b>——等值索引 L+1（非码 L+S），范围 L+Y/2+B/2，嵌套循环 Br+Br·Bs/(K−1) 且小块表当外表。</div>
+
+<div class="trap"><p class="t">易错</p><p>三个公式细节。其一，"码 = 值"用索引是 <strong>L+1</strong>，不是 L+S——S 是非码属性等值的最坏估计。其二，L+S 的 S 是<strong>索引的选择基数</strong>（具有该索引值的元组数），不是不同值数 m。其三，范围查询公式里的 Y/2 与 B/2 是"假设一半元组满足"的粗估，如果统计信息更准要按实际选择率修正，不要机械套用后就说"索引一定好"。</p></div>
+
+<div class="sum"><p class="t">本节小结</p><ul><li>统计信息三类：表（N、l、B、BO）、列（m、最值、索引、选择率 f）、索引（L、不同值数、S、Y）。</li><li>公式：B、B/2、L+1、L+S、L+Y/2+B/2、Br+Br·Bs/(K−1)、Br+Bs+排序代价。</li><li>算完要比较，选择率大时全表扫描可能优于索引；启发式先筛候选、代价估算再定案。</li></ul></div>
+
+<h2 id="s9"><span class="h2no">9.6</span>小结与答题模板</h2>
+
+<p>本章主线：<strong>查询处理是把 SQL 变成执行计划的流水线，查询优化是这条流水线上决定性能的关键工序</strong>。课件小结把内容归为三块：查询处理过程（分析、检查、优化、执行）、查询优化（代数优化即启发式优化；物理优化含基于规则与基于代价两种）、查询执行（自顶向下、自底向上两种方式）。</p>
+
+<p>课件最后的告诫：复杂查询尤其涉及连接和嵌套时，<strong>不要把优化任务全放在 DBMS 上</strong>，应找出 DBMS 的优化规律，写出适合它自动优化的 SQL；对 DBMS 不能优化的查询，则重写语句、手工调整性能。</p>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>考前 60 秒清单，进考场前扫一遍。</p><ul>
+<li>四阶段：分析（词法/语法）→ 检查（合法权、视图消解、安全性、完整性初步）→ 优化（代数/物理）→ 执行（代码生成器）。</li>
+<li>选择二法：全表扫描、索引扫描；连接四法：嵌套循环、排序-合并、索引连接、hash join。</li>
+<li>代数优化五条启发式规则 + 算法五步；物理优化 = 启发式规则 + 代价估算。</li>
+<li>三个代价数字：Q1 约 2×10⁶ 块、Q2 4100 块、Q3 200 块，相差约 1 万倍。</li>
+<li>关键公式：B、B/2、L+1、L+S、L+Y/2+B/2、Br+Br·Bs/(K−1)。</li>
+</ul></div>
+
+<ol class="steps">
+<li>抄题干，写出 SQL 对应的关系代数表达式（笛卡尔积 + 合取选择 + 顶层投影）。</li>
+<li>画初始语法树：从下往上 ×、σ、π，条件全部压在 σ 里。</li>
+<li>规则 4 分解选择，把合取条件拆成可独立下推的多个 σ。</li>
+<li>规则 6 把只涉及单表的 σ 下推到对应叶子上；跨表条件留在连接/积之上。</li>
+<li>规则 3、10 下推投影，只保留后续运算（含连接属性）需要的属性。</li>
+<li>把 σ + × 合并为等值连接（启发式规则 4 / 规则 6 的逆用），必要时按规则 1、2 调连接顺序使中间结果最小。</li>
+<li>合并串接的选择与投影，最后对内结点分组，标注每步用的规则号。</li>
+</ol>
+
+<div class="sum"><p class="t">本节小结</p><ul><li>全章三块：查询处理过程、查询优化（代数 + 物理）、查询执行方式。</li><li>语法树大题按"表达式 → 初始树 → 规则 4 → 规则 6 → 规则 3/10 → 合并连接 → 分组"七步走，每步写规则号。</li><li>不要把优化全推给 DBMS：会写能被优化的 SQL，也要会对不能优化的语句手工重写。</li></ul></div>
+
+    </div>
+    <div class="selftest">
+      <span class="st-n">本章共 24 道自测题（选择 / 判断 / 填空 / 简答），作答后立即判分并给出解析。</span>
+      <a href="quiz.html?ch=9">刷本章题</a>
+    </div>
+    <nav class="pager" aria-label="翻页"><a class="prev" href="7.html">‹ 第 7 章 数据库设计</a><a class="next" href="10.html">第 10 章 数据库恢复技术 ›</a></nav>
+  </article>
+
+</div>
+</main>
+
+<footer class="footer">
+  <div class="wrap foot-inner">
+    <div class="foot-cols">
+      <div class="foot-brand">
+        <div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="7" ry="2.6"/><path d="M5 6v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6V6"/><path d="M5 12v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6v-6"/></svg>数据库系统概论</div>
+        <p>据本学期 14 个课件文件整理，教材为王珊《数据库系统概论》（第 6 版）。题目均为自编练习，不是真题。</p>
+      </div>
+      <div>
+        <h4>学习</h4>
+        <ul>
+          <li><a href="../index.html">备考首页</a></li>
+          <li><a href="../db.html">十章讲义</a></li>
+          <li><a href="../db/cheatsheet.html">考前速查卡</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>练习</h4>
+        <ul>
+          <li><a href="../db/quiz.html">题库 · 239 题</a></li>
+          <li><a href="../db/exam.html">模拟卷 · 3 套</a></li>
+          <li><a href="../index.html#plan">七天冲刺表</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>说明</h4>
+        <ul>
+          <li>课件未含第 8 章</li>
+          <li>进度只存在本机</li>
+          <li>可离线打开</li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-legal"><span>© <span id="year">2026</span> 数据库系统概论 · 期末备考</span><span>据课件整理 · 仅供复习使用</span></div>
+  </div>
+</footer>
+<button class="backtop" id="backtop" type="button" aria-label="回到顶部" hidden>↑</button>
+<script src="../assets/site.js?v=2"></script>
+<script src="../assets/study.js?v=2"></script>
+</body>
+</html>

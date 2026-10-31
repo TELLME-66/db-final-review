@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 5 章 数据库完整性 · 数据库系统概论 · 备考</title>
+<meta name="description" content="三类完整性的定义与违约处理、CONSTRAINT 命名、断言、触发器（行级/语句级、BEFORE/AFTER、新旧值）。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/theme.css?v=2">
+<link rel="stylesheet" href="../assets/site.css?v=2">
+<link rel="stylesheet" href="../assets/course.css?v=2">
+<script>(function(){var d=document.documentElement;d.classList.add('js');try{var t=localStorage.getItem('site-theme');if(t==='light'||t==='dark')d.setAttribute('data-theme',t);}catch(e){}})();</script>
+</head>
+<body data-ch="5">
+<a class="skip" href="#main">跳到正文</a>
+<header class="topbar" id="topbar">
+  <div class="wrap-wide bar">
+    <a class="brand" href="../index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="7" ry="2.6"/><path d="M5 6v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6V6"/><path d="M5 12v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6v-6"/></svg><span>数据库系统概论</span></a>
+    <nav class="nav" aria-label="站点导航"><a href="../index.html">首页</a><a href="../db.html" aria-current="page">讲义</a><a href="quiz.html">题库</a><a href="exam.html">模拟卷</a><a href="cheatsheet.html">速查卡</a></nav>
+    <button class="icon-btn" id="themeBtn" type="button" title="主题：跟随系统（点击切换）" aria-label="主题：跟随系统（点击切换）"><span id="themeIcon" aria-hidden="true">◐</span></button>
+  </div>
+</header>
+<div id="readbar"></div>
+
+<main id="main">
+<div class="doc">
+
+  <aside class="doc-toc" aria-label="讲义目录">
+  <details class="toc-fold" open>
+  <summary>讲义目录</summary>
+  <nav class="mod-switch" aria-label="课程模块">
+    <a href="../db.html" aria-current="page">讲义</a>
+    <a href="quiz.html">题库</a>
+    <a href="exam.html">模拟卷</a>
+    <a href="cheatsheet.html">速查卡</a>
+  </nav>
+  <a class="toc-home" href="../db.html">数据库系统概论</a>
+  <p class="toc-ver"><span>本学期课件</span>10 章</p>
+  <div class="toc-body">
+  <div class="toc-ch">
+    <h2>全部章节</h2>
+    <ul class="toc-list"><li><a href="1.html"><span class="num">第 1 章</span>绪论</a></li><li><a href="2.html"><span class="num">第 2 章</span>关系数据库</a></li><li><a href="3.html"><span class="num">第 3 章</span>关系数据库标准语言 SQL</a></li><li><a href="4.html"><span class="num">第 4 章</span>数据库安全性</a></li><li><a href="5.html" aria-current="page"><span class="num">第 5 章</span>数据库完整性</a></li><li><a href="6.html"><span class="num">第 6 章</span>关系数据理论</a></li><li><a href="7.html"><span class="num">第 7 章</span>数据库设计</a></li><li><a href="9.html"><span class="num">第 9 章</span>关系查询处理和查询优化</a></li><li><a href="10.html"><span class="num">第 10 章</span>数据库恢复技术</a></li><li><a href="11.html"><span class="num">第 11 章</span>并发控制</a></li></ul>
+  </div>
+  <div class="toc-ch">
+    <h2>本章小节</h2>
+    <ul class="toc-list"><li><a href="#s1"><span class="num">5.0</span>数据库完整性与完整性控制机制</a></li><li><a href="#s2"><span class="num">5.1</span>实体完整性</a></li><li><a href="#s3"><span class="num">5.2</span>参照完整性</a></li><li><a href="#s4"><span class="num">5.3</span>用户定义的完整性</a></li><li><a href="#s5"><span class="num">5.4</span>完整性约束命名子句</a></li><li><a href="#s6"><span class="num">5.6</span>断言</a></li><li><a href="#s7"><span class="num">5.7</span>触发器</a></li><li><a href="#s8"><span class="num">5.8</span>小结与横向对比</a></li></ul>
+  </div>
+  </div>
+  </details>
+  </aside>
+
+  <article class="doc-body">
+    <header class="doc-head">
+      <p class="crumb"><a href="../db.html">数据库系统概论</a> · 第 5 章</p>
+      <h1>数据库完整性</h1>
+      <p class="meta">共 8 节 <span class="dot">·</span> 约 7,628 字 <span class="dot">·</span> 课件 77 页 <span class="dot">·</span> 本章自测 23 题</p>
+      <p class="status"><span>已掌握 <b data-mastery-count>0 / 8</b> 节</span>
+        <span class="track"><i data-mastery-bar></i></span></p>
+    </header>
+    <div class="note">
+
+<p class="lead">本章只回答一个问题：数据进了库，怎么保证它一直是对的。第 3 章讲怎样建表、第 4 章讲谁能进库，本章讲进库的每个元组必须守什么规矩、越界时 DBMS 怎样自动处置。期末本章稳定出分：参照完整性违约处理的四种策略、触发器 NEW/OLD 的取值、断言与触发器的选型，常以 SQL 填空、简答和一道触发器编程大题出现。</p>
+
+<h2 id="s1"><span class="h2no">5.0</span>数据库完整性与完整性控制机制</h2>
+
+<p>数据库的完整性包含两层含义。<strong>正确性</strong>指数据符合现实世界语义、反映当前实际状况；<strong>相容性</strong>指同一对象在不同关系表中的数据符合逻辑、互不矛盾。课件列的几条典型要求就是本章的素材库：学号必须唯一（实体完整性）、性别只能是男或女（用户定义完整性·属性级）、本科生年龄取 14~50 的整数（用户定义完整性·属性级）、学生所选课程必须是学校已开设的课程、所在院系必须是已成立的院系（参照完整性）。</p>
+
+<p>完整性最容易和安全性的概念混在一起，两者的防范对象完全不同，见表 1。</p>
+
+<table>
+<thead><tr><th>比较项</th><th>完整性</th><th>安全性</th></tr></thead>
+<tbody>
+<tr><td>目标</td><td>防止数据库中存在不符合语义的、不正确的数据</td><td>保护数据库，防止恶意的破坏和非法的存取</td></tr>
+<tr><td>防范对象</td><td>不合语义的、不正确的数据</td><td>非法用户和非法操作</td></tr>
+<tr><td>典型手段</td><td>PRIMARY KEY、FOREIGN KEY、CHECK、断言、触发器</td><td>身份鉴别、存取控制（GRANT/REVOKE）、视图、审计、加密</td></tr>
+<tr><td>回答的问题</td><td>这条数据本身对不对</td><td>这个人能不能碰这条数据</td></tr>
+</tbody>
+<caption>表 1　完整性与安全性的区别</caption>
+</table>
+
+<p>DBMS 要真正"维护"完整性，必须同时提供三套机制。<strong>定义机制</strong>：把完整性约束条件（也称完整性规则）写进数据字典，SQL 用 DDL 语句实现，标准把它划分为实体完整性、参照完整性、用户定义完整性三类。<strong>检查机制</strong>：一般在 INSERT、UPDATE、DELETE 语句执行后开始检查，也可以在事务提交时检查。<strong>违约处理机制</strong>：发现违反就动作，动作只有两大类——<strong>拒绝（NO ACTION）执行该操作</strong>与<strong>级联（CASCADE）执行其他操作</strong>。课件特别点明：这两类动作由 DBMS 自动处理，早期 DBMS 做不到；交给应用程序实现则无法保障，且加重程序员负担。</p>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>完整性控制的"三件套"是本章骨架，任何一道简答题都可以从它起手。</p><ul><li><strong>定义</strong>：完整性约束条件即完整性规则，是数据必须满足的语义约束，由 SQL 的 DDL 定义。</li><li><strong>检查</strong>：一般在 INSERT/UPDATE/DELETE 语句执行后检查，也可在事务提交时检查。</li><li><strong>处置</strong>：拒绝（NO ACTION）或级联（CASCADE）；教材口径下的可选动作还包括报告、纠正、忽略。</li><li>三类完整性（实体、参照、用户定义）是 SQL 标准的划分方式，不是三种不同的数据库。</li></ul></div>
+
+<div class="trap"><p class="t">易错</p><p>①把完整性当安全性：问"防止非法用户存取"要答安全性，问"防止学号重复"才是完整性。②把违约处理等同于"拒绝"：级联删除、级联修改、设为空值都是 DBMS 的自动处置，不是应用程序补做的动作。③把检查时机说成"事务提交时才检查"：默认是语句执行后立即检查，提交时检查只是另一种可选时机。</p></div>
+
+<div class="eg"><p class="t">例题</p><p>判断下列要求各属于哪类完整性：（a）SC 表中 Grade 取值 0~100；（b）SC 表的 Sno 必须能在 Student 中找到；（c）Student 表的 Sno 不重复且不为空。</p><div class="sol"><p>（a）用户定义的完整性，属性上的 CHECK 约束；（b）参照完整性，外码 Sno 参照 Student 的主码；（c）实体完整性，PRIMARY KEY 自带唯一＋非空。判断诀窍：看约束"跨不跨表"——跨表找主码的是参照完整性，管本表主码的是实体完整性，其余语义限制归用户定义完整性。</p></div></div>
+
+<div class="mem">口诀：<b>定义—检查—处置</b>——先写规矩（DDL），再看是否越界（语句后或提交时），越界就拒绝或级联。答题按这三步铺开，一个字都不会漏。</div>
+
+<h2 id="s2"><span class="h2no">5.1</span>实体完整性</h2>
+
+<p>关系模型的实体完整性在 CREATE TABLE 中用 <strong>PRIMARY KEY</strong> 定义。单属性构成的码有两种写法：<strong>列级约束</strong>与<strong>表级约束</strong>；多属性构成的码<strong>只有表级一种写法</strong>，这是必考的送分点。</p>
+
+<pre><code><span class="c">-- 写法一：列级定义主码（例 5.1）</span>
+CREATE TABLE Student
+(  Sno   CHAR(9) PRIMARY KEY,
+   Sname CHAR(20) NOT NULL,
+   Ssex  CHAR(2),
+   Sage  SMALLINT,
+   Sdept CHAR(20)
+);
+
+<span class="c">-- 写法二：表级定义主码（例 5.1）</span>
+CREATE TABLE Student
+(  Sno   CHAR(9),
+   Sname CHAR(20) NOT NULL,
+   Ssex  CHAR(2),
+   Sage  SMALLINT,
+   Sdept CHAR(20),
+   PRIMARY KEY (Sno)
+);
+
+<span class="c">-- 例 5.2：组合码只能在表级定义</span>
+CREATE TABLE SC
+(  Sno   CHAR(9) NOT NULL,
+   Cno   CHAR(4) NOT NULL,
+   Grade SMALLINT,
+   PRIMARY KEY (Sno, Cno)
+);</code></pre>
+
+<p>检查发生在<strong>插入元组</strong>或<strong>对主码列更新</strong>时，由关系数据库管理系统自动完成，检查两件事：主码值是否唯一，不唯一则拒绝插入或修改；主码的各个属性是否为空，<strong>只要有一个为空就拒绝</strong>插入或修改。检查唯一性最朴素的做法是全表扫描——依次比较每条记录的主码值与待插入（或修改后的新）主码值，缺点是十分耗时。因此 RDBMS 核心一般在主码上<strong>自动建立索引</strong>，用 B+ 树把"查重"降到几次结点读取。</p>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>实体完整性的定义与检查，两句话背下来。</p><ul><li>定义：CREATE TABLE 中用 <strong>PRIMARY KEY</strong> 声明；单属性码可列级可表级，<strong>多属性码只能表级</strong>。</li><li>检查时机：<strong>插入元组</strong>或<strong>更新主码列</strong>时自动检查。</li><li>检查内容：主码值是否唯一；主码各属性是否为空（<strong>只要有一个为空就拒绝</strong>）。</li><li>违约处理：<strong>拒绝</strong>插入或修改，没有级联、没有置空。</li></ul></div>
+
+<div class="trap"><p class="t">易错</p><p>①把 (Sno,Cno) 写成两个列级主码 <code>Sno CHAR(9) PRIMARY KEY, Cno CHAR(4) PRIMARY KEY</code>：这等于声明两个主码，语法错误，组合码必须用表级 <code>PRIMARY KEY (Sno,Cno)</code>。②以为主码"部分为空"可以放过：主码任一属性为 NULL 即违约。③以为主码冲突可以级联处理：实体完整性冲突只能拒绝，级联是参照完整性的手段。</p></div>
+
+<div class="eg"><p class="t">例题</p><p>Student 表主码 Sno 上建有 B+ 树索引，现有主码 15、20、25、30、51，索引为根结点 51、中间结点 (12,30)、叶结点 (15,20,25)。现插入主码为 25 的记录，系统如何判断？</p><div class="sol"><p>从根结点 51 出发：25&lt;51 走左分支到中间结点 (12,30)，12&lt;25≤30 进入叶结点 (15,20,25)，在叶结点中找到 25，说明主码已存在，<strong>拒绝插入</strong>。全程只读 3 个结点，这正是"主码上自动建索引以避免全表扫描"的意义；若全表扫描则要逐条比较所有记录，十分耗时。</p></div></div>
+
+<h2 id="s3"><span class="h2no">5.2</span>参照完整性</h2>
+
+<p>参照完整性描述两张表之间的引用关系：在 CREATE TABLE 中用 <strong>FOREIGN KEY</strong> 短语声明哪些列是外码，用 <strong>REFERENCES</strong> 短语指明这些外码参照哪张表的主码。SC 表的 (Sno,Cno) 是主码，同时 Sno、Cno 又分别参照 Student、Course 的主码——<strong>同一个属性可以既是主码的组成部分，又是外码</strong>，这两件事不冲突。</p>
+
+<pre><code><span class="c">-- 例 5.3：在表级定义参照完整性</span>
+CREATE TABLE SC
+(  Sno   CHAR(9) NOT NULL,
+   Cno   CHAR(4) NOT NULL,
+   Grade SMALLINT,
+   PRIMARY KEY (Sno, Cno),                    <span class="c">-- 表级定义实体完整性</span>
+   FOREIGN KEY (Sno) REFERENCES Student(Sno), <span class="c">-- 表级定义参照完整性</span>
+   FOREIGN KEY (Cno) REFERENCES Course(Cno)   <span class="c">-- 表级定义参照完整性</span>
+);</code></pre>
+
+<p>参照完整性把一个表的元组与另一个表的元组绑定，所以<strong>破坏它的操作有四种</strong>，以 SC 参照 Student 为例：SC 插入一个元组，其 Sno 在 Student 中找不到对应元组；SC 修改一个元组的 Sno，改后找不到对应元组；Student 删除一个元组，使 SC 中某些 Sno 落空；Student 修改一个元组的 Sno，使 SC 中某些 Sno 落空。</p>
+
+<table>
+<thead><tr><th>被参照表 Student 的动作</th><th>参照表 SC 的状态</th><th>违约处理</th></tr></thead>
+<tbody>
+<tr><td>—（SC 自己插入）</td><td>插入元组，外码值找不到对应主码</td><td>拒绝</td></tr>
+<tr><td>—（SC 自己修改）</td><td>修改外码值，改后找不到对应主码</td><td>拒绝</td></tr>
+<tr><td>删除元组</td><td>可能破坏参照完整性</td><td>拒绝 / 级联删除 / 设置为空值</td></tr>
+<tr><td>修改主码值</td><td>可能破坏参照完整性</td><td>拒绝 / 级联修改 / 设置为空值</td></tr>
+</tbody>
+<caption>表 2　可能破坏参照完整性的情况及违约处理（课件表 5.1 整理）</caption>
+</table>
+
+<p><strong>这张表要读出不对称性</strong>：违约由参照表自己引起（SC 插入元组、修改外码值）时，只有"拒绝"一条路；违约由被参照表引起（Student 删元组、改主码）时，才有拒绝、级联、置空三种选择。道理很直白——SC 自己写出一个没有对应实体的外码，系统无法替它"编"一个主码出来，只能拒绝。</p>
+
+<p>检查时机也要说清：<strong>对参照表做插入、修改外码值，以及对被参照表做删除、修改主码值时，都必须检查参照完整性</strong>——只有这四类操作会改变"引用"关系，查询永远不会破坏它。教材把检查安排在语句执行后（也可在事务提交时），与实体完整性保持一致。</p>
+
+<p>三种（标准写法为四种）处置策略的定义要能逐字复述。<strong>（1）拒绝（NO ACTION）</strong>：不允许该操作执行，一般设置为默认策略；标准 SQL 中的 RESTRICT 与之类似，但要求立即拒绝、不允许延迟检查（补充）。<strong>（2）级联（CASCADE）</strong>：当删除或修改被参照表（Student）的一个元组造成与参照表（SC）不一致时，删除或修改参照表中所有造成不一致的元组。<strong>（3）设置为空值（SET NULL）</strong>：当删除或修改被参照表的一个元组造成不一致时，把参照表中所有造成不一致的元组的对应属性置为空值。</p>
+
+<table>
+<thead><tr><th>策略</th><th>语义</th><th>对被参照表的操作</th><th>对参照表的影响</th></tr></thead>
+<tbody>
+<tr><td>NO ACTION（默认）</td><td>拒绝本操作</td><td>删元组 / 改主码</td><td>无，操作整体失败</td></tr>
+<tr><td>RESTRICT（补充）</td><td>立即拒绝，不允许延迟检查</td><td>删元组 / 改主码</td><td>无</td></tr>
+<tr><td>CASCADE</td><td>跟着删除或跟着修改</td><td>删元组 / 改主码</td><td>对应元组被删除或被改写</td></tr>
+<tr><td>SET NULL</td><td>断开引用关系</td><td>删元组 / 改主码</td><td>外码列置空，该列必须允许空值</td></tr>
+</tbody>
+<caption>表 3　参照完整性四种违约处理策略</caption>
+</table>
+
+<p>课件的语义例子值得背：学生（学号，姓名，性别，专业号，年龄）、专业（专业号，专业名），专业号为 12 的专业被删除，按 SET NULL 策略就要把学生表中专业号＝12 的所有元组的专业号置空，对应语义是"某个专业撤销了，该专业的学生专业未定，等待重新分配"。课件还强调：<strong>定义外码时还应说明外码列是否允许空值</strong>——外码列允许空，则表示"暂未确定引用对象"（如新生尚未分专业），不算违约；外码列 NOT NULL，则每一行都必须找到对应主码。</p>
+
+<pre><code><span class="c">-- 例 5.4：显式说明违约处理</span>
+CREATE TABLE SC
+(  Sno   CHAR(9) NOT NULL,
+   Cno   CHAR(4) NOT NULL,
+   Grade SMALLINT,
+   PRIMARY KEY (Sno, Cno),
+   FOREIGN KEY (Sno) REFERENCES Student(Sno)
+     ON DELETE CASCADE      <span class="c">-- 删除学生，级联删除他的选课记录</span>
+     ON UPDATE CASCADE,     <span class="c">-- 修改学号，级联修改选课记录</span>
+   FOREIGN KEY (Cno) REFERENCES Course(Cno)
+     ON DELETE NO ACTION    <span class="c">-- 课程已被选过就不许删</span>
+     ON UPDATE CASCADE      <span class="c">-- 修改课程号则级联修改</span>
+);</code></pre>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>参照完整性是本章第一必考点，四个策略必须连带"适用哪一侧"一起背。</p><ul><li>定义：<strong>FOREIGN KEY (列) REFERENCES 表(主码)</strong>，只能在表级写；被参照列必须是主码（或 UNIQUE）。</li><li>参照表侧违约（插入、改外码值）：<strong>只能拒绝</strong>。</li><li>被参照表侧违约（删元组、改主码值）：<strong>拒绝 / 级联 / 置空</strong>三选一，默认 NO ACTION。</li><li>级联与置空按"被删被改的那一行"逐行触发，一次操作可能影响参照表多行。</li><li>SET NULL 的前提是外码列允许为空；外码列是否允许空值要在建表时明确。</li></ul></div>
+
+<div class="trap"><p class="t">易错</p><p>①以为参照表插入违约也能级联：SC 插入一个不存在的 Sno，只能拒绝，因为没有"可以删掉的不一致元组"。②在外码列 NOT NULL 上写 SET NULL：置空动作自身违反非空约束，删除会失败（补充）。③把 ON DELETE 与 ON UPDATE 写反：删学生用 DELETE，改学号用 UPDATE，两者可以给不同策略。④以为 CASCADE 会沿所有关系无限传递：它只在显式定义了级联的外码链上逐层传下去（补充）。</p></div>
+
+<div class="eg"><p class="t">例题</p><p>有关系 DEPT(Deptno,Dname) 与 Student(Sno,Sname,Sdept)。要求：删除系时若系中还有学生则拒绝；修改系号时级联修改学生表中的系号。写出外码定义。</p><div class="sol"><pre><code>ALTER TABLE Student
+  ADD CONSTRAINT FK_Student_Dept FOREIGN KEY (Sdept)
+      REFERENCES DEPT(Deptno)
+      ON DELETE NO ACTION
+      ON UPDATE CASCADE;</code></pre><p>要点：NO ACTION 是默认策略，写出来更清楚；ON UPDATE CASCADE 保证改系号时学生表跟着改，不会出现悬空引用。若题目改成"撤销系时学生系号置空"，则写 ON DELETE SET NULL，并确认 Sdept 允许空值。</p></div></div>
+
+<div class="mem">口诀：<b>参照表越界只能拒，被参照表删改三选一</b>——SC 插入/改外码只有拒绝，Student 删元组/改主码才有拒绝、级联、置空。</div>
+
+<div class="sum"><p class="t">本节小结</p><ul><li>参照完整性用 FOREIGN KEY…REFERENCES 定义，表达"外码必须能在被参照表中找到"。四种破坏情形＝参照表插入、参照表改外码、被参照表删元组、被参照表改主码。</li><li>处置策略：NO ACTION（默认）、CASCADE、SET NULL，加上标准的 RESTRICT；前三者是课件重点。</li><li>默认策略是拒绝，答题时若题目要求"课程被选过不许删"，写 ON DELETE NO ACTION 最稳。</li><li>外码列的空值语义：允许空＝暂未确定引用，不算违约。</li></ul></div>
+
+<h2 id="s4"><span class="h2no">5.3</span>用户定义的完整性</h2>
+
+<p>用户定义的完整性针对某一具体应用，是数据必须满足的语义要求。RDBMS 提供定义和检验这类完整性的机制，<strong>不必由应用程序承担</strong>——这句话是简答题的标准开头。属性上的约束条件有三种：<strong>NOT NULL</strong>（列值非空）、<strong>UNIQUE</strong>（列值唯一）、<strong>CHECK</strong>（列值满足一个条件表达式）。</p>
+
+<pre><code><span class="c">-- 例 5.5：不允许取空值</span>
+CREATE TABLE SC
+(  Sno   CHAR(9) NOT NULL,
+   Cno   CHAR(4) NOT NULL,
+   Grade SMALLINT NOT NULL,
+   PRIMARY KEY (Sno, Cno)
+);
+<span class="c">-- 表级定义实体完整性已隐含 Sno、Cno 非空，列级的 NOT NULL 可省（各 DBMS 处理不同）</span>
+
+<span class="c">-- 例 5.6：列值唯一（Dname 唯一且非空）</span>
+CREATE TABLE DEPT
+(  Deptno   NUMERIC(2),
+   Dname    CHAR(9) UNIQUE NOT NULL,
+   Location CHAR(10),
+   PRIMARY KEY (Deptno)
+);
+
+<span class="c">-- 例 5.7 / 例 5.8：CHECK 指定取值范围</span>
+CREATE TABLE SC
+(  Sno   CHAR(9),
+   Cno   CHAR(4),
+   Grade SMALLINT CHECK (Grade &gt;= 0 AND Grade &lt;= 100),
+   PRIMARY KEY (Sno, Cno),
+   FOREIGN KEY (Sno) REFERENCES Student(Sno),
+   FOREIGN KEY (Cno) REFERENCES Course(Cno)
+);</code></pre>
+
+<p>属性上的限制只能约束"本列的取值"，若要约束<strong>同一元组内不同属性之间</strong>的关系，就要用<strong>元组上的 CHECK</strong>，它写在表级、可以引用本行的多个列。检查的时机与违约处理很干脆：插入元组或修改属性值时检查，<strong>不满足就拒绝执行</strong>。</p>
+
+<pre><code><span class="c">-- 例 5.9：性别为男时，名字不能以 Ms. 打头</span>
+CREATE TABLE Student
+(  Sno   CHAR(9),
+   Sname CHAR(8) NOT NULL,
+   Ssex  CHAR(2),
+   Sage  SMALLINT,
+   Sdept CHAR(20),
+   PRIMARY KEY (Sno),
+   CHECK (Ssex = '女' OR Sname NOT LIKE 'Ms.%')
+);</code></pre>
+
+<p>例 5.9 的判定逻辑要会说：性别为女的元组一定通过，因为 Ssex='女' 为真；性别为男时，要通过检查则名字一定不能以 Ms. 打头。<strong>元组级 CHECK 的威力就在于把两个属性的取值放在同一个逻辑表达式里相互约束。</strong></p>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>用户定义完整性的三层写法，考试要么让补全 SQL，要么让判断某约束能否用 CHECK 实现。</p><ul><li>属性级三件套：<strong>NOT NULL / UNIQUE / CHECK</strong>，写在列定义之后。</li><li>元组级：<strong>表级 CHECK</strong>，可引用本行多个列，实现属性间相互约束。</li><li>检查：插入元组、修改属性值时进行；违约一律<strong>拒绝</strong>。</li><li>表级实体完整性已隐含主码各列非空，列级 NOT NULL 可省，但不同 DBMS 处理方式可能不同，考试写全更保险。</li></ul></div>
+
+<div class="trap"><p class="t">易错</p><p>①以为 UNIQUE 等于"不许有空值"：标准 SQL 中 UNIQUE 列允许多个 NULL（补充；个别 DBMS 如 SQL Server 只允许一个），要真正非空必须再加 NOT NULL，例 5.6 写成 <code>UNIQUE NOT NULL</code> 正是这个原因。②以为条件求值为 NULL 也算违约：SQL 中 CHECK 只在条件为假时违约，求值为 UNKNOWN 时检查通过（补充），所以年龄列的 CHECK 挡不住 NULL，非空要另用 NOT NULL。③把元组级 CHECK 写成列级：引用另一个列就必须表级。</p></div>
+
+<div class="eg"><p class="t">例题（补充例题）</p><p>为 Student 表加约束：性别只取"男""女"，本科生年龄在 14~50 之间，姓名非空且唯一。写出建表语句中的相关片段。</p><div class="sol"><p><code>Sname CHAR(20) NOT NULL UNIQUE,<br>Ssex CHAR(2) CHECK (Ssex IN ('男','女')),<br>Sage SMALLINT CHECK (Sage BETWEEN 14 AND 50)</code>。三个约束都写在列级：它们都只涉及本列，不需要表级 CHECK。若题目再加"性别为男时年龄不小于 18"，就必须改成表级 <code>CHECK (Ssex='女' OR Sage&gt;=18)</code>，因为它跨列。</p></div></div>
+
+<h2 id="s5"><span class="h2no">5.4</span>完整性约束命名子句</h2>
+
+<p>SQL 允许用 <strong>CONSTRAINT &lt;完整性约束条件名&gt; &lt;完整性约束条件&gt;</strong> 给约束起名字，条件可以是 NOT NULL、UNIQUE、PRIMARY KEY、FOREIGN KEY、CHECK 等。命名不是为了好看：只有命了名，日后才能用一条 <code>ALTER TABLE … DROP CONSTRAINT 名字</code> 精确地删掉它——系统自动生成的名字不可控，等于无法修改。</p>
+
+<pre><code><span class="c">-- 例 5.10：学号 90000~99999，姓名非空，年龄&lt;30，性别限男女</span>
+CREATE TABLE Student
+(  Sno   NUMERIC(6)
+     CONSTRAINT C1 CHECK (Sno BETWEEN 90000 AND 99999),
+   Sname CHAR(20)
+     CONSTRAINT C2 NOT NULL,
+   Sage  NUMERIC(3)
+     CONSTRAINT C3 CHECK (Sage &lt; 30),
+   Ssex  CHAR(2)
+     CONSTRAINT C4 CHECK (Ssex IN ('男','女')),
+   CONSTRAINT StudentKey PRIMARY KEY (Sno)
+);
+<span class="c">-- 该表共 5 个约束：主码 StudentKey + 列级 C1、C2、C3、C4</span>
+
+<span class="c">-- 例 5.11：教师的应发工资（Sal + Deduct）不低于 3000</span>
+CREATE TABLE TEACHER
+(  Eno    NUMERIC(4) PRIMARY KEY,
+   Ename  CHAR(10),
+   Job    CHAR(8),
+   Sal    NUMERIC(7,2),
+   Deduct NUMERIC(7,2),
+   Deptno NUMERIC(2),
+   CONSTRAINT TEACHERFKey FOREIGN KEY (Deptno) REFERENCES DEPT(Deptno),
+   CONSTRAINT C1 CHECK (Sal + Deduct &gt;= 3000)
+);</code></pre>
+
+<p>修改表中的完整性限制也用 <code>ALTER TABLE</code>，套路是<strong>先 DROP 再 ADD</strong>，SQL 没有"直接改约束表达式"的语法。例 5.12 去掉对性别的限制：<code>ALTER TABLE Student DROP CONSTRAINT C4;</code>。例 5.13 把学号改为 900000~999999、年龄由小于 30 改为小于 40：先 <code>DROP CONSTRAINT C1</code>，再 <code>ADD CONSTRAINT C1 CHECK (Sno BETWEEN 900000 AND 999999)</code>；再 <code>DROP CONSTRAINT C3</code>，<code>ADD CONSTRAINT C3 CHECK (Sage &lt; 40)</code>。</p>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>命名子句的语法位置是考试最爱挖空的地方。</p><ul><li>语法：<strong>CONSTRAINT 约束名 约束条件</strong>，约束名由用户指定，是日后定位、删除它的唯一把手。</li><li>位置：列级约束写在列定义后（如 C2 NOT NULL）；表级约束写在所有列之后（如 StudentKey PRIMARY KEY(Sno)）。</li><li>修改：<strong>ALTER TABLE … DROP CONSTRAINT 名字</strong> 删除，<strong>ALTER TABLE … ADD CONSTRAINT 名字 条件</strong> 增加。</li><li>改约束取值范围＝先删旧约束再建同名新约束，不能只改表达式。</li></ul></div>
+
+<div class="trap"><p class="t">易错</p><p>①建表时没写 CONSTRAINT 名字，事后想删就只能去查系统目录，考试题若要求"删除某约束"必然要先命名。②DROP 之后直接 ADD 同一个名字是允许的，但顺序不能颠倒（先 ADD 同名会重名报错）。③把 <code>CONSTRAINT C2 NOT NULL</code> 写成 <code>NOT NULL CONSTRAINT C2</code>：关键字顺序反了。④以为 CHECK 里可以引用其他表：CHECK 只能引用本表本行的列（例 5.11 只用了 Sal、Deduct 两列），跨表要交给断言或触发器。</p></div>
+
+<div class="eg"><p class="t">例题（补充例题）</p><p>为 SC 表建立命名约束：主码 (Sno,Cno)，成绩限定在 0~100（约束名 C_SC_GRADE），Sno 参照 Student(Sno)（约束名 FK_SC_SNO）。写出建表语句，并给出删除成绩约束的语句。</p><div class="sol"><pre><code>CREATE TABLE SC
+(  Sno   CHAR(9),
+   Cno   CHAR(4),
+   Grade SMALLINT,
+   PRIMARY KEY (Sno, Cno),
+   CONSTRAINT C_SC_GRADE CHECK (Grade &gt;= 0 AND Grade &lt;= 100),
+   CONSTRAINT FK_SC_SNO FOREIGN KEY (Sno) REFERENCES Student(Sno)
+);</code></pre><p>删除：<code>ALTER TABLE SC DROP CONSTRAINT C_SC_GRADE;</code>。约束名自带表名前缀便于全库定位；CHECK 写在表级却只引用本行 Grade 列同样合法，不违规。</p></div></div>
+
+<div class="sum"><p class="t">本节小结</p><ul><li>5.1～5.4 是"用 DDL 把规矩写死"：主码管唯一非空、外码管跨表引用、CHECK 管取值、CONSTRAINT 管命名与后续修改。</li><li>四种约束对象不同：PRIMARY KEY（实体）、FOREIGN KEY（参照）、UNIQUE/NOT NULL/CHECK（用户定义）。</li><li>命名是修改的前提，DROP/ADD 成对出现，删完再加是改约束的唯一姿势。</li></ul></div>
+
+<h2 id="s6"><span class="h2no">5.6</span>断言</h2>
+
+<p>CHECK 只能管本表本行，一旦约束涉及多张表、涉及聚集函数、或要求"整个数据库范围内成立"，就要用断言。SQL 用 <strong>CREATE ASSERTION</strong> 语句以声明的方式指定更具一般性的约束：<strong>断言可以定义涉及多个表的或聚集操作的比较复杂的完整性约束</strong>；断言创建以后，任何对断言所涉及关系的操作都会触发 DBMS 对断言的检查，<strong>任何使断言不为真值的操作都会被拒绝执行</strong>。断言只声明"必须为真"，没有动作体，这是它与触发器最本质的区别。</p>
+
+<p>语句格式为 <code>CREATE ASSERTION &lt;断言名&gt; &lt;CHECK 子句&gt;</code>，每个断言都有一个名字，CHECK 子句中的约束条件与 WHERE 子句的条件表达式类似。删除用 <code>DROP ASSERTION &lt;断言名&gt;;</code>。</p>
+
+<pre><code><span class="c">-- 例 5.18：限制"数据库"课程最多 60 名学生选修</span>
+CREATE ASSERTION ASSE_SC_DB_NUM
+CHECK (60 &gt;= (SELECT COUNT(*)
+              FROM Course, SC
+              WHERE SC.Cno = Course.Cno AND Course.Cname = '数据库'));
+
+<span class="c">-- 例 5.19：限制每一门课程最多 60 名学生选修</span>
+CREATE ASSERTION ASSE_SC_CNUM1
+CHECK (60 &gt;= ALL (SELECT COUNT(*) FROM SC GROUP BY Cno));
+
+<span class="c">-- 例 5.20：限制每个学期每一门课程最多 60 名学生选修</span>
+ALTER TABLE SC ADD TERM DATE;   <span class="c">-- 先给 SC 增加学期属性</span>
+CREATE ASSERTION ASSE_SC_CNUM2
+CHECK (60 &gt;= ALL (SELECT COUNT(*) FROM SC GROUP BY Cno, TERM));</code></pre>
+
+<p>三个例子是递进关系，务必分清：例 5.18 的谓词<strong>只盯一门课</strong>，用标量子查询；例 5.19 要求"每一门课"都成立，分组后必须配 <strong>ALL</strong>；例 5.20 把分组键扩成 (Cno,TERM)，于是约束粒度变成"每学期每门课"。课件提醒：<strong>断言很复杂时，系统检测和维护断言的开销较高</strong>，这是使用断言要注意的地方。</p>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>断言的三个特征＋一个代价，简答题按点给分。</p><ul><li>定义在<strong>数据库（模式）级</strong>，不属于某张表，一个断言可管任意多张表。</li><li>谓词可以含<strong>聚集函数</strong>与<strong>分组</strong>，因此能表达"总数不超过 N""每门课不超过 N"这类约束。</li><li>创建后<strong>自动生效</strong>：任何涉及关系的操作都会触发检查，使断言为假的操作被拒绝。</li><li>代价：断言复杂则检测与维护开销高；只在标准 SQL 中通用，不少 DBMS 不支持（补充）。</li></ul></div>
+
+<div class="trap"><p class="t">易错</p><p>①把"每一门课程最多 60 人"写成 <code>60 &gt;= (SELECT COUNT(*) FROM SC GROUP BY Cno)</code>：分组返回多行，标量比较直接报错，必须用 <code>60 &gt;= ALL (…)</code>。②把断言写成表级 CHECK：CHECK 不能引用其他表，也不能带聚集。③给断言写触发动作（INSERT/UPDATE）：断言是声明式的，没有动作体，要动数据只能用触发器。④以为断言一旦建立就只在插入时检查：涉及关系的增、删、改都会触发检查。</p></div>
+
+<div class="eg"><p class="t">例题（补充例题）</p><p>用断言限制"每名学生最多选修 8 门课程"。</p><div class="sol"><pre><code>CREATE ASSERTION ASSE_SC_MAX8
+CHECK (8 &gt;= ALL (SELECT COUNT(*) FROM SC GROUP BY Sno));</code></pre><p>解析：按 Sno 分组后每组是一个学生已选门数，"最多 8 门"即所有组计数都不超过 8，用 <code>ALL</code> 逐个比较。删除断言：<code>DROP ASSERTION ASSE_SC_MAX8;</code>。若改成"全校选课总数不超过 10000"，则不需要分组，直接写 <code>10000 &gt;= (SELECT COUNT(*) FROM SC)</code>。</p></div></div>
+
+<div class="mem">口诀：<b>一句 CHECK 管全库，多表聚集找断言</b>——单表单行用 CHECK，跨表、带 COUNT、要"每个都满足"就用断言加 ALL。</div>
+
+<h2 id="s7"><span class="h2no">5.7</span>触发器</h2>
+
+<p>触发器是<strong>用户定义在关系表上的一类由事件驱动的特殊过程</strong>：它保存在数据库服务器中，任何用户对表的增、删、改操作都由服务器自动激活相应的触发器，因此能实施更复杂的检查和操作，具有更精细、更强大的数据控制能力。课件列的三个优点要背：能完成比 CHECK 更复杂的数据约束（可引用其他表的列，还可插入、更新、删除别的表中的数据）；能评估数据修改前后的表状态，并根据差异采取对策；能支持约束的所有功能，但在所给功能上并不总是最好的方法。</p>
+
+<pre><code>CREATE TRIGGER &lt;触发器名&gt;
+{BEFORE | AFTER} &lt;触发事件&gt; ON &lt;表名&gt;
+REFERENCING NEW|OLD ROW AS &lt;变量&gt;
+FOR EACH {ROW | STATEMENT}
+[WHEN &lt;触发条件&gt;] &lt;触发动作体&gt;</code></pre>
+
+<p>触发器又叫<strong>事件—条件—动作（event-condition-action）规则</strong>：特定系统事件发生时检查条件，条件成立才执行动作；动作体可以很复杂，通常是一段 SQL 存储过程。定义一个触发器要交代清楚七件事，见下面的步骤清单。</p>
+
+<ol class="steps"><li><strong>谁有权建</strong>：表的拥有者才能在表上创建触发器。</li><li><strong>触发器名</strong>：可含模式名也可不含；同一模式下触发器名必须唯一；触发器名与表名必须在同一模式下。</li><li><strong>表名</strong>：只能定义在<strong>基本表</strong>上，<strong>不能定义在视图上</strong>。</li><li><strong>触发事件</strong>：INSERT、DELETE、UPDATE 或它们的组合，还可以写成 UPDATE OF &lt;列,…&gt; 进一步指明修改哪些列时激活。</li><li><strong>触发时机</strong>：BEFORE 表示在触发事件的操作执行<strong>之前</strong>激活，AFTER 表示执行<strong>之后</strong>激活。</li><li><strong>触发器类型</strong>：行级 FOR EACH ROW 与语句级 FOR EACH STATEMENT。TEACHER 表有 1000 行，执行 <code>UPDATE TEACHER SET Deptno=5;</code> 时，语句级触发动作只发生 1 次，行级要执行 1000 次。</li><li><strong>触发条件与动作体</strong>：WHEN 为真才执行动作体，省略 WHEN 则激活后立即执行；动作体可以是匿名 PL/SQL 过程块，也可以是对已创建存储过程的调用；动作体执行失败，激活它的事件随之终止，目标表或其它对象不发生任何变化。</li></ol>
+
+<pre><code><span class="c">-- 例 5.21：分数增加 10% 以上时记入日志表 SC_U(Sno,Cno,Oldgrade,Newgrade)</span>
+CREATE TRIGGER SC_T
+AFTER UPDATE OF Grade ON SC
+REFERENCING
+  OLD ROW AS OldTuple,
+  NEW ROW AS NewTuple
+FOR EACH ROW
+WHEN (NewTuple.Grade &gt;= 1.1 * OldTuple.Grade)
+  INSERT INTO SC_U(Sno, Cno, OldGrade, NewGrade)
+  VALUES (OldTuple.Sno, OldTuple.Cno, OldTuple.Grade, NewTuple.Grade);
+
+<span class="c">-- 例 5.22：把每次插入操作增加的学生个数记入 StudentInsertLog</span>
+CREATE TRIGGER Student_Count
+AFTER INSERT ON Student
+REFERENCING NEW TABLE AS DELTA
+FOR EACH STATEMENT
+  INSERT INTO StudentInsertLog(Numbers)
+  SELECT COUNT(*) FROM DELTA;
+
+<span class="c">-- 例 5.23：教授的工资不得低于 4000，低于则自动改为 4000</span>
+CREATE TRIGGER Insert_Or_Update_Sal
+BEFORE INSERT OR UPDATE ON Teacher
+REFERENCING NEW AS newTuple
+FOR EACH ROW
+BEGIN
+  IF (newTuple.Job = '教授') AND (newTuple.Sal &lt; 4000)
+  THEN newTuple.Sal := 4000;
+  END IF;
+END;</code></pre>
+
+<p>三个例子正好代表三种用法。例 5.21 的关键是 <strong>同时用到 OLD 与 NEW</strong>：WHEN 里比较修改前后的分数，动作体把旧值、新值一起写入日志表，这是 AFTER 行级触发器加 WHEN 条件的标准模板。例 5.22 是<strong>语句级</strong>触发器，一次 INSERT 可能插入多行，所以用 <strong>NEW TABLE AS DELTA</strong> 把整批新元组当成一张过渡表来 COUNT。例 5.23 用 <strong>BEFORE 行级</strong>并在动作体里给 <code>newTuple.Sal</code> 赋值——注意这里引用 NEW 时省略了 ROW 关键字（<code>REFERENCING NEW AS newTuple</code>），这是课件原例的写法，赋值用 PL/SQL 的 <code>:=</code>。同一个触发器还可以挂多个事件（<code>INSERT OR UPDATE</code>），因为两者都有 NEW 可用。</p>
+
+<table>
+<thead><tr><th>触发事件</th><th>OLD（事件前旧值）</th><th>NEW（事件后新值）</th><th>说明</th></tr></thead>
+<tbody>
+<tr><td>INSERT</td><td>不可用</td><td>可用</td><td>插入前没有旧元组；BEFORE 行级可改 NEW，实现"入库前修正"</td></tr>
+<tr><td>UPDATE</td><td>可用</td><td>可用</td><td>唯一能同时拿到新旧值的事件，用于比较修改前后</td></tr>
+<tr><td>DELETE</td><td>可用</td><td>不可用</td><td>删除后没有新元组，只能用 OLD 记录被删内容</td></tr>
+<tr><td>语句级（任何事件）</td><td colspan="2">行变量 NEW / OLD 不可用</td><td>只能用过渡表 NEW TABLE / OLD TABLE，例 5.22 的 DELTA 即 NEW TABLE</td></tr>
+</tbody>
+<caption>表 4　NEW / OLD 在各触发事件中的可用性（补充整理）</caption>
+</table>
+
+<p>触发器的执行由触发事件激活、由数据库服务器自动完成。一张表上可能定义了多个触发器，执行顺序固定：<strong>先执行该表上的 BEFORE 触发器，再执行激活触发器的 SQL 语句本身，最后执行该表上的 AFTER 触发器</strong>。这个顺序解释了两件事：BEFORE 触发器能在数据落库前修改 NEW 值（例 5.23 才有意义），AFTER 触发器拿到的 NEW 已是落库后的值，再改 NEW 不会生效（补充）。</p>
+
+<figure class="fig"><svg viewBox="0 0 560 118" role="img" aria-label="同一张表上触发器的执行顺序：先 BEFORE 触发器，再 SQL 语句，最后 AFTER 触发器" width="560" height="118">
+<text class="lbl" x="83" y="20" text-anchor="middle">① 先执行</text>
+<text class="lbl" x="280" y="20" text-anchor="middle">② 再执行</text>
+<text class="lbl" x="477" y="20" text-anchor="middle">③ 最后执行</text>
+<rect class="box" x="8" y="32" width="150" height="46" rx="5"/>
+<text x="83" y="60" text-anchor="middle" font-size="13">BEFORE 触发器</text>
+<rect class="acc" x="205" y="32" width="150" height="46" rx="5"/>
+<text x="280" y="60" text-anchor="middle" font-size="13">SQL 语句</text>
+<rect class="box" x="402" y="32" width="150" height="46" rx="5"/>
+<text x="477" y="60" text-anchor="middle" font-size="13">AFTER 触发器</text>
+<path class="ln" d="M162,55 L196,55"/>
+<path class="ln" d="M190,50 L198,55 L190,60"/>
+<path class="ln" d="M359,55 L393,55"/>
+<path class="ln" d="M387,50 L395,55 L387,60"/>
+<text class="lbl" x="83" y="100" text-anchor="middle">可用 NEW 修正待写入的值</text>
+<text class="lbl" x="477" y="100" text-anchor="middle">只能读已生效的数据</text>
+</svg><figcaption>图 1　同一张表上 BEFORE / AFTER 触发器的执行顺序</figcaption></figure>
+
+<p>删除触发器的语法是 <code>DROP TRIGGER &lt;触发器名&gt; ON &lt;表名&gt;;</code>，被删的必须是已经创建的触发器，并且只能由具有相应权限的用户删除。选型上，课件的口径是：<strong>实体完整性用 PRIMARY KEY、UNIQUE，域完整性用 CHECK，参照完整性用 REFERENCES</strong>；这些约束支持的功能都无法满足应用要求时，触发器才极为有用。两个判据特别好用：REFERENCES 的级联引用只能引用原值，若两个值之间只存在某种映射关系，就用触发器；CHECK 只能根据逻辑表达式或同一表中的另一列验证列值，若要求根据<strong>另一个表</strong>的列验证，就必须用触发器。</p>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>触发器是本章大题主战场，语法骨架＋NEW/OLD 必须默写。</p><ul><li>骨架：<strong>CREATE TRIGGER 名 {BEFORE|AFTER} 事件 ON 表 [REFERENCING …] FOR EACH {ROW|STATEMENT} [WHEN 条件] 动作体</strong>。</li><li>行级触发器：每一行触发一次，可用 NEW/OLD 行变量；语句级：整条语句触发一次，不能用 NEW/OLD，只能用 NEW TABLE / OLD TABLE。</li><li>事件与值：INSERT 只有 NEW，DELETE 只有 OLD，UPDATE 两者都有。</li><li>执行顺序：BEFORE 触发器 → SQL 语句 → AFTER 触发器。</li><li>只能建在基本表上，不能建在视图上；同一模式下触发器名唯一且与表名同模式。</li></ul></div>
+
+<div class="trap"><p class="t">易错</p><p>①语句级触发器里写 <code>NEW.Grade</code>：行变量在语句级不可用，必须改用 NEW TABLE 做集合运算。②在 AFTER 触发器里给 NEW 赋值想改数据：数据已落库，AFTER 改 NEW 不生效，要修正必须用 BEFORE（补充）。③把行级当"只触发一次"：行级按被影响的行数触发，1000 行就是 1000 次；语句级才是一次。④忘了 WHEN 条件：省略 WHEN 时触发器一激活就执行动作体，例 5.21 若省掉 WHEN，任何改分都会写日志。⑤在视图上建触发器：课件明确只说基本表，标准 SQL 的 INSTEAD OF 触发器属扩展（补充）。</p></div>
+
+<div class="eg"><p class="t">例题</p><p>TEACHER 表有 1000 行，Deptno＝1 的有 20 行。执行 <code>UPDATE TEACHER SET Deptno=5 WHERE Deptno=1;</code> 时，行级与语句级触发器各触发多少次？若同一张表上还建了 BEFORE 与 AFTER 两个触发器，执行顺序如何？</p><div class="sol"><p>该语句影响 20 行，行级触发器触发 <strong>20 次</strong>，语句级触发器触发 <strong>1 次</strong>——次数由"被影响的行数"和"触发器类型"共同决定，与表的总行数无关。执行顺序固定为：BEFORE 触发器（可对每行的 NEW 值做修正）→ UPDATE 语句本身 → AFTER 触发器（可读新旧值写日志，但不能回改）。</p></div></div>
+
+<div class="eg"><p class="t">例题（补充例题）</p><p>为 Teacher 表写一个 BEFORE 行级触发器：讲师的工资不得低于 3000 元，低于 3000 自动改为 3000。</p><div class="sol"><pre><code>CREATE TRIGGER T_Sal
+BEFORE INSERT OR UPDATE ON Teacher
+REFERENCING NEW AS nt
+FOR EACH ROW
+BEGIN
+  IF (nt.Job = '讲师') AND (nt.Sal &lt; 3000)
+  THEN nt.Sal := 3000;
+  END IF;
+END;</code></pre><p>解析：用 BEFORE 是因为要改待写入的新值，AFTER 已来不及；用行级是因为要逐行判断 Job 与 Sal；同时挂 INSERT 与 UPDATE 是因为两种事件都有 NEW。这正是"约束做不到、触发器才做"的典型——业务规则要改数据，而 CHECK 只能拒绝。</p></div></div>
+
+<div class="mem">口诀：<b>插有新、删有旧、改全有；语句级只有表、行级才有行</b>——INSERT 用 NEW，DELETE 用 OLD，UPDATE 两者都能用；NEW TABLE/OLD TABLE 只在语句级登场。</div>
+
+<h2 id="s8"><span class="h2no">5.8</span>小结与横向对比</h2>
+
+<p>本章的逻辑是一条直线：完整性＝正确性＋相容性，DBMS 用定义、检查、处置三套机制保证它；SQL 给的武器从弱到强依次是约束、断言、触发器。约束最省事但表达力有限，断言能跨表带聚集却不改数据，触发器能改数据、能看新旧值但开销与风险最大。<strong>能用约束解决的绝不用触发器</strong>，这是本章最该记住的选型结论。</p>
+
+<table>
+<thead><tr><th>维度</th><th>完整性约束（PRIMARY KEY / FOREIGN KEY / UNIQUE / CHECK）</th><th>断言 ASSERTION</th><th>触发器 TRIGGER</th></tr></thead>
+<tbody>
+<tr><td>定义位置</td><td>表内（列级或表级）</td><td>数据库（模式）级</td><td>基本表上</td></tr>
+<tr><td>作用范围</td><td>本表本行；FOREIGN KEY 只表达引用</td><td>可涉及多表、聚集、分组</td><td>可涉及多表，动作体可写完整 SQL</td></tr>
+<tr><td>有无动作</td><td>无，只拒绝</td><td>无，只拒绝</td><td>有，可增删改其他表的数据</td></tr>
+<tr><td>能否看新旧值</td><td>不能</td><td>不能</td><td>能（行级 NEW/OLD，语句级过渡表）</td></tr>
+<tr><td>检查时机</td><td>语句执行时立即检查</td><td>涉及关系的任何操作都检查</td><td>BEFORE / AFTER 事件点</td></tr>
+<tr><td>典型场景</td><td>学号唯一、性别限男女、成绩 0~100、选课须有学生</td><td>每门课选课人数≤60、每生选课≤8 门</td><td>教授工资自动补到 4000、成绩提高 10% 记日志、按另一张表校验</td></tr>
+</tbody>
+<caption>表 5　约束、断言、触发器的选型对比</caption>
+</table>
+
+<ol class="steps"><li><strong>读题定位</strong>：约束是否只涉及本表本行？是则写列级或表级 CHECK、NOT NULL、UNIQUE。</li><li><strong>看是否跨表或带聚集</strong>：跨表、带 COUNT/SUM、要求"每个都满足"→ 断言，多行比较记得配 ALL。</li><li><strong>看是否要"做事"</strong>：需要修改数据、需要比较修改前后的值、需要根据另一张表的列判断 → 触发器。</li><li><strong>最后一个字都不能少</strong>：写触发器时把 BEFORE/AFTER、事件、ON 表、REFERENCING、FOR EACH、WHEN、动作体七项齐备，缺一项就是丢分点。</li></ol>
+
+<div class="sum"><p class="t">本节小结</p><ul><li>全章就三句话：用 DDL 定义约束，由 DBMS 自动检查，违约就拒绝或级联。</li><li>必考细节两处：参照完整性四种策略"哪一侧能用哪种"；触发器 NEW/OLD 在 INSERT/UPDATE/DELETE 与行级/语句级下的可用性。</li><li>断言与触发器的分界：断言只声明"必须为真"，不改数据；触发器有动作体，可改数据、可看新旧值。</li><li>断言开销高、部分 DBMS 不支持，触发器语法各家不同；答题按标准 SQL 写，并注明"不同 RDBMS 语法可能不同"。</li></ul></div>
+
+<div class="mem">口诀：<b>约束管单表、断言管全库、触发器管动作</b>——三句话选型，答题先写这句再展开，稳拿选型分。</div>
+
+    </div>
+    <div class="selftest">
+      <span class="st-n">本章共 23 道自测题（选择 / 判断 / 填空 / 简答），作答后立即判分并给出解析。</span>
+      <a href="quiz.html?ch=5">刷本章题</a>
+    </div>
+    <nav class="pager" aria-label="翻页"><a class="prev" href="4.html">‹ 第 4 章 数据库安全性</a><a class="next" href="6.html">第 6 章 关系数据理论 ›</a></nav>
+  </article>
+
+</div>
+</main>
+
+<footer class="footer">
+  <div class="wrap foot-inner">
+    <div class="foot-cols">
+      <div class="foot-brand">
+        <div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="7" ry="2.6"/><path d="M5 6v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6V6"/><path d="M5 12v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6v-6"/></svg>数据库系统概论</div>
+        <p>据本学期 14 个课件文件整理，教材为王珊《数据库系统概论》（第 6 版）。题目均为自编练习，不是真题。</p>
+      </div>
+      <div>
+        <h4>学习</h4>
+        <ul>
+          <li><a href="../index.html">备考首页</a></li>
+          <li><a href="../db.html">十章讲义</a></li>
+          <li><a href="../db/cheatsheet.html">考前速查卡</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>练习</h4>
+        <ul>
+          <li><a href="../db/quiz.html">题库 · 239 题</a></li>
+          <li><a href="../db/exam.html">模拟卷 · 3 套</a></li>
+          <li><a href="../index.html#plan">七天冲刺表</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>说明</h4>
+        <ul>
+          <li>课件未含第 8 章</li>
+          <li>进度只存在本机</li>
+          <li>可离线打开</li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-legal"><span>© <span id="year">2026</span> 数据库系统概论 · 期末备考</span><span>据课件整理 · 仅供复习使用</span></div>
+  </div>
+</footer>
+<button class="backtop" id="backtop" type="button" aria-label="回到顶部" hidden>↑</button>
+<script src="../assets/site.js?v=2"></script>
+<script src="../assets/study.js?v=2"></script>
+</body>
+</html>

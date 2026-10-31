@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 3 章 关系数据库标准语言 SQL · 数据库系统概论 · 备考</title>
+<meta name="description" content="建表与索引、单表/连接/嵌套/集合查询、EXISTS 与全称量词、插入修改删除、空值运算、视图定义与更新。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/theme.css?v=2">
+<link rel="stylesheet" href="../assets/site.css?v=2">
+<link rel="stylesheet" href="../assets/course.css?v=2">
+<script>(function(){var d=document.documentElement;d.classList.add('js');try{var t=localStorage.getItem('site-theme');if(t==='light'||t==='dark')d.setAttribute('data-theme',t);}catch(e){}})();</script>
+</head>
+<body data-ch="3">
+<a class="skip" href="#main">跳到正文</a>
+<header class="topbar" id="topbar">
+  <div class="wrap-wide bar">
+    <a class="brand" href="../index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="7" ry="2.6"/><path d="M5 6v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6V6"/><path d="M5 12v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6v-6"/></svg><span>数据库系统概论</span></a>
+    <nav class="nav" aria-label="站点导航"><a href="../index.html">首页</a><a href="../db.html" aria-current="page">讲义</a><a href="quiz.html">题库</a><a href="exam.html">模拟卷</a><a href="cheatsheet.html">速查卡</a></nav>
+    <button class="icon-btn" id="themeBtn" type="button" title="主题：跟随系统（点击切换）" aria-label="主题：跟随系统（点击切换）"><span id="themeIcon" aria-hidden="true">◐</span></button>
+  </div>
+</header>
+<div id="readbar"></div>
+
+<main id="main">
+<div class="doc">
+
+  <aside class="doc-toc" aria-label="讲义目录">
+  <details class="toc-fold" open>
+  <summary>讲义目录</summary>
+  <nav class="mod-switch" aria-label="课程模块">
+    <a href="../db.html" aria-current="page">讲义</a>
+    <a href="quiz.html">题库</a>
+    <a href="exam.html">模拟卷</a>
+    <a href="cheatsheet.html">速查卡</a>
+  </nav>
+  <a class="toc-home" href="../db.html">数据库系统概论</a>
+  <p class="toc-ver"><span>本学期课件</span>10 章</p>
+  <div class="toc-body">
+  <div class="toc-ch">
+    <h2>全部章节</h2>
+    <ul class="toc-list"><li><a href="1.html"><span class="num">第 1 章</span>绪论</a></li><li><a href="2.html"><span class="num">第 2 章</span>关系数据库</a></li><li><a href="3.html" aria-current="page"><span class="num">第 3 章</span>关系数据库标准语言 SQL</a></li><li><a href="4.html"><span class="num">第 4 章</span>数据库安全性</a></li><li><a href="5.html"><span class="num">第 5 章</span>数据库完整性</a></li><li><a href="6.html"><span class="num">第 6 章</span>关系数据理论</a></li><li><a href="7.html"><span class="num">第 7 章</span>数据库设计</a></li><li><a href="9.html"><span class="num">第 9 章</span>关系查询处理和查询优化</a></li><li><a href="10.html"><span class="num">第 10 章</span>数据库恢复技术</a></li><li><a href="11.html"><span class="num">第 11 章</span>并发控制</a></li></ul>
+  </div>
+  <div class="toc-ch">
+    <h2>本章小节</h2>
+    <ul class="toc-list"><li><a href="#s1"><span class="num">3.1</span>SQL 概述：五大特点与三级模式</a></li><li><a href="#s2"><span class="num">3.2</span>学生-课程数据库：三表结构与建表语句</a></li><li><a href="#s3"><span class="num">3.3</span>数据定义：模式、基本表、索引与数据字典</a></li><li><a href="#s4"><span class="num">3.4.1</span>单表查询：SELECT 的五种武器</a></li><li><a href="#s5"><span class="num">3.4.2</span>连接查询：等值、自身、外连接与多表</a></li><li><a href="#s6"><span class="num">3.4.3</span>嵌套查询：IN、ANY/ALL 与 EXISTS 的双重否定</a></li><li><a href="#s7"><span class="num">3.4.4</span>集合查询、派生表与 SELECT 一般格式</a></li><li><a href="#s8"><span class="num">3.5</span>数据更新：INSERT、UPDATE、DELETE</a></li><li><a href="#s9"><span class="num">3.6</span>空值的处理：三值逻辑与它挖的坑</a></li><li><a href="#s10"><span class="num">3.7</span>视图：虚表、消解法与可更新性判定</a></li><li><a href="#s11"><span class="num">3.8</span>本章小结与答题模板</a></li></ul>
+  </div>
+  </div>
+  </details>
+  </aside>
+
+  <article class="doc-body">
+    <header class="doc-head">
+      <p class="crumb"><a href="../db.html">数据库系统概论</a> · 第 3 章</p>
+      <h1>关系数据库标准语言 SQL</h1>
+      <p class="meta">共 11 节 <span class="dot">·</span> 约 8,831 字 <span class="dot">·</span> 课件 306 页 <span class="dot">·</span> 本章自测 24 题</p>
+      <p class="status"><span>已掌握 <b data-mastery-count>0 / 11</b> 节</span>
+        <span class="track"><i data-mastery-bar></i></span></p>
+    </header>
+    <div class="note">
+
+<p class="lead">第 2 章讲关系模型"是什么"，本章讲怎么把它"建起来、查出来、改掉"。SQL 是全书的操作层，也是期末卷中分值最高、几乎必出一道大题的部分；本章的三表结构、嵌套查询与视图可更新性，还会直接在第 4、5、6 章反复出现。</p>
+
+<h2 id="s1"><span class="h2no">3.1</span>SQL 概述：五大特点与三级模式</h2>
+
+<p>SQL（Structured Query Language）是关系数据库的标准语言。1974 年 Boyce 和 Chamberlin 提出 SEQUEL，IBM 将其用于 SYSTEM R；1981 年改名 SQL，1982 年美国国家标准局 ANSI 开始制定 SQL 标准。标准版本从 SQL/86、SQL/89、SQL/92 一路膨胀到 SQL99、SQL2003、SQL2008（3777 页）、SQL2011、SQL2016、SQL2019，陆续加入递归查询、触发器、XML/JSON、窗口函数、时态数据等。<strong>至今没有一个数据库系统能支持 SQL 标准的全部概念和特性</strong>，各厂商都是"标准 + 方言"：Oracle 是 PL/SQL，SQL Server 是 T-SQL。考试若问"SQL 是不是严格的标准语言"，答"是工业标准，但产品只实现其子集并各自扩充"。</p>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>SQL 的五个特点，简答题按"名称 + 一句解释"给分：</p><ul><li><strong>综合统一</strong>：集 DDL、DML、DCL 于一体，数据结构单一（只有关系），操作符统一，能独立完成数据库生命周期中的全部活动。</li><li><strong>高度非过程化</strong>：只说明"做什么"，不指定存取路径，路径由系统自动选择，因而数据独立性高。</li><li><strong>面向集合</strong>：操作对象和查找结果都是元组的集合，一次插入、删除、更新可以作用于多个元组。</li><li><strong>同一种语法结构、两种使用方式</strong>：既可独立联机交互，又可嵌入 C/C++/Java 等宿主语言，两种方式语法基本一致。</li><li><strong>语言简洁、易学易用</strong>：核心功能只用 9 个动词。</li></ul></div>
+
+<p>9 个动词必须能默写并归类，选择题常拿"哪个不是 SQL 动词"来设套（如 JOIN、INDEX 都不是）。</p>
+
+<table>
+<thead><tr><th>SQL 功能</th><th>动词</th><th>个数</th></tr></thead>
+<tbody>
+<tr><td>数据查询</td><td>SELECT</td><td>1</td></tr>
+<tr><td>数据定义</td><td>CREATE、DROP、ALTER</td><td>3</td></tr>
+<tr><td>数据操纵</td><td>INSERT、UPDATE、DELETE</td><td>3</td></tr>
+<tr><td>数据控制</td><td>GRANT、REVOKE</td><td>2</td></tr>
+</tbody>
+<caption>表 1　SQL 的 9 个动词（按功能分四类）</caption>
+</table>
+
+<div class="mem">口诀：<b>一查三定三操纵，二控制</b>——SELECT；CREATE/DROP/ALTER；INSERT/UPDATE/DELETE；GRANT/REVOKE，合计 9 个动词。</div>
+
+<p>SQL 支持关系数据库的三级模式结构，这是"SQL 基本概念"最常考的一张图：<strong>视图对应外模式，基本表对应模式，存储文件对应内模式</strong>。三者关系要能反过来答：</p>
+
+<div class="fig">
+<svg viewBox="0 0 520 268" role="img" aria-label="SQL 支持的三级模式结构" width="520" height="268">
+<rect class="acc" x="120" y="10" width="280" height="46" rx="4"/>
+<text x="260" y="38" text-anchor="middle">外模式 · 视图（View1、View2…）</text>
+<rect class="box" x="60" y="102" width="400" height="50" rx="4"/>
+<text x="260" y="132" text-anchor="middle">模式 · 基本表（基本表1 … 基本表4）</text>
+<rect class="box" x="140" y="196" width="240" height="46" rx="4"/>
+<text x="260" y="224" text-anchor="middle">内模式 · 存储文件（含索引）</text>
+<line class="ln" x1="260" y1="56" x2="260" y2="102"/>
+<line class="ln" x1="260" y1="152" x2="260" y2="196"/>
+<text class="lbl" x="272" y="84">外模式/模式映像</text>
+<text class="lbl" x="272" y="180">模式/内模式映像</text>
+</svg>
+<figcaption>图 1　SQL 的三级模式：视图—基本表—存储文件</figcaption>
+</div>
+
+<p><strong>基本表</strong>是本身独立存在的表，一个关系对应一个基本表；一个（或多个）基本表对应一个存储文件，一个表可带若干索引，索引也存放在存储文件中。<strong>存储文件</strong>的逻辑结构和物理结构组成内模式，物理结构对用户隐蔽、可以任意改变。<strong>视图</strong>从一个或几个基本表导出，数据库中只存放视图的定义而不存放视图对应的数据，是虚表，且可以在视图上再定义视图。在用户眼中视图和基本表都是关系，存储文件对用户透明。</p>
+
+<div class="trap"><p class="t">易错</p><p>"SQL 是非过程化语言"不等于"SQL 不能写过程"——SQL 仍可用游标、存储过程描述流程，非过程化指的是<strong>不指定存取路径</strong>。另一个高频错点是把"两种使用方式"答成"两种语法"：独立式与嵌入式<strong>语法结构基本一致</strong>，差别只在宿主语言的接口（如共享变量、游标）。</p></div>
+
+<div class="eg"><p class="t">例题</p><p>同样的查询"不在武汉居住的供应商"，SQL 写作 <code>SELECT * FROM S WHERE city&lt;&gt;'Wuhan'</code>，而 QUEL 必须写 <code>RANGE OF s IS S</code> 再 <code>RETRIEVE (s.all) WHERE (s.city&lt;&gt;"Wuhan")</code>。这说明了 SQL 的什么特点？</p><div class="sol"><p>说明<strong>高度非过程化</strong>：SQL 只描述结果应满足的条件（做什么），不指出用哪个索引、按什么顺序扫描（怎么做）；QUEL 要先用 RANGE 声明元组变量，带有明显的面向过程痕迹。答案要点是"只提做什么、存取路径由系统选择、减轻用户负担、提高数据独立性"。</p></div></div>
+
+<h2 id="s2"><span class="h2no">3.2</span>学生-课程数据库：三表结构与建表语句</h2>
+
+<p>全书例题共用"学生-课程"模式 S-T，只有三张表，结构必须背到能默写建表语句。注意主码、外码的落点：<strong>SC 的主码由两个属性组成，必须定义为表级约束</strong>；Course 的 Cpno 是<strong>参照自身</strong>的外码（先修课也是课程）。</p>
+
+<table>
+<thead><tr><th>关系</th><th>属性（含义）</th><th>主码</th><th>外码与约束</th></tr></thead>
+<tbody>
+<tr><td>Student</td><td>Sno 学号、Sname 姓名、Ssex 性别、Sage 年龄、Sdept 所在系</td><td>Sno</td><td>Sname 取唯一值；Ssex 只取男/女</td></tr>
+<tr><td>Course</td><td>Cno 课程号、Cname 课程名、Cpno 先修课号、Ccredit 学分</td><td>Cno</td><td>Cpno 参照 Course(Cno)</td></tr>
+<tr><td>SC</td><td>Sno 学号、Cno 课程号、Grade 成绩</td><td>(Sno, Cno)</td><td>Sno 参照 Student，Cno 参照 Course；Grade 允许空且限 0～100</td></tr>
+</tbody>
+<caption>表 2　学生-课程数据库的三表结构与完整性约束</caption>
+</table>
+
+<table>
+<thead><tr><th>关系</th><th>元组（按属性顺序，⊥ 表示空值）</th></tr></thead>
+<tbody>
+<tr><td>Student</td><td>(202215121, 李勇, 男, 20, CS)、(202215122, 刘晨, 女, 19, CS)、(202215123, 王敏, 女, 18, MA)、(202215125, 张立, 男, 19, IS)</td></tr>
+<tr><td>Course</td><td>(1, 数据库, 5, 4)、(2, 数学, ⊥, 2)、(3, 信息系统, 1, 4)、(4, 操作系统, 6, 3)、(5, 数据结构, 7, 4)、(6, 数据处理, ⊥, 2)、(7, PASCAL 语言, 6, 4)</td></tr>
+<tr><td>SC</td><td>(202215121, 1, 92)、(202215121, 2, 85)、(202215121, 3, 88)、(202215122, 2, 90)、(202215122, 3, 80)</td></tr>
+</tbody>
+<caption>表 3　学生-课程数据库的样本数据（后续例题的结果都以此为准）</caption>
+</table>
+
+<p>【例 3.5】【例 3.6】【例 3.7】三张表的建表语句，考试要求原文写出：</p>
+
+<pre><code>CREATE TABLE Student
+ (Sno    CHAR(9)  PRIMARY KEY,        <span class="c">-- 列级约束：Sno 是主码</span>
+  Sname  CHAR(20) UNIQUE,             <span class="c">-- 姓名取值唯一</span>
+  Ssex   CHAR(2),
+  Sage   SMALLINT,
+  Sdept  CHAR(20),
+  CHECK (Ssex = '男' OR Ssex = '女'));
+
+CREATE TABLE Course
+ (Cno     CHAR(4)  PRIMARY KEY,
+  Cname   CHAR(40),
+  Cpno    CHAR(4),
+  Ccredit SMALLINT,
+  FOREIGN KEY (Cpno) REFERENCES Course(Cno));   <span class="c">-- 自参照外码</span>
+
+CREATE TABLE SC
+ (Sno   CHAR(9),
+  Cno   CHAR(4),
+  Grade SMALLINT,
+  PRIMARY KEY (Sno, Cno),              <span class="c">-- 多属性主码必须表级定义</span>
+  FOREIGN KEY (Sno) REFERENCES Student(Sno),
+  FOREIGN KEY (Cno) REFERENCES Course(Cno),
+  CHECK ((Grade IS NULL) OR Grade BETWEEN 0 AND 100));</code></pre>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>建表语句的采分点只有四处，写全即满分：</p><ul><li><strong>列级约束</strong>写在列定义后：PRIMARY KEY、UNIQUE、NOT NULL、CHECK、DEFAULT。</li><li><strong>表级约束</strong>单列一行：PRIMARY KEY(列,…)、FOREIGN KEY(列) REFERENCES 表(列)、CHECK(条件)。凡涉及多个属性列的约束（含复合主码）<strong>必须</strong>写在表级。</li><li>外码的"被参照列"必须是<strong>主码或 UNIQUE 列</strong>，且类型可比。</li><li>CHECK 里要放行空值时必须显式写 <code>Grade IS NULL OR …</code>，否则空值会让条件取 UNKNOWN，插入缺考记录可能被拒。</li></ul></div>
+
+<div class="trap"><p class="t">易错</p><p>SC 的 Grade 允许为空是<strong>有意设计</strong>：有选课记录但未考试。这条设定是 3.6 节和【例 3.82】"不及格但不含缺考"的伏笔。若把 Grade 写成 NOT NULL，就与全书例题的数据矛盾。另一个错点是把 SC 的主码写成 Sno 或 Cno 单列——一个学生选多门课、一门课被多人选，只有 (Sno, Cno) 才能唯一标识一条选课记录。</p></div>
+
+<h2 id="s3"><span class="h2no">3.3</span>数据定义：模式、基本表、索引与数据字典</h2>
+
+<p>SQL 的数据定义靠三条语句：CREATE、DROP、ALTER，作用对象是模式、表、视图、索引。先记层次：一个实例可有多个数据库，一个数据库可有多个模式，一个模式包含多个表、视图、索引。<strong>定义模式本质上就是建立一个命名空间</strong>，而不是建一个"数据库"。</p>
+
+<pre><code>CREATE SCHEMA &lt;模式名&gt; AUTHORIZATION &lt;用户名&gt; [&lt;表定义子句&gt; | &lt;视图定义子句&gt; | &lt;授权子句&gt;];
+DROP   SCHEMA &lt;模式名&gt; &lt;CASCADE | RESTRICT&gt;;</code></pre>
+
+<p>【例 3.1】<code>CREATE SCHEMA "S-T" AUTHORIZATION WANG;</code>。【例 3.2】省略模式名时，<strong>模式名隐含为用户名</strong>。【例 3.3】在 CREATE SCHEMA 后直接跟 CREATE TABLE，可一次建模式并建表。删除时 CASCADE 表示把模式内所有对象一起删（【例 3.4】<code>DROP SCHEMA ZHANG CASCADE;</code> 连 TAB1 一起删）；RESTRICT 表示模式内还有对象就拒绝删除。<strong>凡 CASCADE/RESTRICT 二选一，判断标准只有一句：RESTRICT 要求"没有下属对象"，CASCADE 则"连坐"。</strong></p>
+
+<p>基本表所属模式有三种指定方法：表名前直接加模式名（<code>CREATE TABLE "S-T".Student(…)</code>）、在 CREATE SCHEMA 中同时建表、设置搜索路径后建表。<strong>搜索路径</strong>用 <code>SHOW SEARCH_PATH;</code> 查看，默认值 <code>$user, PUBLIC</code>，系统取路径中第一个存在的模式；<code>SET SEARCH_PATH TO "S-T", PUBLIC;</code> 之后建的表就属于 S-T。</p>
+
+<pre><code>CREATE TABLE &lt;表名&gt; (
+  &lt;列名&gt; &lt;数据类型&gt; [DEFAULT 缺省值] [NOT NULL] [列级约束],
+  …
+  [, PRIMARY KEY (列名 [, 列名] …)]
+  [, FOREIGN KEY (列名 [, 列名] …) REFERENCES 表名 (列名 [, 列名] …)]
+  [, CHECK (条件表达式)]);</code></pre>
+
+<table>
+<thead><tr><th>数据类型</th><th>含义</th></tr></thead>
+<tbody>
+<tr><td>CHAR(n)</td><td>长度为 n 的定长字符串</td></tr>
+<tr><td>VARCHAR(n)</td><td>最大长度为 n 的变长字符串</td></tr>
+<tr><td>CLOB / BLOB</td><td>字符串大对象 / 二进制大对象</td></tr>
+<tr><td>INT / SMALLINT / BIGINT</td><td>长整数（4 字节）/ 短整数（2 字节）/ 大整数（8 字节）</td></tr>
+<tr><td>NUMERIC(p,d) / DECIMAL(p,d)</td><td>定点数，共 p 位数字（不含符号和小数点），小数点后 d 位</td></tr>
+<tr><td>REAL / DOUBLE PRECISION / FLOAT(n)</td><td>单精度 / 双精度 / 精度至少 n 位的浮点数</td></tr>
+<tr><td>DATE / TIME / TIMESTAMP / INTERVAL</td><td>日期（YYYY-MM-DD）/ 时间（HH:MM:SS）/ 时间戳 / 时间间隔</td></tr>
+</tbody>
+<caption>表 4　SQL 常用数据类型（选型看取值范围与要做哪些运算）</caption>
+</table>
+
+<p>修改表用 ALTER TABLE：ADD 增列（【例 3.8】<code>ALTER TABLE Student ADD S_entrance DATE;</code>）、ALTER COLUMN 改类型（【例 3.9】Sage 改 INT）、ADD 表级约束（【例 3.10】<code>ALTER TABLE Course ADD UNIQUE(Cname);</code>）、DROP COLUMN、DROP CONSTRAINT。<strong>新增加的列不论表里原来有没有数据，一律取空值</strong>；若新增列声明 NOT NULL，则必须同时给 DEFAULT，否则语句失败。</p>
+
+<p>删表 <code>DROP TABLE &lt;表名&gt; [RESTRICT|CASCADE];</code>：RESTRICT 要求该表不被其他表的约束、视图、触发器等引用；CASCADE 则把依赖对象一并删掉。【例 3.12】中 Student 上有视图 IS_Student，<code>DROP TABLE Student RESTRICT;</code> 报错，改 CASCADE 后视图自动消失，再查 IS_Student 提示关系不存在。<strong>注意：删除视图必须显式 DROP VIEW，删表并不会自动删视图定义之外的依赖管理，标准与各产品处理不同，答题以"RESTRICT 拒绝、CASCADE 连坐"为准。</strong></p>
+
+<p>索引是为了加快查询，把查找从 O(n) 降到 O(log₂n)。常见类型有顺序文件索引、B+ 树索引（动态平衡）、散列索引（查找快）、位图索引。</p>
+
+<pre><code>CREATE [UNIQUE] [CLUSTER] INDEX &lt;索引名&gt;
+  ON &lt;表名&gt; (&lt;列名&gt; [ASC|DESC] [, &lt;列名&gt; [ASC|DESC]] …);
+ALTER INDEX &lt;旧索引名&gt; RENAME TO &lt;新索引名&gt;;
+DROP  INDEX &lt;索引名&gt;;</code></pre>
+
+<p>【例 3.13】<code>CREATE UNIQUE INDEX Stusno ON Student(Sno);</code>、<code>CREATE UNIQUE INDEX Coucno ON Course(Cno);</code>、<code>CREATE UNIQUE INDEX SCno ON SC(Sno ASC, Cno DESC);</code>。【例 3.14】改名为 SCSno。【例 3.15】<code>DROP INDEX Stusname;</code> 删除时系统同步从数据字典删掉该索引的描述。</p>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>索引的三个"谁"与建索引原则：</p><ul><li><strong>谁建</strong>：DBA 或表的属主；<strong>谁维护</strong>：RDBMS 自动完成；<strong>谁用</strong>：系统自动选择存取路径，<strong>用户不必也不能在 SQL 中显式引用索引</strong>——这正是物理独立性的体现。</li><li><strong>聚簇索引</strong>：索引项顺序与表中记录的物理顺序一致，同值记录构成一簇只存一个索引值；查询快，但维护成本高，<strong>一个表只能建一个</strong>，经常更新的列不宜建。</li><li>建索引原则：主码列一定要建；外码列可以建；常作连接属性、常出现在查询条件中的列最好建；很少涉及、重复值多的列不建；text、image、bit 类型不建。</li><li>索引不是越多越好：过多索引耗费空间，并降低 INSERT/UPDATE/DELETE 的效率。</li></ul></div>
+
+<div class="trap"><p class="t">易错</p><p>UNIQUE 索引保证索引值唯一，但它<strong>不等于主码</strong>：一个表可有多个 UNIQUE 索引，主码只有一个，且 UNIQUE 列允许空值（见 3.6 节）。另一个错点是把聚簇索引当成"可以建多个"——物理顺序只有一种，"一个表只能一个聚簇索引"是选择题常客。</p></div>
+
+<div class="eg"><p class="t">例题</p><p>【例 3.3】为用户 ZHANG 创建模式 TEST，并在其中定义表 TAB1（COL1 SMALLINT、COL2 INT、COL3 CHAR(20)、COL4 NUMERIC(10,3)、COL5 DECIMAL(5,2)），写出语句。</p><div class="sol"><p><code>CREATE SCHEMA TEST AUTHORIZATION ZHANG</code> 后紧跟 <code>CREATE TABLE TAB1 (COL1 SMALLINT, COL2 INT, COL3 CHAR(20), COL4 NUMERIC(10,3), COL5 DECIMAL(5,2));</code>。要点：模式名在前、AUTHORIZATION 在后；子句之间<strong>不用逗号</strong>；NUMERIC(10,3) 表示共 10 位数字、其中小数 3 位，即整数部分最多 7 位。</p></div></div>
+
+<p>数据字典是 RDBMS 内部的一组系统表，记录关系模式定义、视图定义、索引定义、完整性约束定义、各类用户的操作权限和统计信息。<strong>执行 DDL 语句实际上就是在更新数据字典中的相应信息</strong>，这也是"数据字典"必考的一句结论。</p>
+
+<h2 id="s4"><span class="h2no">3.4.1</span>单表查询：SELECT 的五种武器</h2>
+
+<p>查询的骨架来自关系代数 σ、π：<code>SELECT A1,…,An FROM R1,…,Rm WHERE F</code> 对应 π<sub>A1…An</sub>(σ<sub>F</sub>(R1×…×Rm))。SQL 的 WHERE 条件比关系代数的公式灵活得多，但<strong>结果永远是一张表（元组的集合）</strong>，这一点决定了后面所有"嵌套""集合"写法的合法性。</p>
+
+<p>SELECT 子句能放：列名、<code>*</code>、算术表达式、字符串常量、函数、列别名。【例 3.19】<code>SELECT Sname, 2024-Sage FROM Student;</code> 查出姓名与出生年份。【例 3.20】还可拼常量串、用 <code>LOWER(Sdept)</code> 把系名转小写。别名用空格或 AS 引出：【例 3.20 续】<code>SELECT Sname NAME, 'Year of Birth:' BIRTH, 2024-Sage BIRTHDAY, LOWER(Sdept) DEPARTMENT FROM Student;</code>。</p>
+
+<p><strong>DISTINCT 作用于整个目标列组合，不是某一列</strong>；缺省为 ALL，重复行保留。【例 3.21】<code>SELECT Sno FROM SC;</code> 得到 5 行（202215121 出现三次），加 DISTINCT 后只剩 2 行。凡"查询选修了课程的学生学号""选修了某课的学生"一类题，若只选 Sno，必须想清楚要不要 DISTINCT；用了 GROUP BY 或 IN/EXISTS 时通常已天然去重。</p>
+
+<table>
+<thead><tr><th>查询条件</th><th>谓词</th><th>典型例句</th></tr></thead>
+<tbody>
+<tr><td>比较</td><td>=、&gt;、&lt;、&gt;=、&lt;=、!=、&lt;&gt;、!&gt;、!&lt;，可加 NOT</td><td>【例 3.22】WHERE Sdept='CS'；【例 3.24】WHERE Grade&lt;60</td></tr>
+<tr><td>确定范围</td><td>BETWEEN … AND …、NOT BETWEEN … AND …（闭区间）</td><td>【例 3.25】WHERE Sage BETWEEN 20 AND 23</td></tr>
+<tr><td>确定集合</td><td>IN、NOT IN</td><td>【例 3.27】WHERE Sdept IN ('CS','MA','IS')</td></tr>
+<tr><td>字符匹配</td><td>LIKE、NOT LIKE，可带 ESCAPE</td><td>【例 3.30】WHERE Sname LIKE '刘%'</td></tr>
+<tr><td>空值</td><td>IS NULL、IS NOT NULL（不能用 =）</td><td>【例 3.36】WHERE Grade IS NULL</td></tr>
+<tr><td>多重条件</td><td>AND、OR、NOT，AND 优先级高于 OR</td><td>【例 3.38】WHERE Sdept='CS' AND Sage&lt;20</td></tr>
+</tbody>
+<caption>表 5　WHERE 子句的六类查询条件与谓词（表 3.6）</caption>
+</table>
+
+<p>LIKE 只有两个通配符：<strong>% 代表任意长度（可为 0）的字符串，_ 代表任意单个字符</strong>。【例 3.30】姓刘 <code>'刘%'</code>；【例 3.31】姓"欧阳"且全名三个汉字写 <code>'欧阳_'</code>（复姓占两字、全名三字，后面只剩一个字符，故只跟一个下划线；课件该处印成两个下划线，系排版笔误）；【例 3.32】名字第二个字是"阳"写 <code>'__阳%'</code>（前面两个下划线）。若模式串本身含 % 或 _，必须用 ESCAPE 指定换码字符：【例 3.34】查课程名恰为 DB_Design 写作 <code>WHERE Cname LIKE 'DB\_Design' ESCAPE '\'</code>；【例 3.35】以 DB_ 开头且倒数第 3 个字符为 i 写作 <code>WHERE Cname LIKE 'DB\_%i__' ESCAPE '\'</code>。匹配串不含通配符时，LIKE 等价于 =（【例 3.29】）。</p>
+
+<p>排序用 <code>ORDER BY 列 [ASC|DESC]</code>，可多列，缺省 ASC，<strong>空值的排序位置由具体系统决定</strong>。【例 3.39】按成绩降序；【例 3.40】<code>ORDER BY Sdept, Sage DESC</code> 表示先按系升序、同系内按年龄降序—— ASC/DESC 只作用于紧挨着的那一列。</p>
+
+<p>聚集函数五个：COUNT、SUM、AVG、MAX、MIN，<strong>只能出现在 SELECT 子句和 HAVING 子句中</strong>。【例 3.41】<code>COUNT(*)</code> 数学生总人数；【例 3.42】<code>COUNT(DISTINCT Sno)</code> 数选修了课程的人数（去重）；【例 3.43】1 号课平均分；【例 3.44】最高分；【例 3.45】某学生总学分要连接 SC 与 Course 后 <code>SUM(Ccredit)</code>。<strong>除 COUNT(*) 外，聚集函数都跳过空值只处理非空值</strong>，于是 COUNT(Grade) 不计缺考、AVG(Grade) 的分母也不含缺考。</p>
+
+<p>分组用 GROUP BY，值相等为一组，聚集函数分别作用于每组；HAVING 对组再筛。【例 3.46】<code>SELECT Cno, COUNT(Sno) FROM SC GROUP BY Cno;</code> 求各课选课人数。【例 3.47】<code>SELECT Sno FROM SC GROUP BY Sno HAVING COUNT(*) &gt; 3;</code> 选课 3 门以上。【例 3.48】平均分 ≥ 90：条件里含聚集函数，<strong>必须写 HAVING，不能写 WHERE</strong>。</p>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>WHERE 与 HAVING 的分工，以及分组查询的合法目标列：</p><ul><li><strong>WHERE 作用于元组（分组前）</strong>，只能用列名、常量，不能用聚集函数；<strong>HAVING 作用于组（分组后）</strong>，只能引用 GROUP BY 中出现过的列或聚集函数。</li><li>分组查询的 SELECT 目标列<strong>只允许出现聚集函数和 GROUP BY 中出现过的列</strong>，否则结果无意义。</li><li>执行顺序（补充）：FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY。这解释了"SELECT 里的别名不能在 WHERE 中用，但 ORDER BY 可以用"。</li><li>COUNT(*) 统计行数（含全空行），COUNT(列) 只统计该列非空值，COUNT(DISTINCT 列) 再对非空值去重。</li></ul></div>
+
+<div class="trap"><p class="t">易错</p><p>课件第 116 页"查询每门课程的及格人数"给出的 <code>SELECT Cno, COUNT(Sno) FROM SC GROUP BY Cno HAVING Grade&gt;=60</code> 是<strong>错句</strong>：Grade 既不在 GROUP BY 中，也不是聚集函数，且 HAVING 里不能引用未分组的单行属性。正确写法是把条件下推到 WHERE：<code>SELECT Cno, COUNT(Sno) FROM SC WHERE Grade&gt;=60 GROUP BY Cno;</code>。这条错误几乎年年出现在选择题里，务必记成"<strong>行条件进 WHERE，组条件进 HAVING</strong>"。</p></div>
+
+<div class="eg"><p class="t">例题</p><p>【例 3.48】查询平均成绩大于等于 90 分的学生学号和平均成绩，并说明为什么不能把条件写在 WHERE 中。</p><div class="sol"><p><code>SELECT Sno, AVG(Grade) FROM SC GROUP BY Sno HAVING AVG(Grade) &gt;= 90;</code>。原因：WHERE 在分组前逐元组过滤，此时 AVG(Grade) 尚未计算，SQL 规定聚集函数不能出现在 WHERE 中；HAVING 在分组后对每组求值，才能用 AVG。若题目改成"查询有课程成绩 ≥ 90 的学生"，条件针对单行，则应写 <code>WHERE Grade &gt;= 90</code>。</p></div></div>
+
+<div class="mem">口诀：<b>行筛选 WHERE，组筛选 HAVING；聚集不进 WHERE，分组列才进 SELECT</b>——前三句定位置，最后一句定合法性。</div>
+
+<div class="sum"><p class="t">本节小结</p><ul><li>SELECT 管"列"（表达式、别名、DISTINCT），WHERE 管"行"（六类条件），ORDER BY 管"序"，聚集函数 + GROUP BY/HAVING 管"组"。</li><li>LIKE 的两个通配符与 ESCAPE 转义是必考细节，'_' 的个数要与"第几个字"对上。</li><li>聚集函数跳过 NULL（COUNT(*) 除外），HAVING 才能用聚集函数，分组后 SELECT 只能出现分组列与聚集函数。</li></ul></div>
+
+<h2 id="s5"><span class="h2no">3.4.2</span>连接查询：等值、自身、外连接与多表</h2>
+
+<p>连接条件的一般形式是 <code>[表1.]列1 θ [表2.]列2</code>，也可用 BETWEEN … AND …。<strong>连接字段的类型必须可比，但名字不必相同</strong>——这句是判断题常考点。若在 SELECT 中直接写 <code>*</code>，等值连接结果会保留两个重复的连接列，自然连接则要去掉重复列。</p>
+
+<pre><code><span class="c">-- 【例 3.49】等值连接：每个学生及其选课情况</span>
+SELECT Student.*, SC.*
+FROM   Student, SC
+WHERE  Student.Sno = SC.Sno;
+
+<span class="c">-- 【例 3.50】自然连接：去掉重复的 Sno 列</span>
+SELECT Student.Sno, Sname, Ssex, Sage, Sdept, Cno, Grade
+FROM   Student, SC
+WHERE  Student.Sno = SC.Sno;
+
+<span class="c">-- 【例 3.51】选择与连接复合：选 2 号课且 90 分以上</span>
+SELECT Student.Sno, Sname
+FROM   Student, SC
+WHERE  Student.Sno = SC.Sno AND SC.Cno = '2' AND SC.Grade &gt; 90;</code></pre>
+
+<p>连接操作的执行有三种算法（第 10 章详讲）：<strong>嵌套循环法</strong>（外表每个元组扫一遍内表）、<strong>排序合并法</strong>（先按连接属性排序，再双向顺序扫描，常用于 = 连接）、<strong>索引连接</strong>（对内表连接字段建索引，外表全扫描、内表查索引）。考"哪种方法适合等值连接"答排序合并与索引连接。</p>
+
+<p>自身连接是"一张表与自己连接"，<strong>必须起两个别名，且所有同名列前必须加别名前缀</strong>。【例 3.52】查每门课的间接先修课：</p>
+
+<pre><code>SELECT FIRST.Cno, SECOND.Cpno
+FROM   Course FIRST, Course SECOND
+WHERE  FIRST.Cpno = SECOND.Cno;      <span class="c">-- 结果：(1,7)、(3,5)、(5,6)</span></code></pre>
+
+<p>为什么只有 3 行？因为 2 号、6 号课 Cpno 为空，4 号课的先修课 6 号其 Cpno 也为空，7 号课的先修课 6 号同样为空，这些行在等值条件下自然被淘汰。自身连接的另一种典型用法是"既选修 1 号又选修 2 号"：<code>FROM SC X, SC Y WHERE X.Sno=Y.Sno AND X.Cno='1' AND Y.Cno='2'</code>。</p>
+
+<p>外连接以指定表为"主体"，把主体表中不满足连接条件的元组也输出，缺失列补 NULL：LEFT OUTER JOIN 保留左表全部元组，RIGHT 保留右表，FULL 两边都保留。【例 3.53】</p>
+
+<pre><code>SELECT Student.Sno, Sname, Ssex, Sage, Sdept, Cno, Grade
+FROM   Student LEFT OUTER JOIN SC ON (Student.Sno = SC.Sno);</code></pre>
+
+<p>结果比【例 3.49】多出两行：王敏（MA）与张立（IS）没有选课，Cno、Grade 补 NULL。多表连接则是把多个连接条件用 AND 串起来，【例 3.54】查每个学生的学号、姓名、课程名、成绩需要 Student、SC、Course 三表：</p>
+
+<pre><code>SELECT Student.Sno, Sname, Cname, Grade
+FROM   Student, SC, Course
+WHERE  Student.Sno = SC.Sno AND SC.Cno = Course.Cno;</code></pre>
+
+<div class="trap"><p class="t">易错</p><p>外连接的条件位置决定语义：<code>LEFT JOIN … ON (A=B AND 其他条件)</code> 与 <code>LEFT JOIN … ON (A=B) WHERE 其他条件</code> 不等价——后者会把补 NULL 的行过滤掉，退化成内连接。课件第 100 页"查找不为 BOC 工作的员工"给出的 <code>LEFT JOIN … WHERE w.ID IS NULL</code> 正是利用这一性质做反连接，属于正确用法；若把 <code>w.company_name='BOC'</code> 写进 WHERE，结果就错了。另一个错点：写 <code>SELECT Sname, Sno</code> 这类多表查询时，若列名只出现在一张表中可不加前缀，但凡出现同名列必须加表名前缀，否则报"列名歧义"。</p></div>
+
+<div class="eg"><p class="t">例题</p><p>用 JOIN 改写【例 3.51】，并指出课件第 14 页写法的错误。</p><div class="sol"><p>正确写法：<code>SELECT Student.Sno, Sname FROM SC INNER JOIN Student ON Student.Sno = SC.Sno WHERE SC.Cno='2' AND SC.Grade&gt;90;</code>。课件写作 <code>ON Student.Sno = SC.Cno</code>，把学号与课程号相连，属于<strong>连接字段错配</strong>，结果必错。JOIN 写法与逗号写法语义相同，但 ON 只写连接条件、WHERE 只写选择条件，结构更清晰。</p></div></div>
+
+<h2 id="s6"><span class="h2no">3.4.3</span>嵌套查询：IN、ANY/ALL 与 EXISTS 的双重否定</h2>
+
+<p>一个 SELECT-FROM-WHERE 叫一个<strong>查询块</strong>，把一个查询块嵌进另一个查询块的 WHERE 或 HAVING 条件中就是嵌套查询。上层叫外层查询（父查询），下层叫内层查询（子查询）。<strong>子查询不能使用 ORDER BY</strong>，ORDER BY 只能对最终结果排序；子查询的 SELECT 列数必须与父查询的比较对象匹配。</p>
+
+<p>按求解方式分两类，这是理解所有嵌套题的关键：<strong>不相关子查询</strong>由里向外逐层求解，子查询先算出一个集合，再交给父查询；<strong>相关子查询</strong>的子查询条件依赖父查询的当前元组，父查询每取一行就要把该行的值传给子查询重算一遍，因此必须用别名区分内外层。</p>
+
+<pre><code><span class="c">-- 【例 3.55】与"刘晨"在同一个系学习的学生（不相关子查询）</span>
+SELECT Sno, Sname, Sdept
+FROM   Student
+WHERE  Sdept IN (SELECT Sdept FROM Student WHERE Sname = '刘晨');
+
+<span class="c">-- 【例 3.56】选修了"信息系统"的学生（两层 IN 嵌套）</span>
+SELECT Sno, Sname
+FROM   Student
+WHERE  Sno IN (SELECT Sno FROM SC
+               WHERE Cno IN (SELECT Cno FROM Course
+                             WHERE Cname = '信息系统'));
+
+<span class="c">-- 【例 3.57】找出每个学生超过他自己选修课程平均成绩的课程号（相关子查询）</span>
+SELECT Sno, Cno
+FROM   SC x
+WHERE  Grade &gt;= (SELECT AVG(Grade) FROM SC y WHERE y.Sno = x.Sno);</code></pre>
+
+<p>【例 3.56】用连接查询也能做，且通常效率更高：<code>FROM Student, SC, Course WHERE Student.Sno=SC.Sno AND SC.Cno=Course.Cno AND Course.Cname='信息系统'</code>。当能确定内层返回单值时，可用比较运算符（=、&gt;、&lt; 等）代替 IN——【例 3.55】一个学生只在一个系，故 <code>Sdept = (SELECT …)</code> 合法；若子查询可能返回多行，用 = 会运行时报错。</p>
+
+<p>ANY/SOME/ALL 必须与比较运算符连用：&gt;ANY 表示大于子查询结果中的<strong>某个</strong>值（即大于最小值），&gt;ALL 表示大于<strong>所有</strong>值（即大于最大值）。【例 3.58】非 CS 系中比 CS 系任意一个学生年龄小：<code>WHERE Sage &lt; ANY (SELECT Sage FROM Student WHERE Sdept='CS') AND Sdept &lt;&gt; 'CS';</code> 结果王敏 18、张立 19。【例 3.59】比 CS 系所有学生都小，用 &lt; ALL，等价于 &lt; (SELECT MIN(Sage) …)。<strong>用聚集函数的写法效率高于 ANY/ALL</strong>，这是课件明确给出的结论。</p>
+
+<table>
+<thead><tr><th>比较</th><th>=</th><th>&lt;&gt; 或 !=</th><th>&lt;</th><th>&lt;=</th><th>&gt;</th><th>&gt;=</th></tr></thead>
+<tbody>
+<tr><td>ANY（SOME）</td><td>IN</td><td>—</td><td>&lt; MAX</td><td>&lt;= MAX</td><td>&gt; MIN</td><td>&gt;= MIN</td></tr>
+<tr><td>ALL</td><td>—</td><td>NOT IN</td><td>&lt; MIN</td><td>&lt;= MIN</td><td>&gt; MAX</td><td>&gt;= MAX</td></tr>
+</tbody>
+<caption>表 6　ANY/ALL 与聚集函数、IN 的等价转换（表 3.7）</caption>
+</table>
+
+<p>EXISTS 代表存在量词 ∃，<strong>带 EXISTS 的子查询不返回任何数据，只产生真值 TRUE/FALSE</strong>：内层结果非空为真，为空为假；NOT EXISTS 相反。因此 EXISTS 子查询的目标列通常写 <code>*</code>，写什么列都不影响语义。【例 3.60】选修了 1 号课程的学生姓名：<code>WHERE EXISTS (SELECT * FROM SC WHERE Sno=Student.Sno AND Cno='1')</code>；【例 3.61】没选修 1 号课：把 EXISTS 换成 NOT EXISTS。<strong>所有带 IN、比较运算符、ANY/ALL 的子查询都能等价改写成 EXISTS 形式，反之不成立</strong>——EXISTS 表达能力更强。</p>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>用 EXISTS 表达全称量词，是全章最难也最爱考的一题，背模板 + 记语义：</p><ul><li>SQL 没有全称量词 ∀，转换公式：<strong>(∀x)P ≡ ¬(∃x(¬P))</strong>。"选修了全部课程"＝"不存在一门课程他没选"。</li><li>【例 3.62】模板（两层 NOT EXISTS，外层遍历 Student，中层遍历 Course，内层查 SC）：<br><code>SELECT Sname FROM Student WHERE NOT EXISTS (SELECT * FROM Course WHERE NOT EXISTS (SELECT * FROM SC WHERE Sno=Student.Sno AND Cno=Course.Cno));</code></li><li>逻辑蕴涵 p→q ≡ ¬p∨q ≡ ¬(p∧¬q)。"至少选修了 202215122 所选的全部课程"＝"不存在一门 202215122 选了而 x 没选的课"，用 NOT EXISTS 套 NOT EXISTS，内层条件是 <code>SCY.Sno='202215122' AND NOT EXISTS(该生选了同一 Cno)</code>。</li><li>写完后自检：最内层子查询的 WHERE 必须把<strong>外层学号、中层课程号同时</strong>绑上，缺一个就退化成"存在任意选课记录"。</li></ul></div>
+
+<div class="trap"><p class="t">易错</p><p>三个真实会扣分的坑：① <strong>NOT IN 遇 NULL 全盘失效</strong>（补充）：若子查询结果含 NULL，<code>x NOT IN (…NULL…)</code> 对任何 x 都返回 UNKNOWN，查询结果为空；此时应改用 NOT EXISTS。② <strong>EXISTS 与 IN 的去重效果不同</strong>：EXISTS 只判存在性，不产生重复；IN 可能因外层重复行而重复，需要 DISTINCT。③ 把"选修了全部课程"写成 <code>COUNT(*)=(SELECT COUNT(*) FROM Course)</code> 的 GROUP BY 形式虽可得分，但若课程有重复选课记录会算错，标准答案仍是双重 NOT EXISTS。</p></div>
+
+<div class="eg"><p class="t">例题</p><p>【例 3.62】查询选修了全部课程的学生姓名，并说明每一层 NOT EXISTS 的含义。</p><div class="sol"><p>语句见上方 kp 模板。语义逐层拆：最内层"该学生选了这门课"，中层"存在一门该学生没选的课"，最外层 NOT EXISTS 把它否定，即"不存在他没选的课"，也就是全部课程都选了。评分点：两层 NOT EXISTS 各 2 分，内层 WHERE 同时绑定 Sno 与 Cno 得 3 分，外层 SELECT Sname 得 1 分。若学生一门课都没选，内层 NOT EXISTS 恒真、中层 EXISTS 为真、外层为假，不会误选，逻辑自洽。</p></div></div>
+
+<div class="mem">口诀：<b>全部＝没有一门没有；至少（蕴涵）＝没有一门他有我没有</b>——前者两层 NOT EXISTS 夹 Course，后者两层 NOT EXISTS 夹"202215122 选过的课"。</div>
+
+<div class="sum"><p class="t">本节小结</p><ul><li>不相关子查询由里向外一次算完；相关子查询逐行代入，必须用别名区分内外层。</li><li>IN/比较/ANY/ALL 都能改写成 EXISTS；ANY 配聚集函数可读性更好、效率更高，考试两种写法都算对。</li><li>"全部""至少全部"两类题一律双重 NOT EXISTS，先写语义再套模板，最后检查内层是否同时绑定两个外层列。</li></ul></div>
+
+<h2 id="s7"><span class="h2no">3.4.4</span>集合查询、派生表与 SELECT 一般格式</h2>
+
+<p>集合查询把两个查询结果做并、交、差：UNION、INTERSECT、EXCEPT。<strong>参加运算的各结果列数必须相同，对应列的数据类型也必须相同</strong>；ORDER BY 只能写在最后。UNION 自动去重，UNION ALL 保留重复元组。</p>
+
+<pre><code><span class="c">-- 【例 3.64】CS 系学生 并 年龄不大于 19 岁的学生</span>
+SELECT * FROM Student WHERE Sdept = 'CS'
+UNION
+SELECT * FROM Student WHERE Sage &lt;= 19;
+
+<span class="c">-- 【例 3.66】交集；【例 3.68】差集</span>
+SELECT * FROM Student WHERE Sdept = 'CS'
+INTERSECT
+SELECT * FROM Student WHERE Sage &lt;= 19;
+
+SELECT * FROM Student WHERE Sdept = 'CS'
+EXCEPT
+SELECT * FROM Student WHERE Sage &lt;= 19;</code></pre>
+
+<p>注意【例 3.64】到【例 3.68】都在提示同一件事：<strong>能用 AND/OR 或 IN 写清的，就别硬套集合运算</strong>。交集等价于 <code>Sdept='CS' AND Sage&lt;=19</code>，差集等价于 <code>Sdept='CS' AND Sage&gt;19</code>，并集在单表上也可用 OR。集合运算真正的用武之地是"跨表结构相同"或"用 EXCEPT 表达包含"：【例 3.63】"至少选修了 202215122 全部课程"＝"202215122 的选课集合 减去 该生的选课集合 为空"，即"A 包含 B ≡ 不存在 (B 减 A)"，可先用两个 SELECT 做 EXCEPT 再套 NOT EXISTS。</p>
+
+<p>派生表是放在 FROM 子句里的子查询，相当于一张临时表，<strong>必须给别名</strong>；若子查询含聚集函数或表达式列，还要用 <code>别名(列名,…)</code> 指定列名。【例 3.57】的派生表写法：</p>
+
+<pre><code>SELECT Sno, Cno
+FROM   SC, (SELECT Sno, AVG(Grade) FROM SC GROUP BY Sno)
+           AS Avg_sc(avg_sno, avg_grade)
+WHERE  SC.Sno = Avg_sc.avg_sno AND SC.Grade &gt;= Avg_sc.avg_grade;</code></pre>
+
+<p>若子查询中没有聚集函数，列名可省略，直接用子查询 SELECT 出的列名（【例 3.60】的 <code>(SELECT Sno FROM SC WHERE Cno='1') AS SC1</code>）。</p>
+
+<p>SELECT 的一般格式（3.4.6）是答卷前的"检查清单"：</p>
+
+<pre><code>SELECT [ALL|DISTINCT] &lt;目标列表达式&gt; [别名] [, …]
+FROM   &lt;表名或视图名&gt; [别名] [, …] | (&lt;SELECT 语句&gt;) [AS] &lt;别名&gt;
+[WHERE &lt;条件表达式&gt;]
+[GROUP BY &lt;列名&gt; [HAVING &lt;条件表达式&gt;]]
+[ORDER BY &lt;列名&gt; [ASC|DESC]];</code></pre>
+
+<p>目标列表达式有四种合法形态：<code>*</code>、<code>表名.*</code>、聚集函数、由列/聚集函数/常量经 + − × ÷ 组成的表达式。WHERE 条件有七种形态：比较、BETWEEN、IN、LIKE、IS NULL、EXISTS、由 AND/OR/NOT 连接的复合条件。</p>
+
+<div class="trap"><p class="t">易错</p><p>INTERSECT 与 EXCEPT 不是所有系统都支持（补充：MySQL 8.0 之前没有，需用 JOIN 或 EXISTS 改写），答题时若题目限定"标准 SQL"才可放心用。另一个高频错点是把 ORDER BY 写进子查询或派生表——标准不允许（除非同时用 LIMIT），排序只能作用于最终结果。</p></div>
+
+<div class="mem">口诀：<b>选列 FROM 表，WHERE 挑行，GROUP 分组，HAVING 筛组，ORDER 排序</b>——写 SQL 时按这五步填，就不会把条件放错子句。</div>
+
+<h2 id="s8"><span class="h2no">3.5</span>数据更新：INSERT、UPDATE、DELETE</h2>
+
+<p>插入有两种：插入元组与插入子查询结果。列名可省略，省略时表示要插入完整元组且<strong>属性顺序与表定义一致</strong>；只给部分列时，其余列取空值。VALUES 的个数、类型必须与 INTO 子句匹配。</p>
+
+<pre><code><span class="c">-- 【例 3.69】插入一个学生元组</span>
+INSERT INTO Student (Sno, Sname, Ssex, Sdept, Sage)
+VALUES ('202215128', '陈冬', '男', 'IS', 18);
+
+<span class="c">-- 【例 3.71】只给学号、课程号，Grade 自动为空</span>
+INSERT INTO SC (Sno, Cno) VALUES ('202215128', '1');
+
+<span class="c">-- 【例 3.72】按系求平均年龄并存入新表</span>
+CREATE TABLE Dept_age (Sdept CHAR(15), Avg_age SMALLINT);
+INSERT INTO Dept_age (Sdept, Avg_age)
+SELECT Sdept, AVG(Sage) FROM Student GROUP BY Sdept;</code></pre>
+
+<p>插入子查询结果时，<strong>SELECT 的目标列必须与 INTO 子句的列在个数和类型上一一对应</strong>，且子查询中不能引用正在被插入的表（补充：否则可能自我引用导致不确定结果，一般先查完再插入）。执行插入时系统会检查实体完整性、参照完整性和用户定义完整性（NOT NULL、UNIQUE、值域）。</p>
+
+<pre><code><span class="c">-- 【例 3.73】改一个元组；【例 3.74】全表加 1 岁</span>
+UPDATE Student SET Sage = 22 WHERE Sno = '202215121';
+UPDATE Student SET Sage = Sage + 1;
+
+<span class="c">-- 【例 3.75】带子查询：CS 系全体学生成绩置零</span>
+UPDATE SC SET Grade = 0
+WHERE Sno IN (SELECT Sno FROM Student WHERE Sdept = 'CS');</code></pre>
+
+<p>UPDATE 的 SET 子句可用表达式，也可用子查询（如"把 D01 系主任工资改为该系平均工资"）。<strong>省略 WHERE 表示修改表中所有元组</strong>；修改时主码不允许改，其他列要满足实体完整性、用户定义完整性。</p>
+
+<pre><code><span class="c">-- 【例 3.76】删一个元组；【例 3.77】删全部选课记录</span>
+DELETE FROM Student WHERE Sno = '202215128';
+DELETE FROM SC;
+
+<span class="c">-- 【例 3.78】带子查询：删 CS 系学生的选课记录</span>
+DELETE FROM SC
+WHERE Sno IN (SELECT Sno FROM Student WHERE Sdept = 'CS');</code></pre>
+
+<div class="trap"><p class="t">易错</p><p>三个"删不干净"的混淆：<strong>DELETE 只删元组，表的定义仍在数据字典中；DROP TABLE 才删定义、数据和索引</strong>；TRUNCATE（补充，SQL2008 引入）删全部行但不写日志、不可回滚，与 DELETE FROM 表 不同。另外，省略 WHERE 的 UPDATE/DELETE 会作用于全表，是上机题最常见的误操作；带子查询修改时若子查询又引用被修改的表，各系统限制不同，标准答案一般先建临时表或分两步执行。</p></div>
+
+<div class="eg"><p class="t">例题</p><p>【例 3.72】对每一个系求学生平均年龄并存入数据库，写出完整两步语句，并说明字段类型为什么这样选。</p><div class="sol"><p>第一步建表：<code>CREATE TABLE Dept_age (Sdept CHAR(15), Avg_age SMALLINT);</code>；第二步插入：<code>INSERT INTO Dept_age (Sdept, Avg_age) SELECT Sdept, AVG(Sage) FROM Student GROUP BY Sdept;</code>。要点：① 先建表后插入，不能直接 INSERT 到不存在的表；② 目标列个数、类型与 SELECT 一致（CHAR(15) 容纳系名，SMALLINT 容纳平均年龄）；③ AVG 结果是数值，赋给 SMALLINT 会按系统规则取整，若要求精确应改 DECIMAL(4,1)。</p></div></div>
+
+<h2 id="s9"><span class="h2no">3.6</span>空值的处理：三值逻辑与它挖的坑</h2>
+
+<p>空值 NULL 表示"不知道""不存在"或"无意义"，三种来源：该属性应有值但暂时不知道；该属性本不该有值；因某种原因不便填写。它带来不确定性，必须特殊处理。产生空值的途径有：插入时未赋值或显式写 NULL（【例 3.79】<code>INSERT INTO SC(Sno,Cno) VALUES('202215126','1');</code> Grade 自动为空）、UPDATE 把某列置 NULL（【例 3.80】）、外连接给缺失列补 NULL、以及空值参与运算产生新的空值（补充：NULL+1 仍为 NULL）。</p>
+
+<p>判断空值只能用 <code>IS NULL</code> / <code>IS NOT NULL</code>，<strong>绝不能用 = NULL</strong>（【例 3.36】）。约束方面有三条硬规则：<strong>有 NOT NULL 约束的列不能取空值；码属性不能取空值；加了 UNIQUE 约束的列可以取空值</strong>（且多行可同时为空）。</p>
+
+<p>运算规则是全章最容易被判断题坑的地方：<strong>空值与另一个值（包括另一个空值）的算术运算结果为空值；比较运算结果为 UNKNOWN</strong>。有了 UNKNOWN，二值逻辑扩展为三值逻辑：NOT UNKNOWN = UNKNOWN；TRUE AND UNKNOWN = UNKNOWN，FALSE AND UNKNOWN = FALSE；TRUE OR UNKNOWN = TRUE，FALSE OR UNKNOWN = UNKNOWN，UNKNOWN OR UNKNOWN = UNKNOWN。<strong>WHERE 子句只保留条件为 TRUE 的元组</strong>，UNKNOWN 与 FALSE 一样被丢弃。</p>
+
+<pre><code><span class="c">-- 【例 3.82】选 1 号课不及格的学生：缺考的不会出现</span>
+SELECT Sno FROM SC WHERE Grade &lt; 60 AND Cno = '1';
+
+<span class="c">-- 【例 3.83】不及格 或 缺考：必须显式判空</span>
+SELECT Sno FROM SC
+WHERE Cno = '1' AND (Grade &lt; 60 OR Grade IS NULL);</code></pre>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>空值四问，简答与判断都从这里出：</p><ul><li><strong>怎么产生</strong>：插入未赋值、显式 NULL、UPDATE 置空、外连接补空、空值参与运算。</li><li><strong>怎么判断</strong>：IS [NOT] NULL；= NULL 恒为 UNKNOWN，永远查不到行。</li><li><strong>受什么约束</strong>：NOT NULL 列与码属性不可空；UNIQUE 列可空。</li><li><strong>怎么运算</strong>：算术得 NULL，比较得 UNKNOWN，逻辑按三值真值表；聚集函数除 COUNT(*) 外一律跳过 NULL。</li></ul></div>
+
+<div class="trap"><p class="t">易错</p><p>四个连环坑：① <strong>AVG 的分母</strong>：AVG(Grade) 只除以有成绩的人数，缺考不计入，与"按人选课人数求平均"含义不同。② <strong>COUNT(*) 与 COUNT(Grade)</strong> 结果可能差很多，前者含缺考行。③ <strong>NOT IN 遇 NULL</strong>：<code>Sno NOT IN (SELECT Sno FROM SC WHERE Cno='1')</code> 若子查询结果含 NULL，整个条件恒为 UNKNOWN。④ <strong>CHECK 约束遇 NULL</strong>（补充）：SQL 规定 CHECK 条件求值为 UNKNOWN 时不拒绝，只有明确为 FALSE 才拒绝——这正是 SC 的 Grade 约束要写 <code>Grade IS NULL OR …</code> 的原因。</p></div>
+
+<h2 id="s10"><span class="h2no">3.7</span>视图：虚表、消解法与可更新性判定</h2>
+
+<p>视图是从一个或几个基本表（或视图）导出的表，<strong>数据库中只存放视图的定义，不存放对应的数据</strong>，是虚表；基表数据一变，查视图的结果随之改变。</p>
+
+<pre><code>CREATE VIEW &lt;视图名&gt; [(&lt;列名&gt; [, &lt;列名&gt;]…)]
+AS &lt;子查询&gt;
+[WITH CHECK OPTION];
+
+DROP VIEW &lt;视图名&gt; [CASCADE];</code></pre>
+
+<p>组成视图的属性列名<strong>要么全省略、要么全指定</strong>，不能只指定一部分。三种情况必须显式指定列名：某个目标列是聚集函数或表达式；多表连接时选出了同名列；需要给列换更合适的名字。【例 3.84】建信息系学生视图 IS_Student；【例 3.85】加 <code>WITH CHECK OPTION</code>，此后对该视图做 INSERT/UPDATE/DELETE 时，RDBMS 自动加上 <code>Sdept='IS'</code> 的条件，保证更新后的行仍满足视图定义。若视图由单个基本表导出、只去掉了某些行和列但<strong>保留了主码</strong>，称为<strong>行列子集视图</strong>，IS_Student 即是。</p>
+
+<p>其余几类视图要能对号入座：【例 3.86】基于多个基表的视图 IS_S1（必须指定列名，因为 Sno 同名列出现）；【例 3.87】基于视图的视图 IS_S2；【例 3.88】带表达式的视图 BT_S（2014-Sage 必须起别名 Sbirth）；【例 3.89】分组视图 S_G（含聚集函数，必须指定列名）；【例 3.90】用 <code>SELECT *</code> 定义的 F_Student，<strong>缺点是一旦基表增加列，视图与基表的映像被破坏</strong>，这是"不要用 SELECT * 建视图"的标准理由。</p>
+
+<p>删除视图用 DROP VIEW，若该视图还导出了其他视图，需 <code>CASCADE</code> 级联删除（【例 3.91】删 IS_S1 会连带 IS_S2）。查询视图与查基本表写法相同，系统用<strong>视图消解法</strong>处理：有效性检查 → 把视图定义中的子查询与用户查询合并成等价的基本表查询 → 执行。</p>
+
+<pre><code><span class="c">-- 【例 3.92】查信息系年龄小于 20 的学生，消解后为：</span>
+SELECT Sno, Sage FROM Student WHERE Sdept = 'IS' AND Sage &lt; 20;
+
+<span class="c">-- 【例 3.94】S_G 视图上查平均分≥90：直接写 WHERE Gavg>=90 会失败</span>
+SELECT Sno, AVG(Grade) FROM SC GROUP BY Sno HAVING AVG(Grade) &gt;= 90;</code></pre>
+
+<p><strong>视图消解法的局限</strong>：当视图定义含聚集函数和 GROUP BY 时，把 <code>WHERE Gavg&gt;=90</code> 机械下推会得到 <code>WHERE AVG(Grade)&gt;=90</code> 这种非法语句，正确做法是把条件改写成 HAVING，或用派生表 <code>FROM (SELECT Sno, AVG(Grade) …) AS S_G(Sno,Gavg) WHERE Gavg&gt;=90</code>。</p>
+
+<p>更新视图最终都转换成对基本表的更新：【例 3.95】改 IS_Student 中某学生姓名 → UPDATE Student … WHERE Sno=… AND Sdept='IS'；【例 3.96】向 IS_Student 插记录 → 向 Student 插入且 Sdept 补 'IS'；【例 3.97】删记录同样补上系条件。<strong>但 S_G 这类含聚集函数的视图不可更新</strong>：<code>UPDATE S_G SET Gavg=90</code> 无法唯一地转换成对 SC 的更新。</p>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>视图可更新性判定，考场上按"逐条排除"做，只要命中一条即不可更新（DB2 规定，课件原文）：</p><ul><li><strong>行列子集视图一定可更新</strong>；由两个以上基本表导出的视图不可更新。</li><li>字段来自表达式或常量：不允许 INSERT、UPDATE，但允许 DELETE。</li><li>字段来自聚集函数、定义含 GROUP BY、定义含 DISTINCT：一律不可更新。</li><li>定义中有嵌套查询，且内层 FROM 涉及导出该视图的基本表：不可更新；在不允许更新的视图上再定义的视图，也不可更新。</li><li>加了 WITH CHECK OPTION 的视图仍可更新，只是更新必须满足视图定义的谓词。</li></ul></div>
+
+<table>
+<thead><tr><th>视图定义特征</th><th>INSERT</th><th>UPDATE</th><th>DELETE</th></tr></thead>
+<tbody>
+<tr><td>行列子集视图（单表、保留主码）</td><td>可以</td><td>可以</td><td>可以</td></tr>
+<tr><td>由两个以上基本表导出</td><td>不可以</td><td>不可以</td><td>不可以</td></tr>
+<tr><td>字段来自表达式或常量</td><td>不可以</td><td>不可以</td><td>可以</td></tr>
+<tr><td>字段来自聚集函数</td><td>不可以</td><td>不可以</td><td>不可以</td></tr>
+<tr><td>定义含 GROUP BY</td><td>不可以</td><td>不可以</td><td>不可以</td></tr>
+<tr><td>定义含 DISTINCT</td><td>不可以</td><td>不可以</td><td>不可以</td></tr>
+<tr><td>嵌套查询且内层涉及本表</td><td>不可以</td><td>不可以</td><td>不可以</td></tr>
+<tr><td>在不允许更新的视图上再定义视图</td><td>不可以</td><td>不可以</td><td>不可以</td></tr>
+</tbody>
+<caption>表 7　视图可更新性判定（DB2 规定，课件原文；其他系统另有规定）</caption>
+</table>
+
+<p>视图的作用五条，简答题按点给分：<strong>简化用户操作</strong>（多表连接、复杂嵌套、导出属性都可封装）；<strong>使用户能以多种角度看待同一数据</strong>；<strong>对重构数据库提供一定程度的逻辑独立性</strong>——Student 垂直分成 SX(Sno,Sname,Sage) 与 SY(Sno,Ssex,Sdept) 后，重建同名视图 Student 即可让应用程序不改；<strong>对机密数据提供安全保护</strong>（不同用户看不同视图）；<strong>适当使用可更清晰地表达查询</strong>（如先建 VMGRADE 求每人最高分，再连接 SC 取课程号）。</p>
+
+<div class="trap"><p class="t">易错</p><p>视图的"逻辑独立性"只是<strong>一定程度</strong>的：由于更新视图有条件，应用程序中修改数据的语句仍可能因基表结构改变而失效，这句限定词经常是简答题的扣分点。另外，"视图不存储数据"不等于"视图不占空间"——数据字典里要存视图定义；<code>CREATE VIEW</code> 时系统<strong>只把定义存入数据字典，并不执行其中的 SELECT</strong>，这也是判断题高频句。</p></div>
+
+<div class="eg"><p class="t">例题</p><p>【例 3.94】在 S_G 视图（Sno, Gavg）中查询平均成绩在 90 分以上的学生，为什么不能直接写 WHERE Gavg&gt;=90？给出两种正确写法。</p><div class="sol"><p>因为 S_G 由 <code>SELECT Sno, AVG(Grade) FROM SC GROUP BY Sno</code> 定义，视图消解会把 Gavg 替换成 AVG(Grade)，得到 <code>WHERE AVG(Grade)&gt;=90</code>，而聚集函数不能出现在 WHERE 中，语句非法。正确写法一（改 HAVING）：<code>SELECT Sno, AVG(Grade) FROM SC GROUP BY Sno HAVING AVG(Grade)&gt;=90;</code>；写法二（派生表）：<code>SELECT * FROM (SELECT Sno, AVG(Grade) FROM SC GROUP BY Sno) AS S_G(Sno,Gavg) WHERE Gavg&gt;=90;</code>。评分点：指出消解后 WHERE 中出现聚集函数（3 分），两种改法各 2 分。</p></div></div>
+
+<div class="sum"><p class="t">本节小结</p><ul><li>视图 = 存储起来的查询定义，虚表；查询靠消解，更新靠转换。</li><li>可更新性：行列子集视图可更新；聚集、GROUP BY、DISTINCT、多表、表达式列、自引用嵌套一律不可更新（表达式列仅允许 DELETE）。</li><li>WITH CHECK OPTION 管的是"通过视图更新后仍满足视图条件"，不是禁止更新。</li></ul></div>
+
+<h2 id="s11"><span class="h2no">3.8</span>本章小结与答题模板</h2>
+
+<p>SQL 分数据定义、数据查询、数据更新、数据控制四大部分，本章覆盖前三部分，数据控制留到第 4 章。它是关系数据库语言的工业标准：多数产品支持 SQL92，对 SQL99 之后的标准只支持部分特征，<strong>至今没有一个系统完全支持 SQL99 以上的标准</strong>。</p>
+
+<p>本章在期末卷中的题面几乎固定为三类：① 给要求写 SQL（4～6 小题，每小题 3～5 分）；② 给语句问结果或改错；③ 视图/索引/空值/嵌套的概念简答。写 SQL 的通用流程是：</p>
+
+<ol class="steps"><li><strong>定表</strong>：看输出列和条件涉及哪些表，列全需要的表一个不能少；同表用两次就起两个别名。</li><li><strong>定行</strong>：单行条件进 WHERE，组条件进 HAVING，别把聚集函数塞进 WHERE。</li><li><strong>定形</strong>：需要"全部/至少全部"用双重 NOT EXISTS；需要"存在"用 EXISTS 或 IN；需要"不存在"优先 NOT EXISTS 而非 NOT IN。</li><li><strong>定序与去重</strong>：最终结果才 ORDER BY；只输出 Sno 时判断要不要 DISTINCT。</li><li><strong>查漏</strong>：核对字符串常量加引号、日期格式、NULL 用 IS、多表连接条件是否写全（漏一个就是笛卡尔积）。</li></ol>
+
+<div class="sum"><p class="t">全章小结</p><ul><li>一条主线：建（模式/表/索引）→ 查（单表→连接→嵌套→集合→派生表）→ 改（增删改）→ 用（视图封装）。</li><li>两个"必须默写"：Student/Course/SC 建表语句；双重 NOT EXISTS 表达"全部"的模板。</li><li>三个"必考判断"：WHERE 与 HAVING 的分工、视图可更新性、空值比较得 UNKNOWN。</li><li>四个高频失分点：LIKE 中下划线个数、连接条件漏写、NOT IN 遇 NULL、聚集函数写进 WHERE。</li></ul></div>
+
+    </div>
+    <div class="selftest">
+      <span class="st-n">本章共 24 道自测题（选择 / 判断 / 填空 / 简答），作答后立即判分并给出解析。</span>
+      <a href="quiz.html?ch=3">刷本章题</a>
+    </div>
+    <nav class="pager" aria-label="翻页"><a class="prev" href="2.html">‹ 第 2 章 关系数据库</a><a class="next" href="4.html">第 4 章 数据库安全性 ›</a></nav>
+  </article>
+
+</div>
+</main>
+
+<footer class="footer">
+  <div class="wrap foot-inner">
+    <div class="foot-cols">
+      <div class="foot-brand">
+        <div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="7" ry="2.6"/><path d="M5 6v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6V6"/><path d="M5 12v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6v-6"/></svg>数据库系统概论</div>
+        <p>据本学期 14 个课件文件整理，教材为王珊《数据库系统概论》（第 6 版）。题目均为自编练习，不是真题。</p>
+      </div>
+      <div>
+        <h4>学习</h4>
+        <ul>
+          <li><a href="../index.html">备考首页</a></li>
+          <li><a href="../db.html">十章讲义</a></li>
+          <li><a href="../db/cheatsheet.html">考前速查卡</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>练习</h4>
+        <ul>
+          <li><a href="../db/quiz.html">题库 · 239 题</a></li>
+          <li><a href="../db/exam.html">模拟卷 · 3 套</a></li>
+          <li><a href="../index.html#plan">七天冲刺表</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>说明</h4>
+        <ul>
+          <li>课件未含第 8 章</li>
+          <li>进度只存在本机</li>
+          <li>可离线打开</li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-legal"><span>© <span id="year">2026</span> 数据库系统概论 · 期末备考</span><span>据课件整理 · 仅供复习使用</span></div>
+  </div>
+</footer>
+<button class="backtop" id="backtop" type="button" aria-label="回到顶部" hidden>↑</button>
+<script src="../assets/site.js?v=2"></script>
+<script src="../assets/study.js?v=2"></script>
+</body>
+</html>

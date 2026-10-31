@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 1 章 绪论 · 数据库系统概论 · 备考</title>
+<meta name="description" content="四个基本概念、数据管理三阶段、数据模型三要素、E-R 概念模型、三级模式与两级映像、DBA 职责。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/theme.css?v=2">
+<link rel="stylesheet" href="../assets/site.css?v=2">
+<link rel="stylesheet" href="../assets/course.css?v=2">
+<script>(function(){var d=document.documentElement;d.classList.add('js');try{var t=localStorage.getItem('site-theme');if(t==='light'||t==='dark')d.setAttribute('data-theme',t);}catch(e){}})();</script>
+</head>
+<body data-ch="1">
+<a class="skip" href="#main">跳到正文</a>
+<header class="topbar" id="topbar">
+  <div class="wrap-wide bar">
+    <a class="brand" href="../index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="7" ry="2.6"/><path d="M5 6v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6V6"/><path d="M5 12v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6v-6"/></svg><span>数据库系统概论</span></a>
+    <nav class="nav" aria-label="站点导航"><a href="../index.html">首页</a><a href="../db.html" aria-current="page">讲义</a><a href="quiz.html">题库</a><a href="exam.html">模拟卷</a><a href="cheatsheet.html">速查卡</a></nav>
+    <button class="icon-btn" id="themeBtn" type="button" title="主题：跟随系统（点击切换）" aria-label="主题：跟随系统（点击切换）"><span id="themeIcon" aria-hidden="true">◐</span></button>
+  </div>
+</header>
+<div id="readbar"></div>
+
+<main id="main">
+<div class="doc">
+
+  <aside class="doc-toc" aria-label="讲义目录">
+  <details class="toc-fold" open>
+  <summary>讲义目录</summary>
+  <nav class="mod-switch" aria-label="课程模块">
+    <a href="../db.html" aria-current="page">讲义</a>
+    <a href="quiz.html">题库</a>
+    <a href="exam.html">模拟卷</a>
+    <a href="cheatsheet.html">速查卡</a>
+  </nav>
+  <a class="toc-home" href="../db.html">数据库系统概论</a>
+  <p class="toc-ver"><span>本学期课件</span>10 章</p>
+  <div class="toc-body">
+  <div class="toc-ch">
+    <h2>全部章节</h2>
+    <ul class="toc-list"><li><a href="1.html" aria-current="page"><span class="num">第 1 章</span>绪论</a></li><li><a href="2.html"><span class="num">第 2 章</span>关系数据库</a></li><li><a href="3.html"><span class="num">第 3 章</span>关系数据库标准语言 SQL</a></li><li><a href="4.html"><span class="num">第 4 章</span>数据库安全性</a></li><li><a href="5.html"><span class="num">第 5 章</span>数据库完整性</a></li><li><a href="6.html"><span class="num">第 6 章</span>关系数据理论</a></li><li><a href="7.html"><span class="num">第 7 章</span>数据库设计</a></li><li><a href="9.html"><span class="num">第 9 章</span>关系查询处理和查询优化</a></li><li><a href="10.html"><span class="num">第 10 章</span>数据库恢复技术</a></li><li><a href="11.html"><span class="num">第 11 章</span>并发控制</a></li></ul>
+  </div>
+  <div class="toc-ch">
+    <h2>本章小节</h2>
+    <ul class="toc-list"><li><a href="#s1"><span class="num">1.1</span>数据库的四个基本概念</a></li><li><a href="#s2"><span class="num">1.1.2</span>数据管理技术的产生和发展</a></li><li><a href="#s3"><span class="num">1.1.3</span>数据库系统的特点</a></li><li><a href="#s4"><span class="num">1.2.1</span>两类数据模型</a></li><li><a href="#s5"><span class="num">1.2.2</span>概念模型与 E-R 图</a></li><li><a href="#s6"><span class="num">1.2.3</span>数据模型的组成要素</a></li><li><a href="#s7"><span class="num">1.2.4</span>常用数据模型与现代数据库技术</a></li><li><a href="#s8"><span class="num">1.3</span>数据库系统的结构：模式、实例与三级模式</a></li><li><a href="#s9"><span class="num">1.3.3</span>两级映像与数据独立性</a></li><li><a href="#s10"><span class="num">1.4</span>数据库系统的组成与人员</a></li><li><a href="#s11"><span class="num">1.5</span>本章小结与答题模板</a></li></ul>
+  </div>
+  </div>
+  </details>
+  </aside>
+
+  <article class="doc-body">
+    <header class="doc-head">
+      <p class="crumb"><a href="../db.html">数据库系统概论</a> · 第 1 章</p>
+      <h1>绪论</h1>
+      <p class="meta">共 11 节 <span class="dot">·</span> 约 7,990 字 <span class="dot">·</span> 课件 188 页 <span class="dot">·</span> 本章自测 24 题</p>
+      <p class="status"><span>已掌握 <b data-mastery-count>0 / 11</b> 节</span>
+        <span class="track"><i data-mastery-bar></i></span></p>
+    </header>
+    <div class="note">
+
+<p class="lead">本章是全书总纲，回答四个问题：数据库是什么、为什么需要数据库、用什么模型描述现实世界、DBMS 如何用三级模式组织数据并保证程序与数据独立。期末卷中本章以选择、填空和一道简答为主，通常占 8～12 分，其中<strong>三级模式与两级映像、数据独立性</strong>几乎年年出简答，数据管理三阶段、数据模型三要素、E-R 基本概念是高频客观题。本章概念是后面关系代数、SQL 与数据库设计的共同语言，关键词必须背准。</p>
+
+<h2 id="s1"><span class="h2no">1.1</span>数据库的四个基本概念</h2>
+
+<p>四个概念层层递进：数据 → 数据库 → 数据库管理系统 → 数据库系统，后一个都比前一个多一层"软件与人"。数据管理是数据处理的中心问题，指对数据进行分类、组织、编码、存储、检索和维护；数据库技术产生于 20 世纪 60 年代末，是信息系统的核心和基础。</p>
+
+<p><strong>数据</strong>是描述事物的符号记录，是数据库中存储的基本对象，数字、文字、图形、图像、音频、视频、档案记录都是数据。<strong>数据的含义称为数据的语义，数据与其语义不可分</strong>：93 放进成绩列是分数，放进体检表是体重。课件中的学生记录（李明，男，200506，湖北省武汉市，网安，2024）只有按"姓名、性别、出生年月、出生地、院系、入学时间"解释。</p>
+
+<p><strong>数据库</strong>是<strong>长期存储在计算机内、有组织的、可共享的大量数据的集合</strong>，五个特征是：按数据模型组织描述存储、可为各种用户共享、冗余度较小、数据独立性较高、易扩展。<strong>DBMS</strong> 是<strong>位于用户与操作系统之间的一层数据管理软件</strong>，属基础软件，用途是科学地组织和存储数据、高效地获取和维护数据。<strong>DBS</strong> 由数据库、DBMS（及其应用开发工具）、应用程序、数据库管理员四部分构成。</p>
+
+<p>DBMS 的六大功能：</p>
+<ol class="steps">
+<li><strong>数据定义</strong>：提供 DDL，定义表、视图、索引等数据对象。</li>
+<li><strong>数据组织、存储和管理</strong>：确定文件结构与存取方式，实现数据之间的联系，提供索引等存取方法。</li>
+<li><strong>数据操纵</strong>：提供 DML，实现查询、插入、删除、修改。</li>
+<li><strong>事务管理和运行管理</strong>：保证安全性、完整性、多用户并发使用与故障恢复。</li>
+<li><strong>建立和维护</strong>：初始数据装载与转换、转储恢复、重组织、性能监视分析。</li>
+<li><strong>其他</strong>：与网络中其他软件通信、异构数据库互访与互操作。</li>
+</ol>
+
+<div class="kp">
+<p class="t">考点 · 必背</p>
+<p>四个定义按关键词记，填空题只认关键词。</p>
+<ul>
+<li><strong>数据</strong>：描述事物的符号记录，与语义不可分。</li>
+<li><strong>数据库</strong>：长期存储、有组织、可共享的大量数据的集合。</li>
+<li><strong>DBMS</strong>：位于用户与操作系统之间的一层数据管理软件，是基础软件。</li>
+<li><strong>DBS</strong>：数据库 + DBMS（及开发工具）+ 应用程序 + 数据库管理员。</li>
+</ul>
+</div>
+
+<div class="trap">
+<p class="t">易错</p>
+<p>数据库只是 DBS 四部分之一，不等于数据库系统；DBMS 是软件，不是数据库；数据不等于数字，判据是"符号记录"而非"数值"。</p>
+</div>
+
+<div class="mem">口诀：<b>数、库、管、系，四层递进</b>——数据是符号记录，数据库是数据的集合，DBMS 是管数据的软件，DBS 是把数据、软件和人捆在一起的系统。</div>
+
+<h2 id="s2"><span class="h2no">1.1.2</span>数据管理技术的产生和发展</h2>
+
+<p>数据管理技术经历三个阶段，发展的动力是应用需求、计算机硬件和计算机软件。年代与六项特点必须记准。</p>
+
+<p><strong>人工管理（20 世纪 50 年代中之前）</strong>：应用是科学计算，无直接存取存储设备，没有操作系统，批处理。数据由用户（程序员）管理且不保存，面向某一应用程序，无共享、冗余度极大，不独立、完全依赖程序，无结构，由应用程序自己控制，程序一换数据作废。</p>
+
+<p><strong>文件系统（20 世纪 50 年代末—60 年代中）</strong>：有磁盘、磁鼓和文件系统，联机实时处理与批处理。文件系统提供索引、链接、直接存取、倒排文件等存取方法和基本操作，数据以记录为单位存取，实现了<strong>程序与数据物理存储结构的分离</strong>；但数据仍面向应用，一个文件对应一个程序，共享性差、冗余度大，记录内有结构、整体无结构，逻辑结构改变仍要改程序，文件间联系靠程序构造，多副本必须同时更新。</p>
+
+<p><strong>数据库系统（20 世纪 60 年代末以来）</strong>：大容量磁盘、磁盘阵列与 DBMS，联机实时处理、分布处理与批处理并存。<strong>从文件系统到数据库系统标志着数据管理技术的飞跃</strong>，分水岭是数据由 DBMS 统一管理和控制、面向全组织。</p>
+
+<table>
+<thead><tr><th>对比项</th><th>人工管理</th><th>文件系统</th><th>数据库系统</th></tr></thead>
+<tbody>
+<tr><td>时间</td><td>50 年代中之前</td><td>50 年代末—60 年代中</td><td>60 年代末以来</td></tr>
+<tr><td>硬件</td><td>无直接存取存储设备</td><td>磁盘、磁鼓</td><td>大容量磁盘、磁盘阵列</td></tr>
+<tr><td>软件</td><td>没有操作系统</td><td>有文件系统</td><td>有 DBMS</td></tr>
+<tr><td>数据管理者</td><td>用户（程序员），数据不保存</td><td>文件系统，可长期保存</td><td>DBMS，统一管理控制</td></tr>
+<tr><td>面向对象</td><td>某一应用程序</td><td>应用程序</td><td>全组织</td></tr>
+<tr><td>共享与冗余</td><td>无共享，冗余度极大</td><td>共享性差，冗余度大</td><td>共享性高，冗余度低</td></tr>
+<tr><td>独立性</td><td>不独立，完全依赖程序</td><td>独立性差，只有物理存储分离</td><td>物理、逻辑独立性都高</td></tr>
+<tr><td>结构化</td><td>无结构</td><td>记录内有结构，整体无结构</td><td>整体结构化</td></tr>
+<tr><td>数据控制</td><td>应用程序自己控制</td><td>应用程序自己控制</td><td>DBMS 统一管理和控制</td></tr>
+<caption>表 1　数据管理技术三个阶段的对比（高频选择、填空）</caption>
+</tbody>
+</table>
+
+<h2 id="s3"><span class="h2no">1.1.3</span>数据库系统的特点</h2>
+
+<p>数据库系统有四个特点。</p>
+
+<p><strong>数据结构化</strong>：整体结构化是数据库的主要特征。不再只针对某一应用而<strong>面向全组织</strong>；不仅数据内部结构化，整体也是结构化的，数据之间具有联系；记录可以变长，<strong>最小存取单位是数据项</strong>。数据用数据模型描述，无需应用程序定义。</p>
+
+<p><strong>共享性高、冗余度低且易扩充</strong>：数据面向整个系统，可被多个用户、多个应用共享，好处是减少冗余、节约存储，避免数据之间的不相容与不一致，易于扩充和增加新应用。注意<strong>数据库并非完全消除冗余</strong>：为提高效率可保留副本，但这种冗余在 DBMS 控制之下。</p>
+
+<p><strong>数据独立性高</strong>：物理独立性指应用程序与数据的物理存储相互独立，存储改变程序不改；逻辑独立性指应用程序与数据的逻辑结构相互独立，逻辑结构改变程序不改；两者由<strong>两级映像</strong>保证。<strong>由 DBMS 统一管理控制</strong>：安全性保护、完整性检查、并发控制、数据库恢复四项，分别对应第 4、5、12、11 章。</p>
+
+<div class="eg">
+<p class="t">例题</p>
+<p>（补充例题）数据库能"减少冗余"，为什么教材不说"消除冗余"？</p>
+<div class="sol"><p>冗余来自同一数据被多个应用重复存储。数据库面向全组织统一组织数据，同一数据只存一份供多应用共享；但为提高存取效率（统计、连接）会有意保留派生数据或副本，这种冗余必须置于 DBMS 控制之下，否则重新引入不一致。所以准确表述是"冗余度低且易扩充"。</p></div>
+</div>
+
+<div class="mem">口诀：<b>结构、共享、独立、统管</b>——四化对应四个特点：数据结构化、共享性高冗余低、独立性高、DBMS 统一管理控制。</div>
+
+<div class="sum">
+<p class="t">本节小结</p>
+<ul>
+<li>四个基本概念的关键词与 DBS 的四部分构成，是填空题的固定来源。</li>
+<li>三阶段的分水岭是 DBMS 统一管理控制、数据面向全组织。</li>
+<li>四个特点，以及两个限定：冗余受控存在、独立性靠两级映像。</li>
+</ul>
+</div>
+
+<h2 id="s4"><span class="h2no">1.2.1</span>两类数据模型</h2>
+
+<p>数据模型是<strong>对现实世界数据特征的抽象</strong>，是数据库系统的核心和基础。它应满足三条要求：能比较真实地模拟现实世界、容易为人所理解、便于在计算机上实现。</p>
+
+<p>数据模型分两个层次、三类。<strong>概念模型</strong>（信息模型）按用户观点对数据和信息建模，用于数据库设计，不依赖具体计算机系统；<strong>逻辑模型</strong>按计算机观点建模，用于 DBMS 实现，包括网状、层次、关系、面向对象、对象关系、半结构化模型；<strong>物理模型</strong>是对数据最底层的抽象，描述数据在系统内部的表示方式和存取方法，即在磁盘、磁带上的存储方式和存取方式。对应的两步抽象是：现实世界经认识与抽象进入信息世界，得到概念模型（设计人员完成）；信息世界再转换为机器世界，逻辑模型由设计人员借助工具完成，物理模型由 DBMS 完成。</p>
+
+<div class="trap">
+<p class="t">易错</p>
+<p>概念模型不是 DBMS 直接支持的数据模型；E-R 图属于概念模型，不是逻辑模型。"逻辑模型"也不等于"逻辑结构"：前者是一类模型的统称，后者是模式描述的内容。物理模型描述的是存储方式和存取方法，不是磁盘这个硬件本身。</p>
+</div>
+
+<h2 id="s5"><span class="h2no">1.2.2</span>概念模型与 E-R 图</h2>
+
+<p>概念模型用于信息世界建模，是现实世界到机器世界的中间层次，是数据库设计的有力工具，也是设计人员与用户之间交流的语言；要求较强的语义表达能力，且简单、清晰、易于用户理解。最常用的表示方法是实体-联系方法，即 E-R 图。</p>
+
+<p>七个基本概念：<strong>实体</strong>是客观存在并可相互区别的事物；<strong>属性</strong>是实体所具有的某一特性；<strong>码</strong>是唯一标识实体的属性集；<strong>域</strong>是属性的取值范围，如性别取{男，女}；<strong>实体型</strong>是实体名及其属性名集合，如 学生（学号，姓名，年龄，专业）；<strong>实体集</strong>是同一类型实体的集合，如全体学生；<strong>联系</strong>是事物内部及事物之间联系在信息世界中的反映，实体内部的联系指属性之间的联系，实体之间的联系指不同实体集之间的联系。</p>
+
+<p>学生（学号，姓名，年龄，专业）是实体型，(123，李梅，20，计算机) 是实体值。联系有三种：<strong>一对一（1:1）</strong>如班级与班长；<strong>一对多（1:n）</strong>如班级与学生、系与学生；<strong>多对多（m:n）</strong>如学生与课程。判定时固定一端的一个实体，看另一端能有几个，两个方向都试一遍。</p>
+
+<p>E-R 图约定：实体用矩形，属性用椭圆，联系用菱形，连线旁标 1、n、m，码的属性名下加下划线。E-R 图只表达语义，不涉及表和存储，属于概念模型。学生与课程是 m:n，联系的属性"成绩"不能挂到学生或课程上，只能挂在"选修"上。</p>
+
+<div class="fig">
+<svg viewBox="0 0 640 350" width="640" height="350" role="img" aria-label="学生选修课程 E-R 图">
+<rect class="box" x="40" y="30" width="150" height="46" rx="6"/>
+<text x="115" y="59" font-size="14" text-anchor="middle">学生</text>
+<rect class="box" x="450" y="30" width="150" height="46" rx="6"/>
+<text x="525" y="59" font-size="14" text-anchor="middle">课程</text>
+<path class="acc" d="M320 160 L390 210 L320 260 L250 210 Z"/>
+<text x="320" y="215" font-size="14" text-anchor="middle">选修</text>
+<path class="ln" d="M190 53 H222 V210 H250"/>
+<path class="ln" d="M450 53 H418 V210 H390"/>
+<text class="lbl" x="232" y="198" font-size="12" text-anchor="middle">m</text>
+<text class="lbl" x="408" y="198" font-size="12" text-anchor="middle">n</text>
+<path class="box" d="M33 140 a42 22 0 1 0 84 0 a42 22 0 1 0 -84 0"/>
+<text x="75" y="145" font-size="12" text-anchor="middle">学号</text>
+<path class="box" d="M123 140 a42 22 0 1 0 84 0 a42 22 0 1 0 -84 0"/>
+<text x="165" y="145" font-size="12" text-anchor="middle">姓名</text>
+<line class="ln-m" x1="80" y1="76" x2="75" y2="118"/>
+<line class="ln-m" x1="150" y1="76" x2="165" y2="118"/>
+<path class="box" d="M447 140 a40 22 0 1 0 80 0 a40 22 0 1 0 -80 0"/>
+<text x="487" y="145" font-size="12" text-anchor="middle">课程号</text>
+<path class="box" d="M533 140 a40 22 0 1 0 80 0 a40 22 0 1 0 -80 0"/>
+<text x="573" y="145" font-size="12" text-anchor="middle">课程名</text>
+<line class="ln-m" x1="500" y1="76" x2="487" y2="118"/>
+<line class="ln-m" x1="560" y1="76" x2="573" y2="118"/>
+<line class="ln-m" x1="320" y1="260" x2="320" y2="291"/>
+<path class="box" d="M272 315 a48 24 0 1 0 96 0 a48 24 0 1 0 -96 0"/>
+<text x="320" y="320" font-size="12" text-anchor="middle">成绩</text>
+</svg>
+<figcaption>图 1　学生—选修—课程 E-R 图：m:n 联系"选修"带有属性"成绩"</figcaption>
+</div>
+
+<div class="kp">
+<p class="t">考点 · 必背</p>
+<p>七个概念各记一句话。</p>
+<ul>
+<li><strong>实体</strong>：客观存在并可相互区别的事物；<strong>属性</strong>：实体的某一特性；<strong>码</strong>：唯一标识实体的属性集；<strong>域</strong>：属性的取值范围。</li>
+<li><strong>实体型</strong>：实体名 + 属性名集合；<strong>实体集</strong>：同一类型实体的集合。</li>
+<li><strong>联系</strong>：1:1、1:n、m:n；E-R 图用矩形、椭圆、菱形表示实体、属性、联系。</li>
+</ul>
+</div>
+
+<div class="eg">
+<p class="t">例题</p>
+<p>（补充例题）某工厂有仓库和零件：一个仓库可存放多种零件，一种零件可存放在多个仓库，每个仓库存放每种零件要记录库存量。判定联系类型，说明库存量放在哪里，并写出关系模式。</p>
+<div class="sol"><p>仓库与零件是 m:n 联系"存放"，属性为库存量；库存量依赖"哪个仓库的哪种零件"，放到任何一端都会重复存储并产生不一致。关系模式：仓库(仓库号，仓库名)、零件(零件号，零件名，规格)、存放(仓库号，零件号，库存量)，存放的主码是(仓库号，零件号)，外码是仓库号、零件号。</p></div>
+</div>
+
+<div class="trap">
+<p class="t">易错</p>
+<p>实体型与实体集不能混："学生"是实体型，"全体学生"是实体集，"李梅"是实体。码也不等于主码：码是唯一标识实体的属性集，一个实体型可以有多个码，主码是选定的那一个（补充，第 2 章细讲）。m:n 不能塞进某一端当外码，转换时必须单独成表；把"成绩"画成学生或课程的属性，是 E-R 题最常见的扣分点。</p>
+</div>
+
+<div class="mem">口诀：<b>矩形实体椭圆属性菱形联系</b>——1:1 两边都标 1，1:n 的 n 标在多端，m:n 两个字母都标、联系单独成表。</div>
+
+<h2 id="s6"><span class="h2no">1.2.3</span>数据模型的组成要素</h2>
+
+<p>数据模型由三要素组成：数据结构、数据操作、数据的完整性约束条件。三者分别回答"数据怎么组织""能做什么操作""什么状态合法"。同一模型在三要素上的体现不同：关系模型结构是表、操作是关系代数/SQL、约束是完整性规则；层次模型结构是树、操作是遍历父子结点、约束是父子依赖。</p>
+
+<p><strong>数据结构（静态）</strong>描述数据库的组成对象以及对象之间的联系，包括数据对象（实体、属性、记录、元组、文档、节点）、数据类型、数据间的联系（关系模型的外键、层次模型的父子关系、图模型的边）和整体结构（关系模型的表、网状模型的系、面向对象模型的类与继承）。<strong>数据操作（动态）</strong>是对数据库中各种对象的实例允许执行的操作的集合，分检索（查询、遍历、搜索）和更新（插入、删除、修改），模型要定义操作的含义、符号、规则（如优先级）和实现语言。<strong>完整性约束</strong>是一组完整性规则的集合，用以限定数据库状态及状态变化，保证数据的正确、有效和相容；模型既要规定通用的完整性约束，又要提供定义约束的机制以反映具体应用的语义。</p>
+
+<div class="trap">
+<p class="t">易错</p>
+<p>把静态、动态记反是固定陷阱："数据结构描述系统的动态特性"必错。完整性约束不只是实体完整性和参照完整性，还包括用户定义的完整性；数据操作也不只是查询。</p>
+</div>
+
+<h2 id="s7"><span class="h2no">1.2.4</span>常用数据模型与现代数据库技术</h2>
+
+<p>常用模型有层次、网状、关系、面向对象、对象关系、半结构化六种；一种 DBMS 通常只支持一种，DBMS 类型按数据模型划分。</p>
+
+<p><strong>层次模型</strong>是最早的数据模型，代表是 IBM 的 IMS，用树表示实体及实体间的联系。两个条件：<strong>有且只有一个结点没有双亲（根结点）；根以外的其他结点有且只有一个双亲结点</strong>。特点是双亲唯一、只能直接处理 1:n、每个记录类型可定义排序字段（码字段）、记录值只有按层次路径查看才有完整意义、子女不能脱离双亲独立存在。完整性约束：无双亲不能插子女，删双亲连带删子女，更新要更新所有相应记录。优点是结构简单清晰、查询效率高（优于关系模型、不低于网状模型）、完整性支持好；缺点是 m:n 不适合、插入删除限制多、查子女必须经双亲、命令趋于程序化。</p>
+
+<p><strong>网状模型</strong>的代表是 DBTG（亦称 CODASYL）系统，实际系统有 IDMS、DMS1100、IDS/2、IMAGE。两个条件：<strong>允许一个以上的结点无双亲；一个结点可以有多于一个的双亲</strong>。与层次模型的区别：允许多个结点无双亲、允许结点有多个双亲、允许两结点之间有多种联系（复合联系）、能更直接地描述现实世界、层次模型是网状模型的特例。m:n 联系用<strong>联结记录</strong>间接表示，如选课记录（学号、课程号、成绩）把 m:n 分解成两个 1:n。优点是更直接、存取效率较高；缺点是结构复杂、DDL/DML 复杂、用户必须了解存取路径等系统结构细节。</p>
+
+<p><strong>关系模型</strong>由 IBM 公司 San Jose 研究室的 E.F.Codd 于 1970 年首次提出。用户观点下数据结构是二维表：关系（表）、元组（行）、属性（列）、主码（唯一确定元组的属性组）、域（一组具有相同数据类型的值的集合）、分量（元组中的一个属性值）、关系模式（关系名(属性1，…，属性n)）。关系必须规范化：<strong>每个分量必须是一个不可分的数据项，不允许表中还有表</strong>。完整性约束有实体完整性、参照完整性、用户定义完整性。优点是数学基础严格、概念单一（实体和联系都用关系表示，结果也是关系）、存取路径透明、独立性高、简化开发；缺点是查询效率往往不如层次和网状模型，必须做查询优化，增加了 DBMS 开发难度。</p>
+
+<table>
+<thead><tr><th>对比项</th><th>层次模型</th><th>网状模型</th><th>关系模型</th></tr></thead>
+<tbody>
+<tr><td>数据结构</td><td>树：唯一根，其余结点唯一双亲</td><td>图：允许多个结点无双亲、一个结点多双亲</td><td>二维表（关系）</td></tr>
+<tr><td>联系表示</td><td>父子连线，只能直接表示 1:n</td><td>联系命名，m:n 用联结记录分解为 1:n</td><td>外码或联系表，直接表示 m:n</td></tr>
+<tr><td>主要优点</td><td>结构简单清晰、查询效率高、完整性支持好</td><td>更直接描述现实世界、存取效率较高</td><td>数学基础严格、概念单一、独立性高</td></tr>
+<tr><td>主要缺点</td><td>m:n 不适合、插入删除限制多</td><td>结构复杂、DDL/DML 复杂、须了解存取路径</td><td>查询效率相对低、须做查询优化</td></tr>
+<caption>表 2　层次、网状、关系三种数据模型的对比</caption>
+</tbody>
+</table>
+
+<div class="kp">
+<p class="t">考点 · 必背</p>
+<p>三种模型的条件与联系表示是命题核心。</p>
+<ul>
+<li>层次两条件：<strong>唯一根结点</strong>；其余结点<strong>有且只有一个双亲</strong>。</li>
+<li>网状两条件：<strong>允许一个以上结点无双亲</strong>；<strong>一个结点可有多于一个双亲</strong>；层次模型是网状模型的特例。</li>
+<li>层次只能直接处理 1:n；网状用联结记录把 m:n 分解为两个 1:n；关系用外码或联系表直接表示 m:n。</li>
+<li>关系模型优点：数学基础严格、概念单一、存取路径透明、独立性高；缺点：查询效率相对低、必须做查询优化。</li>
+</ul>
+</div>
+
+<div class="trap">
+<p class="t">易错</p>
+<p>"层次模型不能表示多对多"应说成"不适合、不能直接处理"，代价是数据重复、限制多。网状模型的 m:n 靠联结记录间接表示，并非直接支持。关系模型"查询效率低"是相对层次、网状而言，说"因透明而必然低效"是错的。</p>
+</div>
+
+<p><strong>现代数据库技术</strong>（1.2.5）：NoSQL 分键值（Redis）、文档（MongoDB）、列族（HBase）、图（Neo4j）四类，特点是灵活模型、水平扩展、高可用；NewSQL 兼顾 ACID 与扩展；云数据库/DBaaS 弹性付费（Aurora、PolarDB）；分布式靠分片与 CAP；另有内存、时序、多模；趋势为智能化、Serverless、HTAP、安全隐私与国产化（DM、OceanBase、TiDB、GaussDB）。</p>
+
+<h2 id="s8"><span class="h2no">1.3</span>数据库系统的结构：模式、实例与三级模式</h2>
+
+<p>型是对某一类数据结构和属性的说明，值是型的一个具体赋值。<strong>模式</strong>是数据库逻辑结构和特征的描述，是型的描述，不涉及具体值，相对稳定；<strong>实例</strong>是模式的一个具体值，反映数据库某一时刻的状态，同一模式可以有多个实例，实例随数据更新而变动。2021 年度与 2022 年度的学生数据库可以共用一个模式，但实例不同。</p>
+
+<p>对开发人员，数据库系统采用三级模式结构；对最终用户，则分为单用户、主从式、分布式、客户-服务器、多层结构等。</p>
+
+<p><strong>模式</strong>（逻辑模式）是全体数据的逻辑结构和特征的描述，是所有用户的公共数据视图，一个数据库<strong>只有一个</strong>；它是中间层，与物理存储细节、硬件、具体应用程序、开发工具和高级语言都无关。模式定义包括逻辑结构（数据项的名字、类型、取值范围）、数据之间的联系和安全性与完整性要求，如学生、课程、选修三个表。</p>
+
+<p><strong>外模式</strong>（子模式/用户模式）是用户使用的局部数据的逻辑结构和特征的描述，是用户的数据视图，介于模式与应用之间。模式与外模式 1:n：外模式通常是模式的子集，一个数据库可有多个外模式，反映不同用户的需求、看待数据的方式和保密要求；同一数据在外模式中的结构、类型、长度、保密级别都可不同。外模式与应用 1:n：同一外模式可供多个应用使用，但<strong>一个应用程序只能使用一个外模式</strong>。外模式是保证安全性的有力措施，用户只能看见和访问自己外模式中的数据，还能简化应用处理。</p>
+
+<p><strong>内模式</strong>（存储模式）是物理结构和存储方式的描述：记录存储方式（顺序、B 树、hash）、索引组织方式、是否压缩、是否加密、存储记录结构的规定；一个数据库<strong>只有一个内模式</strong>，它依赖全局逻辑结构，独立于外模式和具体存储设备。</p>
+
+<table>
+<thead><tr><th>模式</th><th>别名</th><th>描述内容</th><th>数量</th><th>与其他层次的关系</th></tr></thead>
+<tbody>
+<tr><td>模式</td><td>逻辑模式</td><td>全体数据的逻辑结构和特征，公共数据视图</td><td>1 个</td><td>中间层，与物理存储、硬件、应用程序无关</td></tr>
+<tr><td>外模式</td><td>子模式、用户模式</td><td>局部数据的逻辑结构和特征，用户数据视图</td><td>多个</td><td>介于模式与应用之间，通常是模式的子集</td></tr>
+<tr><td>内模式</td><td>存储模式</td><td>物理结构和存储方式</td><td>1 个</td><td>依赖全局逻辑结构，独立于外模式与存储设备</td></tr>
+<caption>表 3　三级模式结构对比</caption>
+</tbody>
+</table>
+
+<div class="kp">
+<p class="t">考点 · 必背</p>
+<p>三级模式的名称、数量与定位必背。</p>
+<ul>
+<li><strong>模式</strong>：全体数据的逻辑结构，公共视图，一个数据库只有一个。</li>
+<li><strong>外模式</strong>：用户使用的局部逻辑结构，模式的子集，有多个。</li>
+<li><strong>内模式</strong>：物理结构和存储方式的描述，一个数据库只有一个。</li>
+<li>数量关系：<strong>1 个模式、1 个内模式、n 个外模式</strong>；模式与外模式 1:n，外模式与应用 1:n，但一个应用程序只能使用一个外模式。</li>
+</ul>
+</div>
+
+<div class="eg">
+<p class="t">例题</p>
+<p>（补充例题）判断并改正："一个数据库可以有多个模式；一个应用程序可以使用多个外模式；外模式是模式的子集，所以结构、类型、长度必须与模式相同。"</p>
+<div class="sol"><p>三处都错。一个数据库只有一个模式，可以有多个外模式；一个应用程序只能使用一个外模式（同一外模式可供多个应用使用）；外模式虽是子集，但同一数据在外模式中的结构、类型、长度、保密级别都可以与模式不同。</p></div>
+</div>
+
+<div class="mem">口诀：<b>模式一个管全局，外模式多个管局部，内模式一个管存储</b>——数量关系是 1:n:1，别记反。</div>
+
+<h2 id="s9"><span class="h2no">1.3.3</span>两级映像与数据独立性</h2>
+
+<p>三级模式是对数据的三个抽象级别，两级映像在 DBMS 内部实现这三个抽象层次的联系和转换。</p>
+
+<p><strong>外模式/模式映像</strong>：模式描述全局逻辑结构，外模式描述局部逻辑结构，同一个模式可以有任意多个外模式；每个外模式都有一个外模式/模式映像，定义外模式与模式的对应关系，通常包含在各自外模式的描述中。模式改变时，DBA 修改该映像使外模式保持不变；应用程序依据外模式编写，因此不必修改，<strong>保证了数据与程序的逻辑独立性，简称逻辑独立性</strong>。</p>
+
+<p><strong>模式/内模式映像</strong>：定义全局逻辑结构与存储结构的对应关系；数据库中<strong>唯一</strong>，通常包含在模式描述中。存储结构改变时，DBA 修改该映像使模式保持不变，应用程序不受影响，<strong>保证了数据与程序的物理独立性，简称物理独立性</strong>。</p>
+
+<div class="fig">
+<svg viewBox="0 0 640 410" width="640" height="410" role="img" aria-label="三级模式与两级映像结构图">
+<rect class="box" x="40" y="8" width="200" height="42" rx="6"/>
+<text x="140" y="34" font-size="13" text-anchor="middle">应用 A（教务系统）</text>
+<rect class="box" x="400" y="8" width="200" height="42" rx="6"/>
+<text x="500" y="34" font-size="13" text-anchor="middle">应用 B（成绩查询）</text>
+<rect class="box" x="40" y="78" width="200" height="56" rx="6"/>
+<text x="140" y="101" font-size="13" text-anchor="middle">外模式 1</text>
+<text class="lbl" x="140" y="120" font-size="11" text-anchor="middle">（教务员视图）</text>
+<rect class="box" x="400" y="78" width="200" height="56" rx="6"/>
+<text x="500" y="101" font-size="13" text-anchor="middle">外模式 2</text>
+<text class="lbl" x="500" y="120" font-size="11" text-anchor="middle">（学生视图）</text>
+<rect class="acc" x="180" y="176" width="280" height="60" rx="6"/>
+<text x="320" y="201" font-size="14" text-anchor="middle">模式（逻辑模式）</text>
+<text class="lbl" x="320" y="222" font-size="11" text-anchor="middle">全体数据的逻辑结构</text>
+<rect class="box" x="180" y="276" width="280" height="52" rx="6"/>
+<text x="320" y="299" font-size="13" text-anchor="middle">内模式（存储模式）</text>
+<text class="lbl" x="320" y="318" font-size="11" text-anchor="middle">存储方式 / 索引 / 压缩 / 加密</text>
+<rect class="box" x="180" y="356" width="280" height="36" rx="6"/>
+<text x="320" y="379" font-size="12" text-anchor="middle">数据库（数据文件与索引）</text>
+<line class="ln" x1="140" y1="50" x2="140" y2="78"/>
+<line class="ln" x1="500" y1="50" x2="500" y2="78"/>
+<path class="ln-m" d="M140 134 V156 H260 V176"/>
+<path class="ln-m" d="M500 134 V156 H380 V176"/>
+<text class="lbl" x="248" y="150" font-size="11" text-anchor="end">外模式／模式映像（每个外模式一个）</text>
+<line class="ln" x1="320" y1="236" x2="320" y2="276"/>
+<text class="lbl" x="330" y="262" font-size="11">模式／内模式映像（唯一）</text>
+<line class="ln" x1="320" y1="328" x2="320" y2="356"/>
+</svg>
+<figcaption>图 2　三级模式与两级映像：外模式/模式映像保证逻辑独立性，模式/内模式映像保证物理独立性</figcaption>
+</div>
+
+<table>
+<thead><tr><th>映像</th><th>连接的层次</th><th>数量</th><th>定义位置</th><th>修改者与时机</th><th>保证的独立性</th></tr></thead>
+<tbody>
+<tr><td>外模式/模式映像</td><td>外模式与模式</td><td>每个外模式一个</td><td>各自外模式的描述中</td><td>模式改变时，DBA 修改</td><td>逻辑独立性</td></tr>
+<tr><td>模式/内模式映像</td><td>模式与内模式</td><td>唯一</td><td>模式描述中</td><td>存储结构改变时，DBA 修改</td><td>物理独立性</td></tr>
+<caption>表 4　两级映像与两种数据独立性</caption>
+</tbody>
+</table>
+
+<p>两级映像保证了外模式的稳定性，从底层保证应用程序的稳定性；除非应用需求本身发生变化，程序一般不需要修改。数据的定义和描述因此可以从应用程序中分离出去，数据存取由 DBMS 管理，简化了编制、减少了维护和修改。</p>
+
+<div class="kp">
+<p class="t">考点 · 必背</p>
+<p>满分简答按四段写：</p>
+<ul>
+<li><strong>三级模式</strong>：模式（全体逻辑结构，1 个）、外模式（局部逻辑结构，多个）、内模式（物理存储，1 个）。</li>
+<li><strong>外模式/模式映像</strong>：每个外模式一个，放在外模式描述中；模式改变时 DBA 改映像，外模式不变、程序不改，<strong>保证逻辑独立性</strong>。</li>
+<li><strong>模式/内模式映像</strong>：唯一，放在模式描述中；存储结构改变时 DBA 改映像，模式不变、程序不改，<strong>保证物理独立性</strong>。</li>
+<li><strong>结论</strong>：两级映像保证外模式稳定，从而保证应用程序稳定，数据定义与描述从程序中分离。</li>
+</ul>
+</div>
+
+<div class="eg">
+<p class="t">例题</p>
+<p>（补充例题）下列变化分别由哪种映像吸收、保证哪种独立性？①学生表增加"出生日期"属性；②学生表存储由堆存储改为按学号建 B+ 树聚簇索引。</p>
+<div class="sol"><p>①模式改变，DBA 修改外模式/模式映像，使外模式保持不变、程序不改，保证逻辑独立性。②内模式改变，DBA 修改模式/内模式映像，使模式保持不变、程序不受影响，保证物理独立性。</p></div>
+</div>
+
+<div class="sum">
+<p class="t">本节小结</p>
+<ul>
+<li>模式是型的描述、相对稳定；实例是模式的具体值、随数据更新变动。</li>
+<li>三级模式数量 1:n:1，模式是中间层与中心。</li>
+<li>外模式/模式映像（多个）保逻辑独立性，模式/内模式映像（唯一）保物理独立性。</li>
+</ul>
+</div>
+
+<h2 id="s10"><span class="h2no">1.4</span>数据库系统的组成与人员</h2>
+
+<p>数据库系统由硬件平台及数据库、软件、人员三部分组成：数据库对应硬件上的数据，DBMS 与应用程序对应软件，DBA 对应人员。<strong>硬件</strong>要求足够大的内存（OS、DBMS、缓冲、应用）、足够大的磁盘或磁盘阵列（数据库、备份）、较高的通道能力。<strong>软件</strong>五类：DBMS、操作系统、高级语言及其编译系统、应用开发工具、数据库应用系统。</p>
+
+<p><strong>人员</strong>四类，数据视图不同：DBA 关心模式与内模式，数据库设计人员设计各级模式，应用程序员依据外模式编写程序，最终用户通过应用系统的用户接口使用数据库。<strong>DBA 五项职责</strong>：决定数据库中的信息内容和结构；决定存储结构和存取策略；定义安全性要求和完整性约束条件；监控数据库的使用和运行（周期转储数据文件与日志、系统故障恢复、介质故障恢复、监视审计文件）；数据库的改进和重组（性能监控调优、定期重组织、需求变化时重构造）。</p>
+
+<p>系统分析员负责需求分析和规范说明，参与概要设计；数据库设计人员参加需求调查、确定数据、设计各级模式；应用程序员编写并调试程序模块。最终用户分偶然用户（高中级管理人员）、简单用户（银行职员、机票预定、旅馆总台）、复杂用户（工程师、科学家等，直接用数据库语言或 API）。</p>
+
+<div class="trap">
+<p class="t">易错</p>
+<p>DBA 不等于"备份员"：他既参与模式（信息内容与结构）的确定，也管内模式（存储与存取策略）、安全与完整性、运行监控和重组。系统分析员管需求与规范说明、参与概要设计，数据库设计人员管数据与各级模式，应用程序员管程序模块。</p>
+</div>
+
+<div class="mem">口诀：<b>定内容、定存储、定安全、管运行、再重组</b>——五项职责一线串起，答题不漏项。</div>
+
+<h2 id="s11"><span class="h2no">1.5</span>本章小结与答题模板</h2>
+
+<p>全章数字骨架：<strong>4</strong> 个概念、<strong>3</strong> 个阶段、<strong>4</strong> 个特点、<strong>2</strong> 类模型、<strong>3</strong> 个要素、<strong>3</strong> 种模型、<strong>3</strong> 级模式、<strong>2</strong> 级映像、<strong>2</strong> 种独立性、<strong>4</strong> 类人员、<strong>5</strong> 项职责。</p>
+
+<p>必考简答的可背段落：数据库系统采用外模式、模式、内模式三级结构，模式描述全体数据的逻辑结构，一个数据库只有一个；外模式描述用户使用的局部逻辑结构，有多个；内模式描述物理存储结构，只有一个。外模式/模式映像定义外模式与模式的对应关系，模式改变时 DBA 修改映像使外模式不变，保证逻辑独立性；模式/内模式映像定义全局逻辑结构与存储结构的对应关系，存储结构改变时 DBA 修改映像使模式不变，保证物理独立性。两级映像保证外模式稳定，从而保证应用程序稳定。</p>
+
+<p>客观题高频点：数据与语义不可分；数据库定义；DBMS 的位置与功能；DBS 四部分；三阶段分水岭；四个特点；概念模型按用户观点；E-R 七概念与三种联系；三要素的静动；层次两条件、网状两条件、E.F.Codd 与 1970 年；模式与实例；三级模式数量；两种独立性的映像归属；DBA 五项职责。</p>
+
+<div class="sum">
+<p class="t">本节小结</p>
+<ul>
+<li>本章考题以"定义 + 关键词 + 数量关系"为主，抓关键词而不要背整段。</li>
+<li>简答只押一道：三级模式与两级映像、数据独立性，按"三级模式—外模式/模式映像—模式/内模式映像—结论"四段写。</li>
+<li>四个高频陷阱：数据库≠DBS、文件系统有物理无逻辑独立性、层次不能直接处理 m:n、两种独立性记反。</li>
+</ul>
+</div>
+
+    </div>
+    <div class="selftest">
+      <span class="st-n">本章共 24 道自测题（选择 / 判断 / 填空 / 简答），作答后立即判分并给出解析。</span>
+      <a href="quiz.html?ch=1">刷本章题</a>
+    </div>
+    <nav class="pager" aria-label="翻页"><span></span><a class="next" href="2.html">第 2 章 关系数据库 ›</a></nav>
+  </article>
+
+</div>
+</main>
+
+<footer class="footer">
+  <div class="wrap foot-inner">
+    <div class="foot-cols">
+      <div class="foot-brand">
+        <div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="7" ry="2.6"/><path d="M5 6v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6V6"/><path d="M5 12v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6v-6"/></svg>数据库系统概论</div>
+        <p>据本学期 14 个课件文件整理，教材为王珊《数据库系统概论》（第 6 版）。题目均为自编练习，不是真题。</p>
+      </div>
+      <div>
+        <h4>学习</h4>
+        <ul>
+          <li><a href="../index.html">备考首页</a></li>
+          <li><a href="../db.html">十章讲义</a></li>
+          <li><a href="../db/cheatsheet.html">考前速查卡</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>练习</h4>
+        <ul>
+          <li><a href="../db/quiz.html">题库 · 239 题</a></li>
+          <li><a href="../db/exam.html">模拟卷 · 3 套</a></li>
+          <li><a href="../index.html#plan">七天冲刺表</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>说明</h4>
+        <ul>
+          <li>课件未含第 8 章</li>
+          <li>进度只存在本机</li>
+          <li>可离线打开</li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-legal"><span>© <span id="year">2026</span> 数据库系统概论 · 期末备考</span><span>据课件整理 · 仅供复习使用</span></div>
+  </div>
+</footer>
+<button class="backtop" id="backtop" type="button" aria-label="回到顶部" hidden>↑</button>
+<script src="../assets/site.js?v=2"></script>
+<script src="../assets/study.js?v=2"></script>
+</body>
+</html>

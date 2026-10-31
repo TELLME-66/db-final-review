@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第 10 章 数据库恢复技术 · 数据库系统概论 · 备考</title>
+<meta name="description" content="事务 ACID、故障三类、静态/动态与海量/增量转储、日志登记原则、三类故障恢复步骤、检查点、数据库镜像。">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/theme.css?v=2">
+<link rel="stylesheet" href="../assets/site.css?v=2">
+<link rel="stylesheet" href="../assets/course.css?v=2">
+<script>(function(){var d=document.documentElement;d.classList.add('js');try{var t=localStorage.getItem('site-theme');if(t==='light'||t==='dark')d.setAttribute('data-theme',t);}catch(e){}})();</script>
+</head>
+<body data-ch="10">
+<a class="skip" href="#main">跳到正文</a>
+<header class="topbar" id="topbar">
+  <div class="wrap-wide bar">
+    <a class="brand" href="../index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="7" ry="2.6"/><path d="M5 6v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6V6"/><path d="M5 12v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6v-6"/></svg><span>数据库系统概论</span></a>
+    <nav class="nav" aria-label="站点导航"><a href="../index.html">首页</a><a href="../db.html" aria-current="page">讲义</a><a href="quiz.html">题库</a><a href="exam.html">模拟卷</a><a href="cheatsheet.html">速查卡</a></nav>
+    <button class="icon-btn" id="themeBtn" type="button" title="主题：跟随系统（点击切换）" aria-label="主题：跟随系统（点击切换）"><span id="themeIcon" aria-hidden="true">◐</span></button>
+  </div>
+</header>
+<div id="readbar"></div>
+
+<main id="main">
+<div class="doc">
+
+  <aside class="doc-toc" aria-label="讲义目录">
+  <details class="toc-fold" open>
+  <summary>讲义目录</summary>
+  <nav class="mod-switch" aria-label="课程模块">
+    <a href="../db.html" aria-current="page">讲义</a>
+    <a href="quiz.html">题库</a>
+    <a href="exam.html">模拟卷</a>
+    <a href="cheatsheet.html">速查卡</a>
+  </nav>
+  <a class="toc-home" href="../db.html">数据库系统概论</a>
+  <p class="toc-ver"><span>本学期课件</span>10 章</p>
+  <div class="toc-body">
+  <div class="toc-ch">
+    <h2>全部章节</h2>
+    <ul class="toc-list"><li><a href="1.html"><span class="num">第 1 章</span>绪论</a></li><li><a href="2.html"><span class="num">第 2 章</span>关系数据库</a></li><li><a href="3.html"><span class="num">第 3 章</span>关系数据库标准语言 SQL</a></li><li><a href="4.html"><span class="num">第 4 章</span>数据库安全性</a></li><li><a href="5.html"><span class="num">第 5 章</span>数据库完整性</a></li><li><a href="6.html"><span class="num">第 6 章</span>关系数据理论</a></li><li><a href="7.html"><span class="num">第 7 章</span>数据库设计</a></li><li><a href="9.html"><span class="num">第 9 章</span>关系查询处理和查询优化</a></li><li><a href="10.html" aria-current="page"><span class="num">第 10 章</span>数据库恢复技术</a></li><li><a href="11.html"><span class="num">第 11 章</span>并发控制</a></li></ul>
+  </div>
+  <div class="toc-ch">
+    <h2>本章小节</h2>
+    <ul class="toc-list"><li><a href="#s1"><span class="num">10.1</span>事务的基本概念</a></li><li><a href="#s2"><span class="num">10.2</span>数据库恢复概述</a></li><li><a href="#s3"><span class="num">10.3</span>故障的种类</a></li><li><a href="#s4"><span class="num">10.4.1</span>数据转储</a></li><li><a href="#s5"><span class="num">10.4.2</span>登记日志文件</a></li><li><a href="#s6"><span class="num">10.5</span>恢复策略</a></li><li><a href="#s7"><span class="num">10.6</span>具有检查点的恢复技术</a></li><li><a href="#s8"><span class="num">10.7</span>数据库镜像</a></li><li><a href="#s9"><span class="num">10.8</span>小结</a></li></ul>
+  </div>
+  </div>
+  </details>
+  </aside>
+
+  <article class="doc-body">
+    <header class="doc-head">
+      <p class="crumb"><a href="../db.html">数据库系统概论</a> · 第 10 章</p>
+      <h1>数据库恢复技术</h1>
+      <p class="meta">共 9 节 <span class="dot">·</span> 约 9,114 字 <span class="dot">·</span> 课件 104 页 <span class="dot">·</span> 本章自测 24 题</p>
+      <p class="status"><span>已掌握 <b data-mastery-count>0 / 9</b> 节</span>
+        <span class="track"><i data-mastery-bar></i></span></p>
+    </header>
+    <div class="note">
+
+<p class="lead">前九章讲"怎么把数据存对、查对"，本章回答另一个问题：系统崩了、盘坏了、事务做到一半断电了，凭什么还能把数据救回来？靠的是<strong>冗余</strong>（后备副本、日志文件、数据库镜像）与<strong>事务</strong>（恢复的最小单位）。本章是第 11 章并发控制的前置基础，两章共用"事务"这一概念。期末必有一道 8～10 分的恢复大题（给日志写 REDO/UNDO 过程，或给检查点判五类事务），简答则几乎年年考"系统故障为什么既要 UNDO 又要 REDO"和"日志的两条登记原则"。</p>
+
+<h2 id="s1"><span class="h2no">10.1</span>事务的基本概念</h2>
+
+<p>事务（Transaction）是用户定义的一个数据库操作序列，<strong>这些操作要么全做，要么全不做，是一个不可分割的工作单位</strong>。"不可分割"不是"一批语句打包执行"，而是"要么整体生效、要么整体不生效"，中间状态对外不可见。事务用 <strong>BEGIN TRANSACTION</strong> 开始，用 <strong>COMMIT</strong> 或 <strong>ROLLBACK</strong> 结束；用户没有显式定义时，DBMS 按缺省规定自动划分事务（隐式方式）。<strong>COMMIT 表示事务正常结束</strong>，提交事务的所有操作（读＋更新），把更新写回磁盘上的物理数据库；<strong>ROLLBACK 表示事务异常终止</strong>，系统把事务对数据库<strong>已完成的操作全部撤销</strong>，滚回到开始时的状态。</p>
+
+<p>事务和程序是两个概念，这是选择题常客：<strong>一个事务可以是一条 SQL 语句、一组 SQL 语句或整个程序；一个程序通常包含多个事务</strong>。事务的地位由课件一句话定死：<strong>事务是恢复和并发控制的基本单位</strong>。</p>
+
+<pre><code><span class="c">-- 课件中的银行转账事务：从账户甲转 AMOUNT 元到账户乙</span>
+BEGIN TRANSACTION
+  读账户甲的余额 BALANCE;
+  BALANCE = BALANCE - AMOUNT;          <span class="c">-- AMOUNT 为转账金额</span>
+  IF (BALANCE &lt; 0) THEN
+  {  打印'金额不足，不能转账';
+     ROLLBACK; }                       <span class="c">-- 撤销刚才的修改，恢复事务</span>
+  ELSE
+  {  读账户乙的余额 BALANCE1;
+     BALANCE1 = BALANCE1 + AMOUNT;
+     写回 BALANCE1;
+     COMMIT; }</code></pre>
+
+<p>事务的四个特性合称 <strong>ACID</strong>。<strong>原子性（Atomicity）</strong>：事务是数据库的逻辑工作单位，诸操作要么都做，要么都不做。<strong>一致性（Consistency）</strong>：事务执行的结果必须使数据库从一个一致性状态变到另一个一致性状态——<strong>一致性状态指数据库中只包含成功事务提交的结果</strong>，<strong>不一致状态指有些事务尚未完成就被迫中断，而未完成事务对数据库的修改已有一部分写入物理数据库</strong>。<strong>隔离性（Isolation）</strong>：一个事务的执行不能被其它事务干扰，其内部操作及使用的数据对其它并发事务是隔离的。<strong>持续性（Durability）</strong>也称永久性（Permanence）：事务一旦提交，对数据的改变就是永久性的，接下来的其它操作或故障不应影响其执行结果。<strong>原子性是手段，一致性是目的</strong>。</p>
+
+<table>
+<thead><tr><th>特性</th><th>一句话定义</th><th>转账中的实例</th><th>被什么破坏</th></tr></thead>
+<tbody>
+<tr><td>原子性 A</td><td>诸操作要么都做，要么都不做</td><td>甲减 X 与乙加 X 捆绑生效</td><td>事务中途中断，只做了减</td></tr>
+<tr><td>一致性 C</td><td>一个一致性状态到另一个</td><td>转账前后甲、乙余额之和不变</td><td>未完成事务的部分修改已写盘</td></tr>
+<tr><td>隔离性 I</td><td>并发事务互不干扰</td><td>别的事务读不到甲被减的中间值</td><td>并发调度不当，修改被覆盖</td></tr>
+<tr><td>持续性 D</td><td>提交后的改变永久有效</td><td>COMMIT 后断电，乙的余额仍在</td><td>已提交事务结果未写盘就崩溃</td></tr>
+</tbody>
+<caption>表 1　ACID 四特性与转账实例的对应</caption>
+</table>
+
+<div class="eg"><p class="t">例题</p><p>课件给出两个并发事务：T1 读 A=16，做 A=A−1 写回 15；T2 读 A=16，做 A=A−3 写回 13，顺序为 T1 读、T2 读、T1 写、T2 写。结果是否正确？违背了哪条特性？</p><div class="sol"><p>结果 A=13，错误，正确应为 16−1−3=12。T2 读到的是 T1 修改前的旧值 16，写回 13 时覆盖了 T1 的修改，即"丢失修改"，属<strong>错误的调度</strong>，违背<strong>隔离性</strong>。两个事务各自都执行完了，不是原子性问题；也不是提交后丢失，不是持续性问题。</p></div></div>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>事务这一节的全部得分点，四条：</p><ul><li><strong>定义</strong>：用户定义的数据库操作序列，要么全做要么全不做，不可分割。</li><li><strong>与程序的关系</strong>：一个事务可以是一条 SQL 语句、一组 SQL 语句或整个程序；一个程序通常包含多个事务。</li><li><strong>地位</strong>：事务是<strong>恢复</strong>和<strong>并发控制</strong>的基本单位。</li><li><strong>ACID</strong>：原子性、一致性、隔离性、持续性（永久性）。</li></ul></div>
+
+<p>破坏 ACID 的因素只有两类：<strong>多个事务并行运行时操作交叉执行</strong>，DBMS 必须保证交叉运行不影响隔离性；<strong>事务在运行过程中被强行停止</strong>，DBMS 必须保证被终止的事务对数据库和其它事务没有任何影响。前一类归并发控制（第 11 章），后一类归恢复技术（本章）。</p>
+
+<div class="trap"><p class="t">易错</p><p>① 把"事务"当"程序"：一个程序通常含多个事务，事务也可只是单条 SQL 语句。<br>② 以为 ROLLBACK 是"取消还没执行的语句"：它撤销的是<strong>已经完成</strong>的更新，把事务滚回起点。<br>③ 以为 COMMIT 后还能回滚：提交即持久化，只能靠日志 REDO 保证。<br>④ 把"一致性"理解为"数据不为空、类型正确"：这里特指<strong>只包含成功事务提交的结果</strong>这一状态。</p></div>
+
+<div class="mem">口诀：<b>原一隔持</b>——原子（全做全不做）、一致（状态到状态）、隔离（互不干扰）、持续（提交即永久）；再补"事务是恢复与并发的基本单位"。</div>
+
+<div class="sum"><p class="t">本节小结</p><ul><li>事务是不可分割的数据库操作序列，是恢复与并发控制的共同基本单位。</li><li>BEGIN TRANSACTION 定起点，COMMIT 提交并写盘，ROLLBACK 撤销并回到起点。</li><li>ACID 中原子性是手段、一致性是目的；破坏因素分别归并发控制与恢复管。</li></ul></div>
+
+<h2 id="s2"><span class="h2no">10.2</span>数据库恢复概述</h2>
+
+<p>恢复这一节三句话有分。<strong>故障是不可避免的</strong>，来源有计算机硬件故障、软件的错误、操作员的失误、恶意的破坏；<strong>故障的影响有两种</strong>——运行事务非正常中断，影响数据库中数据的正确性；破坏数据库，使全部或部分数据丢失。<strong>数据库的恢复，指 DBMS 必须具有把数据库从错误状态恢复到某一已知的正确状态（亦称为一致状态或完整状态）的功能</strong>。恢复的基本原理只有两个字：<strong>冗余</strong>，即<strong>利用存储在系统别处的冗余数据来重建数据库中已被破坏或不正确的那部分数据</strong>。三种冗余手段与故障一一对应：后备副本对应介质故障，日志文件对应事务故障与系统故障，数据库镜像对应介质故障的在线预防。</p>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>恢复概述三连问，另加两个"地位"结论：</p><ul><li><strong>为什么恢复</strong>：故障不可避免（硬件、软件、操作员、恶意破坏），会中断事务或破坏数据。</li><li><strong>恢复是什么</strong>：把数据库从错误状态恢复到某一已知的正确状态（一致状态、完整状态）。</li><li><strong>靠什么恢复</strong>：冗余——后备副本、日志文件、数据库镜像。</li><li><strong>两个地位</strong>：恢复子系统是 DBMS 的重要组成部分；恢复技术是衡量系统优劣的重要指标（大型产品中其代码占全部代码 <strong>10% 以上</strong>）。</li></ul></div>
+
+<div class="trap"><p class="t">易错</p><p>把"恢复"理解成"重启系统"或"重新运行程序"。重启只让系统能跑；恢复必须<strong>利用冗余数据把数据库内容重建到某个一致状态</strong>。重跑程序既撤销不了已写盘的错误修改，也补不回已丢失的已提交结果。</p></div>
+
+<h2 id="s3"><span class="h2no">10.3</span>故障的种类</h2>
+
+<p>故障分四类：<strong>事务内部的故障、系统故障、介质故障、计算机病毒</strong>。前三类是恢复策略的直接依据，第四类是需要用恢复技术善后的破坏行为。考法固定：给场景，判断属哪类故障、数据库有没有被破坏、由谁来做恢复。</p>
+
+<p><strong>（1）事务内部的故障。</strong>有的可由事务程序本身发现（非法输入、找不到数据），有的是<strong>非预期</strong>、不能由应用程序处理的（运算溢出、并发事务死锁而被选中撤销、违反完整性限制）。<strong>课件划界：以后"事务故障"仅指这类非预期故障</strong>。它意味着<strong>事务没有达到预期的终点（COMMIT 或显式 ROLLBACK），数据库可能处于不正确状态</strong>；恢复只有一个动作——<strong>事务撤销（UNDO）</strong>，强行回滚该事务、撤销它已作出的任何修改，<strong>使该事务像根本没有启动一样</strong>。</p>
+
+<p><strong>（2）系统故障。</strong>称<strong>软故障</strong>，指造成系统停止运转的任何事件，使系统要重新启动。四个特征：整个系统的正常运行突然被破坏；<strong>所有正在运行的事务都非正常终止</strong>；<strong>不破坏数据库</strong>；<strong>内存中数据库缓冲区的信息全部丢失</strong>。原因有特定类型的硬件错误（如 CPU 故障）、操作系统故障、DBMS 代码错误、系统断电。"不破坏数据库"这五个字决定了它的恢复不需重装副本，只需日志。</p>
+
+<p><strong>（3）介质故障。</strong>称<strong>硬故障</strong>，指外存故障：磁盘损坏、磁头碰撞、瞬时强磁场干扰。它<strong>破坏数据库或部分数据库，并影响正在存取这部分数据的所有事务</strong>；<strong>可能性比前两类小得多，但破坏性大得多</strong>。恢复两步：装入故障前某时刻的数据副本；REDO 自此时始的所有成功事务。</p>
+
+<p><strong>（4）计算机病毒。</strong>一种人为的故障或破坏，是恶作剧者研制的可繁殖、可传播的程序：小的只有 20 条指令、不到 50B，大的像一个操作系统、上万条指令。危害形态多样：传播极快、侵入即摧毁系统；潜伏数天或数月才发病；有的感染所有程序和数据，有的只对特定对象感兴趣。<strong>数据库一旦被破坏，仍要用恢复技术恢复</strong>。</p>
+
+<table>
+<thead><tr><th>故障类型</th><th>别称／典型原因</th><th>对数据库的影响</th><th>恢复策略</th><th>谁来做</th></tr></thead>
+<tbody>
+<tr><td>事务内部故障</td><td>非预期：溢出、死锁被撤销、违反完整性限制</td><td>不破坏库；事务未到终点，数据可能不正确</td><td>UNDO 该事务</td><td>系统自动，对用户透明</td></tr>
+<tr><td>系统故障</td><td>软故障：CPU 故障、OS 故障、DBMS 错误、断电</td><td>不破坏库；缓冲区全丢，运行事务全部非正常终止</td><td>UNDO 未完成＋REDO 已提交</td><td>重启时系统自动</td></tr>
+<tr><td>介质故障</td><td>硬故障：磁盘损坏、磁头碰撞、强磁场</td><td>库被破坏或部分破坏，影响正在存取该部分数据的所有事务</td><td>装入副本＋REDO 其后的已提交事务</td><td>需 DBA 介入</td></tr>
+<tr><td>计算机病毒</td><td>人为编制、可繁殖可传播的程序</td><td>可能破坏程序与数据，程度视病毒而定</td><td>用恢复技术善后</td><td>DBA＋DBMS</td></tr>
+</tbody>
+<caption>表 2　四类故障的原因、影响与恢复策略（必背）</caption>
+</table>
+
+<p>课件的"故障小结"给出更高层的二分法：<strong>各类故障对数据库的影响有两种可能性，一是数据库本身被破坏；二是数据库没有被破坏，但数据可能不正确，这是由事务的运行被非正常终止造成的</strong>。第一种要重装副本，第二种只需日志 UNDO/REDO。</p>
+
+<div class="eg"><p class="t">例题</p><p>判断下列情形各属哪类故障、库是否被破坏、要不要 DBA 介入：（1）余额变负，程序主动 ROLLBACK；（2）两事务死锁，DBMS 选中一个撤销；（3）机房断电重启；（4）磁头碰撞，数据文件损坏。</p><div class="sol"><p>（1）不是课程定义的"事务故障"——程序能发现并显式 ROLLBACK，属预期回滚，恢复子系统不介入。（2）事务内部故障（非预期）：需 UNDO，系统自动完成。（3）系统故障（软）：库没坏，但缓冲区全丢、运行事务全部非正常终止，需 UNDO＋REDO，重启时自动完成。（4）介质故障（硬）：库被破坏，需装入副本＋REDO，必须 DBA 介入。</p></div></div>
+
+<div class="trap"><p class="t">易错</p><p>① 把"程序里主动 ROLLBACK"算事务故障：课程定义的只是<strong>非预期</strong>、不能由应用程序处理的那一类。<br>② 说"系统故障会破坏数据库"：它<strong>不破坏数据库</strong>，丢的是内存缓冲区。<br>③ 说介质故障"只影响当前事务"：它影响<strong>正在存取该部分数据的所有事务</strong>。<br>④ 认为病毒破坏不需恢复：被病毒破坏的库仍要用恢复技术恢复。</p></div>
+
+<div class="mem">口诀：<b>事务软硬毒</b>——事务故障（UNDO 自己）、系统故障（软，UNDO＋REDO）、介质故障（硬，副本＋REDO）、病毒（人为，照介质思路善后）；判据"<b>坏库靠副本，脏数据靠日志</b>"。</div>
+
+<h2 id="s4"><span class="h2no">10.4.1</span>数据转储</h2>
+
+<p>恢复的实现技术要回答两个问题：<strong>如何建立冗余数据</strong>（数据转储 backup、登记日志文件 logging），<strong>如何利用冗余数据实施恢复</strong>。转储是指<strong>数据库管理员定期地将整个数据库复制到磁带、磁盘或其它存储介质上保存起来的过程</strong>，备用数据文本称<strong>后备副本（backup）或后援副本</strong>。两个采分点：动作者是 <strong>DBA</strong>（不是 DBMS 自动完成），方式是<strong>定期</strong>。局限必须说清：<strong>重装后备副本只能把数据库恢复到转储时的状态；要恢复到故障发生时的状态，必须重新运行自转储以后的所有更新事务</strong>——这正是日志存在的理由。</p>
+
+<p>按<strong>转储时数据库的状态</strong>分静态与动态。<strong>静态转储</strong>在无运行事务时进行，期间不允许任何存取、修改，<strong>得到的一定是一致性副本</strong>，实现简单，但<strong>降低了数据库可用性</strong>——转储必须等正运行的用户事务结束，新事务又必须等转储结束。<strong>动态转储</strong>与用户事务并发，允许存取或修改，不用等待、不影响新事务，但<strong>不能保证副本中的数据正确有效</strong>：课件举例，Tc 时刻把 A=100 转储到磁带，Td 时刻某事务把 A 改为 200，副本上的 A 就过时了。补救是<strong>把转储期间各事务的修改活动登记下来建立日志文件</strong>，<strong>后备副本加上日志文件才能把数据库恢复到某一时刻的正确状态</strong>。按<strong>转储的规模</strong>又分<strong>海量转储</strong>（每次转储全部数据库）与<strong>增量转储</strong>（只转储上次转储后更新过的数据）：<strong>从恢复角度看海量转储更方便</strong>；<strong>数据库很大、事务处理又十分频繁时增量转储更实用更有效</strong>。</p>
+
+<table>
+<thead><tr><th>组合</th><th>时机</th><th>优点</th><th>缺点／代价</th><th>恢复所需</th></tr></thead>
+<tbody>
+<tr><td>静态海量</td><td>无事务时转储全库</td><td>副本必一致；恢复最方便</td><td>可用性最差，转储期间停止服务</td><td>副本＋（可选）日志，重跑转储后事务</td></tr>
+<tr><td>静态增量</td><td>无事务时只转储更新数据</td><td>每次量小、速度快；副本一致</td><td>须周期性做海量转储作基准</td><td>最近海量副本＋各次增量＋日志</td></tr>
+<tr><td>动态海量</td><td>与事务并发转储全库</td><td>不阻塞业务，覆盖全库</td><td>副本不一致、可能过时，必须配日志</td><td>副本＋转储期间日志，先 REDO＋UNDO</td></tr>
+<tr><td>动态增量</td><td>与事务并发只转储更新数据</td><td>对业务影响最小，量最小</td><td>副本既不一致又不完整，恢复最复杂</td><td>基准副本＋各次增量＋日志，缺一不可</td></tr>
+</tbody>
+<caption>表 3　转储的四种组合及优缺点（课件"转储方法小结"的四格表）</caption>
+</table>
+
+<div class="trap"><p class="t">易错</p><p>① 说"转储由 DBMS 自动完成"：转储是 <strong>DBA 定期</strong>做的管理工作，日志登记才是 DBMS 自动做的。<br>② 说"动态转储的副本可直接恢复"：副本不一致，必须借日志做 REDO＋UNDO。<br>③ 认为增量转储恢复更简单：增量恢复要"基准海量副本＋一串增量＋日志"叠加，课件明确说海量转储恢复更方便。<br>④ 把转储与日志混为一谈：转储存<strong>数据本身</strong>，日志存<strong>更新操作的历史</strong>。</p></div>
+
+<div class="mem">口诀：<b>静等事务、动靠日志；海量好恢复、增量省时间</b>——四句话讲完两个维度的取舍。</div>
+
+<h2 id="s5"><span class="h2no">10.4.2</span>登记日志文件</h2>
+
+<p>日志文件（log file）是<strong>用来记录事务对数据库的更新操作的文件</strong>：记的不是数据长什么样，而是"谁对哪个对象做了什么、做之前是什么、做之后是什么"。格式分<strong>以记录为单位</strong>与<strong>以数据块为单位</strong>。以记录为单位的日志文件包含三类内容：<strong>各个事务的开始标记（BEGIN TRANSACTION）、结束标记（COMMIT 或 ROLLBACK）、所有更新操作</strong>，均作为日志记录（log record）。<strong>每条日志记录五项内容</strong>：事务标识、操作类型（插入、删除或修改）、操作对象（记录 ID、Block NO.）、<strong>更新前数据的旧值</strong>（插入操作此项为空值）、<strong>更新后数据的新值</strong>（删除操作此项为空值）。<strong>插入无旧值，删除无新值</strong>，这是填空高频点。</p>
+
+<table>
+<thead><tr><th>比较项</th><th>以记录为单位</th><th>以数据块为单位</th></tr></thead>
+<tbody>
+<tr><td>记录粒度</td><td>一条更新操作（记录级）</td><td>一个被更新的数据块（块级）</td></tr>
+<tr><td>每条内容</td><td>事务标识、操作类型、操作对象、旧值、新值</td><td>事务标识、被更新的数据块（含前像／后像）</td></tr>
+<tr><td>UNDO 精度</td><td>可按逆操作精确回退到某条记录</td><td>只能整块回退，粒度粗</td></tr>
+<tr><td>日志体积</td><td>较小，只记变化的记录</td><td>较大，整块前后像都要写</td></tr>
+</tbody>
+<caption>表 4　两种日志格式的对比</caption>
+</table>
+
+<pre><code>BEGIN;
+UPDATE Student SET sname = '张三', age = 21 WHERE sno = 'S01';
+INSERT INTO Student VALUES ('S02', '李四', 19, '数学');
+COMMIT;
+<span class="c">-- 对应的两条更新日志记录：旧值、新值成对出现</span>
+&lt;T1, UPDATE, Student.sno='S01', (sname='张叁', age=20), (sname='张三', age=21)&gt;
+&lt;T1, INSERT, Student.sno='S02', NULL, (sname='李四', age=19, dept='数学')&gt;
+&lt;T1, COMMIT&gt;</code></pre>
+
+<p>恢复怎么用这两条记录：<strong>系统在 COMMIT 前崩溃</strong>，T1 未提交，执行 UNDO——UPDATE 把 sname 改回 '张叁'、age 改回 20；INSERT 则删除 sno='S02' 的记录（插入的旧值为空，逆操作就是删除）。<strong>系统在 COMMIT 后崩溃</strong>，T1 已提交，执行 REDO——确保 S01 的值是 '张三'、21，S02 记录存在。一对情形把"靠旧值 UNDO、靠新值 REDO"讲透。</p>
+
+<p>日志文件的作用三条，前两条是"必须"，第三条是"协助"：<strong>进行事务故障恢复；进行系统故障恢复；协助后备副本进行介质故障恢复</strong>。<strong>事务故障恢复和系统故障恢复必须用日志文件</strong>；<strong>动态转储中必须建立日志文件</strong>；<strong>静态转储中也可以建立日志文件</strong>——重装副本恢复至转储结束时刻后，用日志重做已完成事务、撤销未完成事务，<strong>不必重新运行那些已完成的事务程序</strong>。</p>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>登记日志文件的两条原则，年年考、要一字不差：</p><ul><li><strong>原则一</strong>：登记的次序严格按并发事务执行的时间次序，写到磁盘中的日志记录顺序必须与写入日志缓冲区的次序完全一致。</li><li><strong>原则二</strong>：<strong>必须先写日志文件，后写数据库</strong>。写日志文件指把表示这个修改的日志记录写到日志文件；写数据库指把对数据的修改写到数据库。</li><li><strong>原则二的理由</strong>：写数据库与写日志文件是两个不同操作，两者之间可能发生故障。若先写了数据库修改而日志中没有登记，则以后无法恢复这个修改；若先写日志但没修改数据库，按日志恢复时只不过多执行一次不必要的 UNDO，并不影响正确性。</li></ul></div>
+
+<p>实现细节：内存中临时保存日志记录的区域叫<strong>日志缓冲区</strong>，一次将一个或多个缓冲块写入磁盘以减少写盘次数；<strong>日志必须存储在稳定存储器上</strong>——日志丢了，一切恢复无从谈起。两条合起来即常说的 WAL（Write-Ahead Logging，补充术语）。</p>
+
+<div class="eg"><p class="t">例题</p><p>某事务执行"把 A 由 100 改为 200"，日志记录已写入日志缓冲区但未落盘，此时数据页（A=200）已写回磁盘，随后断电。能否正确恢复？</p><div class="sol"><p>不能。这违反原则二"先写日志、后写数据库"：库已改而日志未落盘，磁盘上既无这条更新记录，恢复时既不知道 A 曾经是 100，也不知道该不该改回去，A 停在 200 而事务未提交，处于不一致状态且<strong>无法撤销</strong>。若遵守原则二，顺序是日志先落盘再写数据页，恢复程序扫到"有更新、无 COMMIT"就用旧值 100 做 UNDO。原则二的作用就是<strong>保证每一个已生效的修改都有日志可查</strong>。</p></div></div>
+
+<div class="trap"><p class="t">易错</p><p>① 只背原则二，漏掉原则一（<strong>日志写入磁盘的顺序必须与写入缓冲区一致</strong>）：顺序错乱会使 UNDO 的逆操作次序颠倒。<br>② 把"先写日志后写数据库"理解成"同时写"：必须日志<strong>先落盘</strong>。<br>③ 记反两个空值：<strong>插入操作旧值为空，删除操作新值为空</strong>。<br>④ 认为日志只用于介质故障：事务故障、系统故障<strong>必须</strong>用日志，介质故障只是"协助"副本。</p></div>
+
+<div class="mem">口诀：<b>先日志、后数据；旧值撤、新值重</b>——前句是登记原则，后句是日志的两种用法。</div>
+
+<h2 id="s6"><span class="h2no">10.5</span>恢复策略</h2>
+
+<p>三种故障对应三套策略，这一节最可能出大题。</p>
+
+<table>
+<thead><tr><th>故障类型</th><th>不一致的根源</th><th>恢复动作</th><th>日志扫描方向</th><th>是否需 DBA</th></tr></thead>
+<tbody>
+<tr><td>事务故障</td><td>事务未运行到正常终止点，已做的修改可能已写盘</td><td>只 UNDO 该事务</td><td>反向扫描到该事务 BEGIN</td><td>否，系统自动、透明</td></tr>
+<tr><td>系统故障</td><td>未完成事务的更新可能已写盘；已提交事务的更新可能还在缓冲区</td><td>UNDO 未完成＋REDO 已提交</td><td>正向扫建队列；UNDO 反向、REDO 正向</td><td>否，重启时自动</td></tr>
+<tr><td>介质故障</td><td>库本身被破坏，副本之后的更新全部丢失</td><td>装入最近副本＋REDO 其后的已提交事务</td><td>扫日志找已提交事务，正向 REDO</td><td><strong>是</strong>，DBA 重装副本与日志</td></tr>
+</tbody>
+<caption>表 5　故障类型与恢复策略的对应（必背，能默写）</caption>
+</table>
+
+<p><strong>10.5.1 事务故障的恢复。</strong>事务在运行至正常终止点前被终止，由恢复子系统<strong>利用日志文件撤销（UNDO）此事务已对数据库进行的修改</strong>；由系统自动完成，对用户透明。四步：</p>
+
+<ol class="steps"><li>反向扫描日志文件（从最后向前），查找该事务的更新操作——必须反向，否则同一数据被改多次时会把中间值当最终旧值。</li><li>对更新操作执行逆操作，即将"更新前的值"写入数据库：<strong>插入操作</strong>的更新前值为空，相当于做删除；<strong>删除操作</strong>的更新后值为空，相当于做插入；<strong>修改操作</strong>则用修改前值代替修改后值。</li><li>继续反向扫描日志文件，查找该事务的其它更新操作并同样处理。</li><li>如此处理下去，直至读到此事务的开始标记，恢复完成。</li></ol>
+
+<p><strong>10.5.2 系统故障的恢复。</strong>造成不一致状态的原因有两条，必须成对背：<strong>一是未完成事务对数据库的更新可能已写入数据库；二是已提交事务对数据库的更新可能还留在缓冲区没来得及写入数据库</strong>。对应两个动作：<strong>UNDO 故障发生时未完成的事务，REDO 已完成的事务</strong>，由系统在重新启动时自动完成。三步：</p>
+
+<ol class="steps"><li><strong>正向扫描日志文件</strong>（从头扫描），建两个队列：<strong>重做（REDO）队列</strong>放故障前已提交的事务——既有 BEGIN TRANSACTION 记录，也有 COMMIT 记录；<strong>撤销（UNDO）队列</strong>放故障时尚未完成的事务——只有 BEGIN，无相应的 COMMIT。</li><li>对 UNDO 队列事务撤销：<strong>反向扫描</strong>日志，对每个撤销事务的更新操作执行逆操作，将"更新前的值"写入数据库。</li><li>对 REDO 队列事务重做：<strong>正向扫描</strong>日志，对每个重做事务重新执行登记的操作，将"更新后的值"写入数据库。</li></ol>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>必考简答：<strong>系统故障的恢复为什么既要 UNDO 又要 REDO？</strong>分三层答：</p><ul><li><strong>要 UNDO</strong>：故障时有些事务尚未完成，但崩溃前已把部分修改写入磁盘。这些修改属于未提交事务，必须撤销，否则库里留下"半截事务"的脏数据。</li><li><strong>要 REDO</strong>：有些事务已经提交（日志中有 COMMIT），但修改可能还留在内存缓冲区、未写回磁盘；缓冲区内容随断电全部丢失，不重做则已提交结果永久丢失，违背持续性。</li><li><strong>一句话</strong>：<strong>UNDO 保证原子性（未完成的不留痕），REDO 保证持续性（已提交的不丢失）</strong>。两者缺一不可，根子在"日志写盘"与"数据写盘"是两个不同步的动作。</li></ul></div>
+
+<p>课件的日志例题必须会做。设记录类型为 <code>&lt;START T&gt;</code>、<code>&lt;COMMIT T&gt;</code>、<code>&lt;T,X,u,v&gt;</code>（T 修改 X，原值 u，新值 v），故障时日志为：</p>
+
+<pre><code>&lt;START T&gt; &lt;T,C,29,30&gt; &lt;T,A,10,11&gt; &lt;START U&gt;
+&lt;U,B,20,21&gt; &lt;T,C,30,31&gt; &lt;U,D,40,41&gt; &lt;U,B,21,22&gt; &lt;COMMIT U&gt;</code></pre>
+
+<p>恢复三步：<strong>（1）正向扫描</strong>，U 有 START 和 COMMIT，入 REDO 队列；T 只有 START 没有 COMMIT，入 UNDO 队列。<strong>（2）UNDO 队列</strong>：对 T 反向扫描，先遇 <code>&lt;T,C,30,31&gt;</code> 把 C 写回 30，再遇 <code>&lt;T,A,10,11&gt;</code> 把 A 写回 10，最后遇 <code>&lt;T,C,29,30&gt;</code> 把 C 写回 29。<strong>（3）REDO 队列</strong>：对 U 正向扫描，B 写 21、D 写 41、B 写 22。最终 U 全部生效、T 全部消失。</p>
+
+<p><strong>10.5.3 介质故障的恢复。</strong>两步：<strong>（1）装入最新的后备数据库副本</strong>（离故障最近的转储副本），使数据库恢复到最近一次转储时的一致性状态。对<strong>静态转储</strong>副本，装入后即处于一致性状态；对<strong>动态转储</strong>副本，还须同时装入<strong>转储开始时刻的日志文件副本</strong>，利用恢复系统故障的方法（REDO＋UNDO）才能恢复到一致性状态。<strong>（2）装入有关的日志文件副本</strong>（转储结束时刻的日志副本），重做已完成的事务：先扫日志找出故障时已提交的事务标识记入重做队列，再正向扫描，对重做队列中所有事务重做，将"更新后的值"写入数据库。责任划分是本节唯一"人"的考点：<strong>介质故障的恢复需要 DBA 介入</strong>，其工作只有两件——<strong>重装最近转储的数据库副本和有关的各日志文件副本；执行系统提供的恢复命令</strong>；<strong>具体恢复操作仍由 DBMS 完成</strong>。</p>
+
+<div class="trap"><p class="t">易错</p><p>① 系统故障只答 UNDO：漏掉"已提交但未写盘"，等于放弃持续性。<br>② 事务故障恢复用正向扫描：逆操作必须反向。<br>③ 介质故障用"重跑程序"代替 REDO：重跑会重复执行已生效的更新，破坏幂等性。<br>④ 把 UNDO 队列的事务也 REDO：等于把未提交的脏数据当真。<br>⑤ 说介质故障恢复全自动：<strong>必须 DBA 介入</strong>。</p></div>
+
+<div class="sum"><p class="t">本节小结</p><ul><li>事务故障→只 UNDO，反向扫描到该事务 BEGIN 为止，系统自动。</li><li>系统故障→UNDO 未完成＋REDO 已提交；正向扫描建队列，UNDO 反向写旧值、REDO 正向写新值。</li><li>介质故障→装入最近副本＋REDO 其后的已提交事务；DBA 重装副本与日志，DBMS 执行恢复。</li><li>共同依据：日志旧值用于撤销、新值用于重做，副本提供基准。</li></ul></div>
+
+<h2 id="s7"><span class="h2no">10.6</span>具有检查点的恢复技术</h2>
+
+<p>没有检查点时，恢复面对两个浪费：<strong>搜索整个日志耗费大量时间</strong>；<strong>重做处理是重新执行，浪费大量时间</strong>——一个早已提交、修改早已写盘的事务仍会被从头 REDO。解决方案含三件事：<strong>在日志文件中增加检查点记录；增加重新开始文件；恢复子系统在登录日志文件期间动态地维护日志</strong>。检查点记录内容两项：<strong>建立检查点时刻所有正在执行的事务清单</strong>；<strong>这些事务最近一个日志记录的地址</strong>。<strong>重新开始文件</strong>记录<strong>各个检查点记录在日志文件中的地址</strong>，作用是<strong>大幅缩小恢复的日志扫描范围，提升恢复速度</strong>——日志文件里放检查点记录本身，重新开始文件里放"检查点记录在哪儿"的指针。</p>
+
+<p>动态维护日志文件的方法是周期性地执行四步，顺序考填空题的概率极高：</p>
+
+<ol class="steps"><li>将当前<strong>日志缓冲区</strong>中的所有日志记录写入磁盘的日志文件上。</li><li>在日志文件中写入一个<strong>检查点记录</strong>。</li><li>将当前<strong>数据缓冲区</strong>的所有数据记录写入磁盘的数据库中。</li><li>把检查点记录在日志文件中的地址写入一个<strong>重新开始文件</strong>。</li></ol>
+
+<p>第 1 步先落日志、第 3 步才刷数据页，正是"先写日志后写数据库"；第 3 步把数据缓冲区全部刷盘，意味着<strong>检查点时刻之前已提交的事务，其修改一定已在数据库中</strong>，恢复时无需重做。检查点可<strong>定期</strong>建立（如每隔一小时），也可<strong>不定期</strong>建立（如日志已写满一半）。</p>
+
+<figure class="fig">
+<svg viewBox="0 0 720 300" width="100%" role="img" aria-label="检查点恢复中五类事务的处置：T1 检查点前提交不重做，T2 与 T4 重做，T3 与 T5 撤销">
+<line class="ln" x1="60" y1="70" x2="700" y2="70"/>
+<path class="ln" d="M700,70 L692,66 M700,70 L692,74"/>
+<text class="lbl" x="60" y="60" text-anchor="start">时间 →</text>
+<line class="ln-m" x1="300" y1="48" x2="300" y2="252" stroke-dasharray="4 3"/>
+<line class="ln-m" x1="620" y1="48" x2="620" y2="252" stroke-dasharray="4 3"/>
+<text x="300" y="42" text-anchor="middle" font-size="12">检查点 Tc</text>
+<text x="620" y="42" text-anchor="middle" font-size="12">故障点 Tf</text>
+<rect class="box" x="90" y="92" width="150" height="18" rx="3"/>
+<text x="86" y="106" text-anchor="end" font-size="12">T1</text>
+<text class="lbl" x="246" y="106" text-anchor="start">不重做</text>
+<rect class="acc" x="170" y="122" width="300" height="18" rx="3"/>
+<text x="166" y="136" text-anchor="end" font-size="12">T2</text>
+<text class="lbl" x="478" y="136" text-anchor="start">重做 REDO</text>
+<rect class="box" x="210" y="152" width="410" height="18" rx="3"/>
+<text x="206" y="166" text-anchor="end" font-size="12">T3</text>
+<text class="lbl" x="628" y="166" text-anchor="start">撤销 UNDO</text>
+<rect class="acc" x="350" y="182" width="170" height="18" rx="3"/>
+<text x="346" y="196" text-anchor="end" font-size="12">T4</text>
+<text class="lbl" x="528" y="196" text-anchor="start">重做 REDO</text>
+<rect class="box" x="400" y="212" width="220" height="18" rx="3"/>
+<text x="396" y="226" text-anchor="end" font-size="12">T5</text>
+<text class="lbl" x="628" y="226" text-anchor="start">撤销 UNDO</text>
+</svg>
+<figcaption>图 10.1　检查点恢复中五类事务的处置（Tc 为检查点，Tf 为故障点）</figcaption>
+</figure>
+
+<table>
+<thead><tr><th>事务</th><th>开始</th><th>提交</th><th>故障时状态</th><th>处置</th><th>理由</th></tr></thead>
+<tbody>
+<tr><td>T1</td><td>检查点前</td><td>检查点前</td><td>已提交且已写盘</td><td><strong>不重做</strong></td><td>检查点第 3 步已刷缓冲区，结果必在库中</td></tr>
+<tr><td>T2</td><td>检查点前</td><td>检查点后、故障前</td><td>已提交</td><td><strong>REDO</strong></td><td>提交在检查点后，修改可能仍在缓冲区</td></tr>
+<tr><td>T3</td><td>检查点前</td><td>未提交</td><td>未完成</td><td><strong>UNDO</strong></td><td>未提交却可能已部分写盘</td></tr>
+<tr><td>T4</td><td>检查点后</td><td>故障前</td><td>已提交</td><td><strong>REDO</strong></td><td>提交在检查点后</td></tr>
+<tr><td>T5</td><td>检查点后</td><td>未提交</td><td>未完成</td><td><strong>UNDO</strong></td><td>未提交，可能已部分写盘</td></tr>
+</tbody>
+<caption>表 6　检查点恢复的五类事务判定（T1～T5）</caption>
+</table>
+
+<p>利用检查点的恢复步骤四步，答题按这四步写最稳：</p>
+
+<ol class="steps"><li>从<strong>重新开始文件</strong>中找到最后一个检查点记录在日志文件中的地址，由该地址找到最后一个检查点记录。</li><li>由该检查点记录得到检查点建立时刻所有正在执行的事务清单 <strong>ACTIVE-LIST</strong>，建立 <strong>UNDO-LIST</strong> 与 <strong>REDO-LIST</strong>：<strong>把 ACTIVE-LIST 暂时放入 UNDO-LIST，REDO 队列暂为空</strong>。</li><li>从检查点开始<strong>正向扫描</strong>日志直到结束：如有新开始的事务 Ti，把 Ti 暂时放入 UNDO-LIST；如有提交的事务 Tj，<strong>把 Tj 从 UNDO-LIST 移到 REDO-LIST</strong>。</li><li>对 UNDO-LIST 中每个事务执行 UNDO，对 REDO-LIST 中每个事务执行 REDO。</li></ol>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>检查点这一节最容易失分的三处，全是"为什么"：</p><ul><li><strong>为什么"暂时"全放 UNDO-LIST</strong>：检查点时刻活着的事务到故障时未必提交，只有扫到它的 COMMIT 才能移入 REDO；先全放 UNDO 是"有罪推定"，提交即可"洗清"。</li><li><strong>为什么 T2 必须 REDO</strong>：它在检查点之后才提交，而检查点刷盘只保证"检查点时刻已提交事务"的结果在库中，管不了之后提交的。</li><li><strong>为什么 T1 连 REDO 都不必</strong>：它在检查点之前提交，修改随第 3 步写盘，库里已是它的结果，重做是纯浪费——这正是检查点省时间的来源。</li></ul></div>
+
+<div class="eg"><p class="t">例题（补充例题）</p><p>检查点时刻正在执行的事务为 {T2, T3}，此后日志依次为 <code>&lt;T2,A,5,6&gt;</code>、<code>&lt;START T4&gt;</code>、<code>&lt;COMMIT T2&gt;</code>、<code>&lt;T4,B,7,8&gt;</code>、<code>&lt;START T5&gt;</code>、<code>&lt;T5,C,9,10&gt;</code>、<code>&lt;T3,D,1,2&gt;</code>，随后故障。求 UNDO-LIST 与 REDO-LIST。</p><div class="sol"><p>初值 UNDO-LIST={T2,T3}，REDO-LIST=∅。正向扫描：<code>&lt;START T4&gt;</code>→T4 进 UNDO；<code>&lt;COMMIT T2&gt;</code>→T2 从 UNDO 移入 REDO；<code>&lt;START T5&gt;</code>→T5 进 UNDO；更新记录不改变队列。得 <strong>UNDO-LIST={T3,T4,T5}，REDO-LIST={T2}</strong>。处置：T2 正向 REDO（A 写 6）；T3、T4、T5 反向 UNDO（D 写回 1、B 写回 7、C 写回 9）。T3 虽在检查点前开始却未提交，仍属 UNDO——判据是"<strong>检查点之后有没有 COMMIT</strong>"，不是"何时开始"。</p></div></div>
+
+<div class="trap"><p class="t">易错</p><p>① 把"检查点"当"提交点"：检查点只记录活跃事务清单与日志地址并刷盘，不等于提交。<br>② 认为"检查点之前开始的事务一定要 REDO"：T3 就在检查点前开始，却要 UNDO。<br>③ 忘了提交事务是<strong>从 UNDO 移到 REDO</strong>，不是同时留在两个队列（一个事务不能既撤销又重做）。<br>④ 扫描起点错：从<strong>最后一个检查点</strong>开始正向扫，不是从日志头，也不是从故障点反向扫。<br>⑤ 把 ACTIVE-LIST 当最终答案：它只是 UNDO-LIST 的初值。</p></div>
+
+<div class="mem">口诀：<b>前提交不管、后提交重做、没提交撤销</b>——以检查点为界看提交时刻；配套"<b>活着先进 UNDO，提交立刻搬家</b>"。</div>
+
+<h2 id="s8"><span class="h2no">10.7</span>数据库镜像</h2>
+
+<p>要镜像，因为<strong>介质故障是对系统影响最为严重的一种故障，严重影响数据库的可用性</strong>：恢复费时，DBA 必须周期性转储；而转储只能恢复到最近一次转储，中间那段还得靠日志重做。方案是<strong>数据库镜像（Mirror）</strong>：<strong>DBMS 自动把整个数据库或其中的关键数据复制到另一个磁盘上；DBMS 自动保证镜像数据与主数据的一致性；每当主数据库更新时，DBMS 自动把更新后的数据复制过去</strong>。三个"自动"是关键——镜像由系统维护，不需 DBA 定期操作，这正是它与转储的根本区别。</p>
+
+<p>用途分两种。<strong>出现介质故障时</strong>：可由镜像磁盘继续提供使用；同时 DBMS 自动利用镜像磁盘数据进行恢复；<strong>不需要关闭系统和重装数据库副本</strong>——把"停机＋重装＋REDO"压缩成在线切换。没有故障时：可用于并发操作，<strong>一个用户对数据加排他锁修改数据，其它用户可以读镜像数据库上的数据，而不必等待该用户释放锁</strong>。代价要说清：<strong>频繁复制数据会降低系统运行效率</strong>，所以<strong>实际应用中往往只对关键数据和日志文件镜像，而不是对整个数据库镜像</strong>。</p>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>镜像四问四答：</p><ul><li><strong>是什么</strong>：DBMS 自动把整个数据库或关键数据复制到另一磁盘，并自动保证主、镜像数据一致。</li><li><strong>为什么</strong>：介质故障影响最严重、恢复最费时，镜像是提高可用性的方案。</li><li><strong>有什么用</strong>：故障时由镜像盘继续服务并自动恢复，不必关系统、不必重装副本；正常时可支持并发读。</li><li><strong>代价</strong>：频繁复制降低效率，实际只对关键数据和日志文件镜像。</li></ul></div>
+
+<div class="trap"><p class="t">易错</p><p>① 说"镜像可以替代日志"：不能，镜像只是"另一份可用数据"，回答不了"未提交事务改过什么"，UNDO 仍要靠日志（补充结论）。<br>② 说"镜像由 DBA 定期做"：镜像由 <strong>DBMS 自动</strong>维护，定期做的是转储。<br>③ 说"镜像能防病毒"：镜像只防介质故障，逻辑破坏会被同步复制到镜像盘（补充提醒）。</p></div>
+
+<h2 id="s9"><span class="h2no">10.8</span>小结</h2>
+
+<p>全章一条主线：<strong>事务是恢复的基本单位 → 故障分事务、系统、介质三类 → 恢复靠冗余（副本、日志、镜像）→ 三类故障各有固定招式</strong>。课件小结的三段话就是答案骨架：事务是数据库的逻辑工作单位，DBMS 保证一切事务的原子性、一致性、隔离性和持续性，就保证了事务处于一致状态；故障分事务故障、系统故障、介质故障；恢复中最经常使用的技术是数据库转储和登记日志文件；<strong>恢复的基本原理是利用存储在后备副本、日志文件和数据库镜像中的冗余数据来重建数据库</strong>；<strong>事务不仅是恢复的基本单位，也是并发控制的基本单位</strong>。</p>
+
+<div class="kp"><p class="t">考点 · 必背</p><p>全章最可能出的五道简答，考前各写一遍：</p><ul><li>事务的定义与 ACID 四特性，各举一例。</li><li>四类故障的成因与影响，恢复各由谁完成。</li><li>日志文件的内容与两条登记原则，为什么必须先写日志。</li><li>系统故障为什么既要 UNDO 又要 REDO（原子性＋持续性）。</li><li>检查点记录的内容、建立检查点四步、利用检查点恢复的四步。</li></ul></div>
+
+<div class="sum"><p class="t">本节小结</p><ul><li>恢复＝用冗余重建；冗余三件套：后备副本、日志文件、数据库镜像。</li><li>事务故障、系统故障不破坏数据库、靠日志；介质故障破坏数据库、靠副本＋日志、需 DBA。</li><li>两条铁律：日志<strong>先写日志后写数据库</strong>，日志写入磁盘的<strong>顺序与缓冲区一致</strong>。</li><li>系统故障必须 UNDO＋REDO；检查点用"前提交不管、后提交重做、没提交撤销"定五类事务。</li></ul></div>
+
+    </div>
+    <div class="selftest">
+      <span class="st-n">本章共 24 道自测题（选择 / 判断 / 填空 / 简答），作答后立即判分并给出解析。</span>
+      <a href="quiz.html?ch=10">刷本章题</a>
+    </div>
+    <nav class="pager" aria-label="翻页"><a class="prev" href="9.html">‹ 第 9 章 关系查询处理和查询优化</a><a class="next" href="11.html">第 11 章 并发控制 ›</a></nav>
+  </article>
+
+</div>
+</main>
+
+<footer class="footer">
+  <div class="wrap foot-inner">
+    <div class="foot-cols">
+      <div class="foot-brand">
+        <div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="7" ry="2.6"/><path d="M5 6v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6V6"/><path d="M5 12v6c0 1.44 3.13 2.6 7 2.6s7-1.16 7-2.6v-6"/></svg>数据库系统概论</div>
+        <p>据本学期 14 个课件文件整理，教材为王珊《数据库系统概论》（第 6 版）。题目均为自编练习，不是真题。</p>
+      </div>
+      <div>
+        <h4>学习</h4>
+        <ul>
+          <li><a href="../index.html">备考首页</a></li>
+          <li><a href="../db.html">十章讲义</a></li>
+          <li><a href="../db/cheatsheet.html">考前速查卡</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>练习</h4>
+        <ul>
+          <li><a href="../db/quiz.html">题库 · 239 题</a></li>
+          <li><a href="../db/exam.html">模拟卷 · 3 套</a></li>
+          <li><a href="../index.html#plan">七天冲刺表</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>说明</h4>
+        <ul>
+          <li>课件未含第 8 章</li>
+          <li>进度只存在本机</li>
+          <li>可离线打开</li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-legal"><span>© <span id="year">2026</span> 数据库系统概论 · 期末备考</span><span>据课件整理 · 仅供复习使用</span></div>
+  </div>
+</footer>
+<button class="backtop" id="backtop" type="button" aria-label="回到顶部" hidden>↑</button>
+<script src="../assets/site.js?v=2"></script>
+<script src="../assets/study.js?v=2"></script>
+</body>
+</html>
