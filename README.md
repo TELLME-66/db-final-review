@@ -1,5 +1,8 @@
 # 数据库系统概论 · 期末备考
 
+**在线地址：<https://tellme-66.github.io/db-final-review/>**　·　仓库：<https://github.com/TELLME-66/db-final-review>
+
+
 把本学期 14 个课件 PDF（王珊《数据库系统概论》第 6 版，第 1–7、9–11 章）整理成一套可以「读 → 练 → 考 → 查」的静态站点。
 
 ## 打开
@@ -55,10 +58,16 @@ dist/                                   可直接部署的静态站点（GitHub 
 
 ## 发布到 GitHub Pages
 
-把 `dist/` 推到仓库根目录，然后在仓库 Settings → Pages 里选择 `Deploy from a branch`、分支 `main`、目录 `/ (root)`，几分钟后即可访问
-`https://<用户名>.github.io/<仓库名>/`。
+仓库 `TELLME-66/db-final-review` 已开启 Pages（分支 `main` / 根目录），每次推送到 `main` 会自动重新发布。
 
-`.nojekyll` 已包含，避免 GitHub 的 Jekyll 处理干扰。
+更新流程：
+
+```bash
+./package.sh    # 重新生成 dist/ 和 zip
+./deploy.sh     # 提交并推送到 GitHub，约 1 分钟后线上更新
+```
+
+`.nojekyll` 已包含，避免 GitHub 的 Jekyll 处理干扰；`404.html` 是自定义 404 页。
 
 ## 进度保存在哪
 
